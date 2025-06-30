@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet } from 'lucide-react';
+import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet, X } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
 import { Input } from '@/components/ui/input';
@@ -73,7 +73,7 @@ export default function LandingPage() {
       <LandingHeader />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 md:py-32 bg-card relative">
+        <section className="py-20 md:py-32 bg-background relative">
             <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[bottom_1px_center] dark:bg-grid-slate-400/[0.05] dark:bg-bottom mask-image-hero"></div>
             <div className="container text-center relative">
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
@@ -83,10 +83,10 @@ export default function LandingPage() {
                 {t.landingPage.hero.subtitle}
                 </p>
                 <div className="mt-8 flex justify-center gap-4">
-                <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button asChild size="lg">
                     <Link href="#contact">{t.landingPage.hero.cta_demo}</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10">
+                <Button asChild size="lg" variant="outline">
                     <Link href="#pricing">{t.landingPage.hero.cta_prices}</Link>
                 </Button>
                 </div>
@@ -95,7 +95,7 @@ export default function LandingPage() {
         </section>
 
         {/* Social Proof Section */}
-        <section className="py-8 bg-background">
+        <section className="py-8 bg-muted">
             <div className="container text-center">
                 <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">{t.landingPage.socialProof.title}</p>
                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center opacity-60">
@@ -135,7 +135,7 @@ export default function LandingPage() {
         </section>
 
         {/* Solution Section */}
-        <section id="solution" className="py-16 md:py-24 bg-card">
+        <section id="solution" className="py-16 md:py-24 bg-muted">
             <div className="container">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.solution.title}</h2>
@@ -185,7 +185,7 @@ export default function LandingPage() {
                     </div>
                 </div>
                  <div className="mt-12 text-center">
-                    <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Button asChild>
                         <Link href="/help">{t.landingPage.howItWorks.cta}</Link>
                     </Button>
                 </div>
@@ -193,7 +193,7 @@ export default function LandingPage() {
         </section>
 
         {/* Use Cases Section */}
-        <section id="use-cases" className="py-16 md:py-24 bg-card">
+        <section id="use-cases" className="py-16 md:py-24 bg-muted">
           <div className="container">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.useCases.title}</h2>
@@ -279,11 +279,12 @@ export default function LandingPage() {
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_starter}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_starter}</span></li>
                      <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_templates}</span></li>
+                     <li className="flex items-center gap-2"><X className="h-5 w-5 text-muted-foreground flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_no}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_email}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
-                    <Button asChild variant="outline" className="w-full border-accent text-accent hover:bg-accent/10">
+                    <Button asChild variant="outline" className="w-full">
                         <Link href="#contact">{t.landingPage.pricing.cta_choose_starter}</Link>
                     </Button>
                 </CardFooter>
@@ -300,12 +301,12 @@ export default function LandingPage() {
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_pro}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_pro}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_ai_assistant}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_priority}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
-                    <Button asChild className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Button asChild className="w-full">
                        <Link href="#contact">{t.landingPage.pricing.cta_choose_pro}</Link>
                     </Button>
                 </CardFooter>
@@ -320,22 +321,60 @@ export default function LandingPage() {
                   <ul className="space-y-3">
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_volume}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_api}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_sla}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_dedicated}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
-                    <Button asChild variant="outline" className="w-full border-accent text-accent hover:bg-accent/10">
+                    <Button asChild variant="outline" className="w-full">
                         <Link href="#contact">{t.landingPage.pricing.cta_contact_sales}</Link>
                     </Button>
                 </CardFooter>
               </Card>
             </div>
+            <div className="mt-16 text-center">
+              <h3 className="text-2xl font-bold text-foreground">{t.landingPage.pricing.add_ons_title}</h3>
+              <div className="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_1_title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_1_desc}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_2_title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_2_desc}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_3_title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_3_desc}</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_4_title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_4_desc}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="py-16 md:py-24 bg-card">
+        <section id="faq" className="py-16 md:py-24 bg-muted">
             <div className="container max-w-4xl mx-auto">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.faq.title}</h2>
@@ -371,7 +410,7 @@ export default function LandingPage() {
               {t.landingPage.finalCta.subtitle}
             </p>
             <div className="mt-8">
-              <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button asChild size="lg">
                 <Link href="#contact">{t.landingPage.finalCta.cta}</Link>
               </Button>
             </div>
@@ -379,7 +418,7 @@ export default function LandingPage() {
         </section>
 
         {/* Contact Section */}
-        <section id="contact" className="py-16 md:py-24 bg-card">
+        <section id="contact" className="py-16 md:py-24 bg-muted">
           <div className="container">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.contact.title}</h2>
@@ -446,7 +485,7 @@ export default function LandingPage() {
                             </FormItem>
                           )}
                         />
-                      <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" size="lg" disabled={loading}>
+                      <Button type="submit" className="w-full" size="lg" disabled={loading}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {t.landingPage.contact.form_cta}
                       </Button>
@@ -463,5 +502,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
