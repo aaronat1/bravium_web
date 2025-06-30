@@ -45,16 +45,16 @@ export default function Sidebar() {
       </div>
       <nav className="flex-1 px-4 py-6 space-y-2">
         {navItems.map((item) => (
-          <Link key={item.name} href={item.href} legacyBehavior passHref>
-            <a
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-primary/10",
-                (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) && "bg-primary/10 text-primary font-semibold"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.name}
-            </a>
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-primary/10",
+              (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) && "bg-primary/10 text-primary font-semibold"
+            )}
+          >
+            <item.icon className="h-5 w-5" />
+            {item.name}
           </Link>
         ))}
       </nav>
