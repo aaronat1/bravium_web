@@ -58,7 +58,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Fallo de Inicio de Sesión",
-        description: "Credenciales incorrectas. Por favor, intente de nuevo.",
+        description: error.message,
       });
     } else {
       toast({
