@@ -4,16 +4,64 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Globe, Rocket, ShieldCheck, Users, Wallet, XCircle } from 'lucide-react';
+import { CheckCircle, Globe, Rocket, ShieldCheck, Users, Wallet, XCircle, Loader2 } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@/hooks/use-i18n';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { addContactMessage } from '@/lib/firebase/auth';
+
 
 export default function LandingPage() {
   const { t } = useI18n();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const formSchema = z.object({
+    name: z.string().min(1, { message: t.landingPage.contact.form_validation_name }),
+    email: z.string().email({ message: t.landingPage.contact.form_validation_email }),
+    subject: z.string().min(1, { message: t.landingPage.contact.form_validation_subject }),
+    message: z.string().min(10, { message: t.landingPage.contact.form_validation_message }),
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+    const { success } = await addContactMessage(values);
+    setLoading(false);
+
+    if (success) {
+      toast({
+        title: t.landingPage.contact.toast_success_title,
+        description: t.landingPage.contact.toast_success_desc,
+      });
+      form.reset();
+    } else {
+      toast({
+        variant: "destructive",
+        title: t.landingPage.contact.toast_error_title,
+        description: t.landingPage.contact.toast_error_desc,
+      });
+    }
+  }
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -189,27 +237,68 @@ export default function LandingPage() {
             <div className="max-w-2xl mx-auto">
               <Card>
                 <CardContent className="pt-6">
-                  <form className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">{t.landingPage.contact.form_name}</Label>
-                        <Input id="name" placeholder={t.landingPage.contact.form_name_placeholder} />
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t.landingPage.contact.form_name}</FormLabel>
+                              <FormControl>
+                                <Input placeholder={t.landingPage.contact.form_name_placeholder} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t.landingPage.contact.form_email}</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder={t.landingPage.contact.form_email_placeholder} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">{t.landingPage.contact.form_email}</Label>
-                        <Input id="email" type="email" placeholder={t.landingPage.contact.form_email_placeholder} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="subject">{t.landingPage.contact.form_subject}</Label>
-                      <Input id="subject" placeholder={t.landingPage.contact.form_subject_placeholder} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message">{t.landingPage.contact.form_message}</Label>
-                      <Textarea id="message" placeholder={t.landingPage.contact.form_message_placeholder} rows={5} />
-                    </div>
-                    <Button type="submit" className="w-full" size="lg">{t.landingPage.contact.form_cta}</Button>
-                  </form>
+                      <FormField
+                          control={form.control}
+                          name="subject"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t.landingPage.contact.form_subject}</FormLabel>
+                              <FormControl>
+                                <Input placeholder={t.landingPage.contact.form_subject_placeholder} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      <FormField
+                          control={form.control}
+                          name="message"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t.landingPage.contact.form_message}</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder={t.landingPage.contact.form_message_placeholder} rows={5} {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {t.landingPage.contact.form_cta}
+                      </Button>
+                    </form>
+                  </Form>
                 </CardContent>
               </Card>
             </div>

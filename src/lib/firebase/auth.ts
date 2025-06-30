@@ -1,5 +1,6 @@
-import { auth } from './config';
+import { auth, db } from './config';
 import { signInWithEmailAndPassword, signOut as firebaseSignOut, type AuthError } from 'firebase/auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export const signIn = async (email: string, password: string): Promise<{ user: any; error: AuthError | null }> => {
   try {
@@ -18,3 +19,23 @@ export const signOut = async (): Promise<{ error: AuthError | null }> => {
     return { error: error as AuthError };
   }
 };
+
+interface ContactMessage {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+}
+
+export const addContactMessage = async (data: ContactMessage) => {
+    try {
+        await addDoc(collection(db, 'contacts'), {
+            ...data,
+            createdAt: serverTimestamp(),
+        });
+        return { success: true, error: null };
+    } catch (error) {
+        console.error("Error adding document: ", error);
+        return { success: false, error: error as Error };
+    }
+}
