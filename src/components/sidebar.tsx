@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -7,29 +8,31 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-
-const navItems = [
-  { name: "Panel", href: "/dashboard", icon: Home },
-  { name: "Certificados", href: "/certificates", icon: FileText },
-];
+import { useI18n } from "@/hooks/use-i18n";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useI18n();
+
+  const navItems = [
+    { name: t.sidebar.link_dashboard, href: "/dashboard", icon: Home },
+    { name: t.sidebar.link_certificates, href: "/certificates", icon: FileText },
+  ];
 
   const handleLogout = async () => {
     const { error } = await signOut();
     if (error) {
       toast({
         variant: "destructive",
-        title: "Fallo al Cerrar Sesión",
+        title: t.sidebar.toast_logout_fail_title,
         description: error.message,
       });
     } else {
       toast({
-        title: "Sesión Cerrada",
-        description: "Has cerrado sesión exitosamente.",
+        title: t.sidebar.toast_logout_success_title,
+        description: t.sidebar.toast_logout_success_desc,
       });
       router.push("/login");
     }
@@ -61,7 +64,7 @@ export default function Sidebar() {
       <div className="p-4 mt-auto border-t">
         <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
           <LogOut className="mr-2 h-5 w-5" />
-          Cerrar Sesión
+          {t.sidebar.logout}
         </Button>
       </div>
     </aside>

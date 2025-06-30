@@ -1,11 +1,17 @@
+
+"use client";
+
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
 
 export default function VerifyPage() {
+  const { t } = useI18n();
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <LandingHeader />
@@ -16,25 +22,25 @@ export default function VerifyPage() {
                     <div className="mx-auto bg-primary text-primary-foreground rounded-full p-3 w-fit mb-4">
                       <ShieldCheck className="h-8 w-8" />
                     </div>
-                    <CardTitle className="text-3xl">Página de Verificación Pública</CardTitle>
-                    <CardDescription>Valide la autenticidad de una credencial presentada por el titular.</CardDescription>
+                    <CardTitle className="text-3xl">{t.verifyPage.title}</CardTitle>
+                    <CardDescription>{t.verifyPage.subtitle}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-muted-foreground text-sm">
-                        Pegue el contenido de la "Presentación Verificable" (en formato JSON) en el siguiente campo para validar su autenticidad criptográfica. El sistema comprobará la firma del emisor contra su Identificador Descentralizado (DID) público.
+                        {t.verifyPage.description}
                     </p>
                     <form className="space-y-4 pt-4">
                         <Textarea
-                            placeholder="Pegue aquí la Presentación Verificable..."
+                            placeholder={t.verifyPage.placeholder}
                             rows={12}
                             className="font-mono text-xs"
                         />
-                        <Button type="submit" className="w-full" size="lg">Verificar Credencial</Button>
+                        <Button type="submit" className="w-full" size="lg">{t.verifyPage.cta}</Button>
                     </form>
                     {/* Placeholder for verification result */}
                     <div className="mt-6 p-4 border rounded-md bg-muted/50 hidden">
-                        <h4 className="font-semibold">Resultado de la Verificación:</h4>
-                        <p className="text-green-600">✓ Verificado</p>
+                        <h4 className="font-semibold">{t.verifyPage.result_title}</h4>
+                        <p className="text-green-600">{t.verifyPage.result_success}</p>
                     </div>
                 </CardContent>
             </Card>

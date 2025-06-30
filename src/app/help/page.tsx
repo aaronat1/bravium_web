@@ -1,34 +1,11 @@
+
+"use client";
+
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle, Wallet, Users, BookOpen } from "lucide-react";
-
-const wallets = [
-  {
-    name: "Apple Wallet",
-    platform: "iOS",
-    description: "Integración nativa, máxima seguridad con Secure Enclave. Los usuarios de iPhone confían en ella y ya la usan para otros fines.",
-    icon: "apple"
-  },
-  {
-    name: "Google Wallet",
-    platform: "Android",
-    description: "Cartera por defecto en la mayoría de smartphones Android. Gran alcance y flexibilidad, con soporte nativo para credenciales digitales.",
-    icon: "google"
-  },
-  {
-    name: "Microsoft Authenticator",
-    platform: "iOS, Android",
-    description: "Ideal para entornos corporativos y educativos. Respaldada por Microsoft, ofrece una gran credibilidad y seguridad.",
-    icon: "microsoft"
-  },
-  {
-    name: "Learner Credential Wallet",
-    platform: "iOS, Android",
-    description: "Opción ideal para el sector educativo. Es una cartera de código abierto impulsada por el MIT y la OpenWallet Foundation, diseñada para credenciales académicas.",
-    icon: "learner"
-  }
-];
+import { useI18n } from "@/hooks/use-i18n";
 
 const WalletIcon = ({ iconName }: { iconName: string }) => {
     if (iconName === 'apple') {
@@ -45,14 +22,43 @@ const WalletIcon = ({ iconName }: { iconName: string }) => {
 
 
 export default function HelpPage() {
+  const { t } = useI18n();
+  
+  const wallets = [
+    {
+      name: t.helpPage.wallet_apple_name,
+      platform: t.helpPage.wallet_apple_platform,
+      description: t.helpPage.wallet_apple_desc,
+      icon: "apple"
+    },
+    {
+      name: t.helpPage.wallet_google_name,
+      platform: t.helpPage.wallet_google_platform,
+      description: t.helpPage.wallet_google_desc,
+      icon: "google"
+    },
+    {
+      name: t.helpPage.wallet_microsoft_name,
+      platform: t.helpPage.wallet_microsoft_platform,
+      description: t.helpPage.wallet_microsoft_desc,
+      icon: "microsoft"
+    },
+    {
+      name: t.helpPage.wallet_learner_name,
+      platform: t.helpPage.wallet_learner_platform,
+      description: t.helpPage.wallet_learner_desc,
+      icon: "learner"
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <LandingHeader />
       <main className="flex-grow container py-12 md:py-20">
         <div className="text-center mb-16">
-            <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">Guía para Carteras Digitales</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-5xl">{t.helpPage.title}</h1>
             <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                BRAVIUM se integra con el ecosistema abierto de carteras digitales. Esto te da la libertad y el control para elegir la herramienta que prefieras para gestionar tus credenciales.
+                {t.helpPage.subtitle}
             </p>
         </div>
 
@@ -74,28 +80,28 @@ export default function HelpPage() {
         </div>
 
         <div className="mt-20 text-center bg-card p-8 md:p-12 rounded-lg border">
-            <h2 className="text-3xl font-bold text-primary">Tu Credencial, Tu Control</h2>
+            <h2 className="text-3xl font-bold text-primary">{t.helpPage.your_control_title}</h2>
             <div className="grid md:grid-cols-3 gap-8 mt-8 max-w-5xl mx-auto">
                 <div className="flex flex-col items-center gap-2">
                     <div className="bg-primary/10 p-4 rounded-full">
                         <Users className="h-8 w-8 text-primary" />
                     </div>
-                    <h3 className="font-semibold">1. Emisión</h3>
-                    <p className="text-sm text-muted-foreground">La institución te emite una credencial. La recibes como un código QR o un enlace.</p>
+                    <h3 className="font-semibold">{t.helpPage.step1_title}</h3>
+                    <p className="text-sm text-muted-foreground">{t.helpPage.step1_desc}</p>
                 </div>
                 <div className="flex flex-col items-center gap-2">
                     <div className="bg-primary/10 p-4 rounded-full">
                         <Wallet className="h-8 w-8 text-primary" />
                     </div>
-                    <h3 className="font-semibold">2. Almacenamiento</h3>
-                    <p className="text-sm text-muted-foreground">Escaneas el QR con tu cartera preferida. La credencial se guarda segura en tu dispositivo, no en nuestros servidores.</p>
+                    <h3 className="font-semibold">{t.helpPage.step2_title}</h3>
+                    <p className="text-sm text-muted-foreground">{t.helpPage.step2_desc}</p>
                 </div>
                 <div className="flex flex-col items-center gap-2">
                     <div className="bg-primary/10 p-4 rounded-full">
                         <CheckCircle className="h-8 w-8 text-primary" />
                     </div>
-                    <h3 className="font-semibold">3. Verificación</h3>
-                    <p className="text-sm text-muted-foreground">Compartes tu credencial desde tu cartera para que un tercero verifique su autenticidad al instante.</p>
+                    <h3 className="font-semibold">{t.helpPage.step3_title}</h3>
+                    <p className="text-sm text-muted-foreground">{t.helpPage.step3_desc}</p>
                 </div>
             </div>
         </div>

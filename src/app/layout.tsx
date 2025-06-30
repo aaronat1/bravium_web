@@ -1,7 +1,9 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { AuthProvider } from '@/contexts/auth-provider';
 import { Toaster } from "@/components/ui/toaster"
+import { I18nProvider } from '@/contexts/i18n-provider';
 
 export const metadata: Metadata = {
   title: 'BraviumCertBoard',
@@ -22,7 +24,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {children}
+          <I18nProvider>
+            {children}
+          </I18nProvider>
         </AuthProvider>
         <Toaster />
       </body>

@@ -1,25 +1,34 @@
+
 "use client";
 
 import Link from "next/link";
-import { ShieldCheck, Menu } from "lucide-react";
+import { ShieldCheck, Menu, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-
-const navItems = [
-  { name: "Visión", href: "/#vision" },
-  { name: "Planes", href: "/#planes" },
-  { name: "Verificar", href: "/verify" },
-  { name: "Ayuda", href: "/help" },
-  { name: "Contacto", href: "/#contact" },
-];
+import { useI18n } from "@/hooks/use-i18n";
 
 export default function LandingHeader() {
   const [isOpen, setIsOpen] = useState(false);
+  const { t, setLocale, locale } = useI18n();
+
+  const navItems = [
+    { name: t.landingHeader.vision, href: "/#vision" },
+    { name: t.landingHeader.plans, href: "/#planes" },
+    { name: t.landingHeader.verify, href: "/verify" },
+    { name: t.landingHeader.help, href: "/help" },
+    { name: t.landingHeader.contact, href: "/#contact" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
@@ -41,9 +50,25 @@ export default function LandingHeader() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-2">
+           <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Globe className="h-5 w-5" />
+                <span className="sr-only">Change language</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setLocale('es')} disabled={locale === 'es'}>
+                Español
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocale('en')} disabled={locale === 'en'}>
+                English
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button asChild>
-            <Link href="/login">Acceder</Link>
+            <Link href="/login">{t.landingHeader.access}</Link>
           </Button>
         </div>
 
@@ -52,7 +77,7 @@ export default function LandingHeader() {
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
                 <Menu className="h-6 w-6" />
-                <span className="sr-only">Abrir menú</span>
+                <span className="sr-only">{t.landingHeader.openMenu}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
@@ -71,9 +96,27 @@ export default function LandingHeader() {
                     {item.name}
                   </Link>
                 ))}
-                <Button asChild className="mt-4">
-                  <Link href="/login">Acceder</Link>
-                </Button>
+                <div className="flex items-center gap-4 mt-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <Globe className="h-5 w-5" />
+                        <span className="sr-only">Change language</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setLocale('es'); setIsOpen(false); }} disabled={locale === 'es'}>
+                        Español
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setLocale('en'); setIsOpen(false); }} disabled={locale === 'en'}>
+                        English
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button asChild className="flex-grow">
+                    <Link href="/login">{t.landingHeader.access}</Link>
+                  </Button>
+                </div>
               </div>
             </SheetContent>
           </Sheet>

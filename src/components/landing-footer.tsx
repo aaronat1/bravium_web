@@ -1,7 +1,21 @@
+
+"use client";
+
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
 
 export default function LandingFooter() {
+  const { t } = useI18n();
+
+  const navItems = [
+    { name: t.landingHeader.vision, href: "/#vision" },
+    { name: t.landingHeader.plans, href: "/#planes" },
+    { name: t.landingHeader.verify, href: "/verify" },
+    { name: t.landingHeader.help, href: "/help" },
+    { name: t.landingHeader.contact, href: "/#contact" },
+  ];
+
   return (
     <footer className="border-t bg-card">
       <div className="container py-8">
@@ -11,13 +25,17 @@ export default function LandingFooter() {
             <span className="text-xl font-bold text-primary">Bravium</span>
           </div>
           <div className="flex gap-4 flex-wrap justify-center">
-            <Link href="/#vision" className="text-sm text-muted-foreground hover:text-primary">Visión</Link>
-            <Link href="/#planes" className="text-sm text-muted-foreground hover:text-primary">Planes</Link>
-            <Link href="/verify" className="text-sm text-muted-foreground hover:text-primary">Verificar</Link>
-            <Link href="/help" className="text-sm text-muted-foreground hover:text-primary">Ayuda</Link>
-            <Link href="/#contact" className="text-sm text-muted-foreground hover:text-primary">Contacto</Link>
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
+                {item.name}
+              </Link>
+            ))}
           </div>
-          <p className="text-sm text-muted-foreground text-center md:text-right">© {new Date().getFullYear()} Bravium. Todos los derechos reservados.</p>
+          <p className="text-sm text-muted-foreground text-center md:text-right">{t.landingFooter.rights.replace('{year}', new Date().getFullYear().toString())}</p>
         </div>
       </div>
     </footer>

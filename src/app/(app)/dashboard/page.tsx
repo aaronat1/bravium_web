@@ -1,3 +1,6 @@
+
+"use client";
+
 import {
   Table,
   TableBody,
@@ -9,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/hooks/use-i18n";
 
 const certificates = [
   {
@@ -61,38 +65,40 @@ const certificates = [
   },
 ];
 
-const getStatusBadge = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'activo':
-      return <Badge variant="secondary">Activo</Badge>;
-    case 'expirado':
-      return <Badge variant="destructive">Expirado</Badge>;
-    case 'advertencia':
-      return <Badge variant="default">Expira Pronto</Badge>;
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
-};
-
 export default function DashboardPage() {
+  const { t } = useI18n();
+
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'activo':
+        return <Badge variant="secondary">{t.dashboard.status_active}</Badge>;
+      case 'expirado':
+        return <Badge variant="destructive">{t.dashboard.status_expired}</Badge>;
+      case 'advertencia':
+        return <Badge variant="default">{t.dashboard.status_warning}</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Panel</h1>
+      <h1 className="text-3xl font-bold">{t.dashboard.title}</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Certificados</CardTitle>
+          <CardTitle>{t.dashboard.card_title}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
-            <TableCaption>Una lista de certificados recientes.</TableCaption>
+            <TableCaption>{t.dashboard.table_caption}</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[150px]">ID de Certificado</TableHead>
-                <TableHead>Nombre del Certificado</TableHead>
-                <TableHead>Receptor</TableHead>
-                <TableHead>Fecha de Emisión</TableHead>
-                <TableHead>Fecha de Vencimiento</TableHead>
-                <TableHead className="text-right">Estado</TableHead>
+                <TableHead className="w-[150px]">{t.dashboard.col_id}</TableHead>
+                <TableHead>{t.dashboard.col_name}</TableHead>
+                <TableHead>{t.dashboard.col_recipient}</TableHead>
+                <TableHead>{t.dashboard.col_issue_date}</TableHead>
+                <TableHead>{t.dashboard.col_expiry_date}</TableHead>
+                <TableHead className="text-right">{t.dashboard.col_status}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

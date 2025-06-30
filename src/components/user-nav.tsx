@@ -1,3 +1,4 @@
+
 "use client";
 
 import { LogOut, User as UserIcon } from "lucide-react";
@@ -17,24 +18,26 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { signOut } from "@/lib/firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useI18n } from "@/hooks/use-i18n";
 
 export function UserNav() {
   const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useI18n();
 
   const handleLogout = async () => {
     const { error } = await signOut();
     if (error) {
       toast({
         variant: "destructive",
-        title: "Fallo al Cerrar Sesión",
+        title: t.sidebar.toast_logout_fail_title,
         description: error.message,
       });
     } else {
       toast({
-        title: "Sesión Cerrada",
-        description: "Has cerrado sesión exitosamente.",
+        title: t.sidebar.toast_logout_success_title,
+        description: t.sidebar.toast_logout_success_desc,
       });
       router.push("/login");
     }
@@ -60,7 +63,7 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {user.displayName || "Usuario"}
+              {user.displayName || t.userNav.user}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
@@ -73,7 +76,7 @@ export function UserNav() {
         </DropdownMenuGroup>
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Cerrar sesión</span>
+          <span>{t.userNav.logout}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

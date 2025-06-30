@@ -1,3 +1,6 @@
+
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +10,11 @@ import LandingFooter from '@/components/landing-footer';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useI18n } from '@/hooks/use-i18n';
 
 export default function LandingPage() {
+  const { t } = useI18n();
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <LandingHeader />
@@ -17,17 +23,17 @@ export default function LandingPage() {
         <section className="py-20 md:py-32 bg-card">
           <div className="container text-center">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-primary">
-              Plataforma de Credenciales Verificables como Servicio (VCaaS)
+              {t.landingPage.hero.title}
             </h1>
             <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground">
-              BRAVIUM permite a instituciones emitir, gestionar y verificar credenciales digitales seguras, interoperables y controladas por el usuario.
+              {t.landingPage.hero.subtitle}
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button asChild size="lg">
-                <Link href="/login">Empezar ahora</Link>
+                <Link href="/login">{t.landingPage.hero.cta_start}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="#planes">Ver Planes</Link>
+                <Link href="#planes">{t.landingPage.hero.cta_plans}</Link>
               </Button>
             </div>
           </div>
@@ -37,24 +43,24 @@ export default function LandingPage() {
         <section id="vision" className="py-16 md:py-24">
           <div className="container">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-primary">Visión Estratégica</h2>
-              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">De la complejidad de Blockchain a la simplicidad de la confianza digital estandarizada.</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-primary">{t.landingPage.vision.title}</h2>
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{t.landingPage.vision.subtitle}</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="flex flex-col items-center text-center p-6">
                 <Globe className="h-12 w-12 text-primary mb-4"/>
-                <h3 className="text-xl font-semibold">Alineación con Estándares Globales</h3>
-                <p className="mt-2 text-muted-foreground">Nos alineamos con los estándares W3C (DIDs y VCs), garantizando interoperabilidad futura con un ecosistema global.</p>
+                <h3 className="text-xl font-semibold">{t.landingPage.vision.item1_title}</h3>
+                <p className="mt-2 text-muted-foreground">{t.landingPage.vision.item1_text}</p>
               </div>
               <div className="flex flex-col items-center text-center p-6">
                 <Rocket className="h-12 w-12 text-primary mb-4"/>
-                <h3 className="text-xl font-semibold">Reducción Radical de la Complejidad</h3>
-                <p className="mt-2 text-muted-foreground">Eliminamos la necesidad de construir consensos o minería, reduciendo drásticamente costes y tiempo de desarrollo.</p>
+                <h3 className="text-xl font-semibold">{t.landingPage.vision.item2_title}</h3>
+                <p className="mt-2 text-muted-foreground">{t.landingPage.vision.item2_text}</p>
               </div>
               <div className="flex flex-col items-center text-center p-6">
                 <ShieldCheck className="h-12 w-12 text-primary mb-4"/>
-                <h3 className="text-xl font-semibold">Propuesta de Valor Clara</h3>
-                <p className="mt-2 text-muted-foreground">No vendemos "blockchain", vendemos confianza y verificación instantánea para combatir la falsificación de documentos.</p>
+                <h3 className="text-xl font-semibold">{t.landingPage.vision.item3_title}</h3>
+                <p className="mt-2 text-muted-foreground">{t.landingPage.vision.item3_text}</p>
               </div>
             </div>
           </div>
@@ -64,8 +70,8 @@ export default function LandingPage() {
         <section id="how-it-works" className="py-16 md:py-24 bg-card">
             <div className="container">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold text-primary">¿Cómo Funciona?</h2>
-                    <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Un flujo simple y estandarizado para la emisión y verificación de credenciales.</p>
+                    <h2 className="text-3xl md:text-4xl font-bold text-primary">{t.landingPage.howItWorks.title}</h2>
+                    <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{t.landingPage.howItWorks.subtitle}</p>
                 </div>
                 <div className="relative">
                     <div className="grid md:grid-cols-3 gap-8 relative">
@@ -73,22 +79,22 @@ export default function LandingPage() {
                             <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center border-4 border-card mb-4 z-10">
                                 <Users className="h-8 w-8" />
                             </div>
-                            <h3 className="text-xl font-semibold">1. Emisor</h3>
-                            <p className="mt-2 text-muted-foreground">Tu cliente (universidad, ONG) crea y firma criptográficamente las credenciales desde el dashboard de BRAVIUM.</p>
+                            <h3 className="text-xl font-semibold">{t.landingPage.howItWorks.step1_title}</h3>
+                            <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step1_text}</p>
                         </div>
                         <div className="flex flex-col items-center text-center">
                             <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center border-4 border-card mb-4 z-10">
                                 <Wallet className="h-8 w-8" />
                             </div>
-                            <h3 className="text-xl font-semibold">2. Titular</h3>
-                            <p className="mt-2 text-muted-foreground">El usuario final (estudiante, donante) recibe la credencial y la almacena en una cartera digital de su elección, con control total.</p>
+                            <h3 className="text-xl font-semibold">{t.landingPage.howItWorks.step2_title}</h3>
+                            <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step2_text}</p>
                         </div>
                         <div className="flex flex-col items-center text-center">
                             <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center border-4 border-card mb-4 z-10">
                                 <CheckCircle className="h-8 w-8" />
                             </div>
-                            <h3 className="text-xl font-semibold">3. Verificador</h3>
-                            <p className="mt-2 text-muted-foreground">Un tercero (empleador, auditor) valida la autenticidad de la credencial de forma instantánea usando nuestra página pública.</p>
+                            <h3 className="text-xl font-semibold">{t.landingPage.howItWorks.step3_title}</h3>
+                            <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step3_text}</p>
                         </div>
                     </div>
                 </div>
@@ -99,73 +105,73 @@ export default function LandingPage() {
         <section id="planes" className="py-16 md:py-24">
           <div className="container">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-primary">Planes de Suscripción Flexibles</h2>
-              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Diseñados para ser accesibles y escalar con tus necesidades. Más valor que las APIs, más asequible que las soluciones empresariales.</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-primary">{t.landingPage.pricing.title}</h2>
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{t.landingPage.pricing.subtitle}</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8 items-stretch">
               <Card className="flex flex-col">
                 <CardHeader>
-                  <CardTitle>Starter</CardTitle>
-                  <CardDescription>PYMEs pequeñas, ONGs locales, departamentos universitarios.</CardDescription>
-                  <p className="text-4xl font-bold pt-4">149€<span className="text-lg font-normal text-muted-foreground">/mes</span></p>
+                  <CardTitle>{t.landingPage.pricing.plan_starter_title}</CardTitle>
+                  <CardDescription>{t.landingPage.pricing.plan_starter_target}</CardDescription>
+                  <p className="text-4xl font-bold pt-4">149€<span className="text-lg font-normal text-muted-foreground">{t.landingPage.pricing.price_month}</span></p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>100</strong> emisiones/mes</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>1.000</strong> verificaciones/mes</span></li>
-                    <li className="flex items-center gap-2"><XCircle className="h-5 w-5 text-red-500" /><span>Sin soporte para ficheros adjuntos</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_emissions.replace('{count}', '100')}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_verifications.replace('{count}', '1.000')}</span></li>
+                    <li className="flex items-center gap-2"><XCircle className="h-5 w-5 text-red-500" /><span>{t.landingPage.pricing.feature_attachments_no}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full">Elegir Plan</Button>
+                    <Button className="w-full">{t.landingPage.pricing.cta_choose}</Button>
                 </CardFooter>
               </Card>
               <Card className="border-primary border-2 flex flex-col relative">
-                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">Más Popular</div>
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">{t.landingPage.pricing.popular}</div>
                 <CardHeader>
-                  <CardTitle>Pro</CardTitle>
-                  <CardDescription>PYMEs en crecimiento, ONGs medianas, facultades.</CardDescription>
-                  <p className="text-4xl font-bold pt-4">249€<span className="text-lg font-normal text-muted-foreground">/mes</span></p>
+                  <CardTitle>{t.landingPage.pricing.plan_pro_title}</CardTitle>
+                  <CardDescription>{t.landingPage.pricing.plan_pro_target}</CardDescription>
+                  <p className="text-4xl font-bold pt-4">249€<span className="text-lg font-normal text-muted-foreground">{t.landingPage.pricing.price_month}</span></p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>500</strong> emisiones/mes</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>5.000</strong> verificaciones/mes</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Soporte para ficheros adjuntos</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>1 GB de almacenamiento incluido</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_emissions.replace('{count}', '500')}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_verifications.replace('{count}', '5.000')}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_storage.replace('{gb}', '1')}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
-                    <Button className="w-full">Elegir Plan</Button>
+                    <Button className="w-full">{t.landingPage.pricing.cta_choose}</Button>
                 </CardFooter>
               </Card>
               <Card className="flex flex-col">
                 <CardHeader>
-                  <CardTitle>Enterprise</CardTitle>
-                  <CardDescription>Grandes empresas, universidades, consorcios de ONGs.</CardDescription>
-                  <p className="text-4xl font-bold pt-4">Desde 499€<span className="text-lg font-normal text-muted-foreground">/mes</span></p>
+                  <CardTitle>{t.landingPage.pricing.plan_enterprise_title}</CardTitle>
+                  <CardDescription>{t.landingPage.pricing.plan_enterprise_target}</CardDescription>
+                  <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.price_from} 499€<span className="text-lg font-normal text-muted-foreground">{t.landingPage.pricing.price_month}</span></p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Volúmenes personalizados</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>SLAs y soporte dedicado</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Gestión de esquemas complejos</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Soporte para ficheros adjuntos</span></li>
-                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Almacenamiento personalizado</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_volume}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_sla}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_schemas}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_storage_custom}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
-                    <Button variant="outline" className="w-full">Contactar</Button>
+                    <Button variant="outline" className="w-full">{t.landingPage.pricing.cta_contact}</Button>
                 </CardFooter>
               </Card>
             </div>
              <div className="mt-12 text-left text-muted-foreground bg-card p-6 md:p-8 rounded-lg border">
-                <h3 className="text-xl font-semibold text-primary mb-4 text-center">Costes Adicionales</h3>
+                <h3 className="text-xl font-semibold text-primary mb-4 text-center">{t.landingPage.pricing.additional_costs_title}</h3>
                 <ul className="space-y-4 max-w-3xl mx-auto">
-                    <li><strong className="text-foreground">Tarifa de Configuración Inicial (299 € pago único):</strong> Cubre el onboarding, la personalización de marca y la configuración inicial del emisor.</li>
-                    <li><strong className="text-foreground">Cargos por Uso Excedente:</strong> 0.30 € por credencial extra.</li>
-                    <li><strong className="text-foreground">Almacenamiento Adicional (Planes Pro/Enterprise):</strong> 0.20 € por GB/mes que exceda el límite incluido.</li>
-                    <li><strong className="text-foreground">Servicios Profesionales (Desde 250 €):</strong> Diseño de esquemas de credenciales complejos, integraciones a medida (CRM, ERP), y consultoría de confianza digital.</li>
+                    <li><strong className="text-foreground">{t.landingPage.pricing.cost1}</strong></li>
+                    <li><strong className="text-foreground">{t.landingPage.pricing.cost2}</strong></li>
+                    <li><strong className="text-foreground">{t.landingPage.pricing.cost3}</strong></li>
+                    <li><strong className="text-foreground">{t.landingPage.pricing.cost4}</strong></li>
                 </ul>
             </div>
           </div>
@@ -175,9 +181,9 @@ export default function LandingPage() {
         <section id="contact" className="py-16 md:py-24 bg-card">
           <div className="container">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-primary">Contacto</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-primary">{t.landingPage.contact.title}</h2>
               <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                ¿Tienes alguna pregunta o quieres solicitar una demo? Rellena el formulario y nos pondremos en contacto contigo.
+                {t.landingPage.contact.subtitle}
               </p>
             </div>
             <div className="max-w-2xl mx-auto">
@@ -186,23 +192,23 @@ export default function LandingPage() {
                   <form className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nombre</Label>
-                        <Input id="name" placeholder="Tu nombre" />
+                        <Label htmlFor="name">{t.landingPage.contact.form_name}</Label>
+                        <Input id="name" placeholder={t.landingPage.contact.form_name_placeholder} />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Correo Electrónico</Label>
-                        <Input id="email" type="email" placeholder="tu@ejemplo.com" />
+                        <Label htmlFor="email">{t.landingPage.contact.form_email}</Label>
+                        <Input id="email" type="email" placeholder={t.landingPage.contact.form_email_placeholder} />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="subject">Asunto</Label>
-                      <Input id="subject" placeholder="Ej: Solicitud de Demo" />
+                      <Label htmlFor="subject">{t.landingPage.contact.form_subject}</Label>
+                      <Input id="subject" placeholder={t.landingPage.contact.form_subject_placeholder} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="message">Mensaje</Label>
-                      <Textarea id="message" placeholder="Escribe tu mensaje aquí..." rows={5} />
+                      <Label htmlFor="message">{t.landingPage.contact.form_message}</Label>
+                      <Textarea id="message" placeholder={t.landingPage.contact.form_message_placeholder} rows={5} />
                     </div>
-                    <Button type="submit" className="w-full" size="lg">Enviar Mensaje</Button>
+                    <Button type="submit" className="w-full" size="lg">{t.landingPage.contact.form_cta}</Button>
                   </form>
                 </CardContent>
               </Card>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,18 +23,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { signIn } from "@/lib/firebase/auth";
 import { useAuth } from "@/hooks/use-auth";
-
-const formSchema = z.object({
-  email: z.string().email({ message: "Dirección de correo electrónico inválida." }),
-  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
-});
+import { useI18n } from "@/hooks/use-i18n";
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const formSchema = z.object({
+    email: z.string().email({ message: t.loginPage.email_error }),
+    password: z.string().min(6, { message: t.loginPage.password_error }),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,13 +60,13 @@ export default function LoginPage() {
     if (error) {
       toast({
         variant: "destructive",
-        title: "Fallo de Inicio de Sesión",
+        title: t.loginPage.toast_fail_title,
         description: error.message,
       });
     } else {
       toast({
-        title: "Inicio de Sesión Exitoso",
-        description: "¡Bienvenido de nuevo!",
+        title: t.loginPage.toast_success_title,
+        description: t.loginPage.toast_success_desc,
       });
       router.push("/dashboard");
     }
@@ -85,7 +88,7 @@ export default function LoginPage() {
             <ShieldCheck className="h-8 w-8" />
           </div>
           <CardTitle className="text-3xl font-bold">Bravium</CardTitle>
-          <CardDescription>Bienvenido al Panel de Certificados</CardDescription>
+          <CardDescription>{t.loginPage.title}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -95,7 +98,7 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Correo Electrónico</FormLabel>
+                    <FormLabel>{t.loginPage.email_label}</FormLabel>
                     <FormControl>
                       <Input placeholder="nombre@ejemplo.com" {...field} />
                     </FormControl>
@@ -109,9 +112,9 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel>Contraseña</FormLabel>
+                      <FormLabel>{t.loginPage.password_label}</FormLabel>
                       <Link href="#" className="text-sm font-medium text-primary hover:underline">
-                        ¿Has olvidado la contraseña?
+                        {t.loginPage.forgot_password}
                       </Link>
                     </div>
                     <FormControl>
@@ -126,7 +129,7 @@ export default function LoginPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute inset-y-0 right-0 flex items-center justify-center h-full px-3 text-muted-foreground hover:text-foreground"
-                          aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                          aria-label={showPassword ? t.loginPage.hide_password : t.loginPage.show_password}
                         >
                           {showPassword ? (
                             <EyeOff className="h-5 w-5" />
@@ -142,7 +145,7 @@ export default function LoginPage() {
               />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Iniciar Sesión
+                {t.loginPage.cta}
               </Button>
             </form>
           </Form>
