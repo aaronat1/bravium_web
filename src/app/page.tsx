@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Globe, Rocket, ShieldCheck, Database, Server, GitPullRequest, FileCode2, Users, Wallet, BarChart, Target, Flag, BookOpen, Scaling, FileText } from 'lucide-react';
+import { CheckCircle, Globe, Rocket, ShieldCheck, Users, Wallet, XCircle } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
 
@@ -111,6 +111,7 @@ export default function LandingPage() {
                   <ul className="space-y-3">
                     <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>100</strong> emisiones/mes</span></li>
                     <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>1.000</strong> verificaciones/mes</span></li>
+                    <li className="flex items-center gap-2"><XCircle className="h-5 w-5 text-red-500" /><span>Sin soporte para ficheros adjuntos</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -128,6 +129,8 @@ export default function LandingPage() {
                   <ul className="space-y-3">
                     <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>500</strong> emisiones/mes</span></li>
                     <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Hasta <strong>5.000</strong> verificaciones/mes</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Soporte para ficheros adjuntos</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>1 GB de almacenamiento incluido</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
@@ -145,6 +148,8 @@ export default function LandingPage() {
                     <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Volúmenes personalizados</span></li>
                     <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>SLAs y soporte dedicado</span></li>
                     <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Gestión de esquemas complejos</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Soporte para ficheros adjuntos</span></li>
+                    <li className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-green-500" /><span>Almacenamiento personalizado</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
@@ -152,9 +157,14 @@ export default function LandingPage() {
                 </CardFooter>
               </Card>
             </div>
-             <div className="mt-12 text-center text-muted-foreground">
-                <h3 className="font-semibold text-lg text-primary">Ingresos Adicionales</h3>
-                <p className="mt-2">Configuración inicial, cargos por uso excedente y servicios profesionales para integraciones a medida.</p>
+             <div className="mt-12 text-left text-muted-foreground bg-card p-6 md:p-8 rounded-lg border">
+                <h3 className="text-xl font-semibold text-primary mb-4 text-center">Costes Adicionales</h3>
+                <ul className="space-y-4 max-w-3xl mx-auto">
+                    <li><strong className="text-foreground">Tarifa de Configuración Inicial (299 € pago único):</strong> Cubre el onboarding, la personalización de marca y la configuración inicial del emisor.</li>
+                    <li><strong className="text-foreground">Cargos por Uso Excedente:</strong> 0.30 € por credencial extra.</li>
+                    <li><strong className="text-foreground">Almacenamiento Adicional (Planes Pro/Enterprise):</strong> 0.20 € por GB/mes que exceda el límite incluido.</li>
+                    <li><strong className="text-foreground">Servicios Profesionales (Desde 250 €):</strong> Diseño de esquemas de credenciales complejos, integraciones a medida (CRM, ERP), y consultoría de confianza digital.</li>
+                </ul>
             </div>
           </div>
         </section>
