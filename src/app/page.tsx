@@ -108,7 +108,7 @@ export default function LandingPage() {
         </section>
 
         {/* Problem Section */}
-        <section id="problem" className="py-16 md:py-24">
+        <section id="problem" className="py-16 md:py-24 bg-background">
             <div className="container">
                 <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.problem.title}</h2>
@@ -162,7 +162,7 @@ export default function LandingPage() {
         </section>
 
         {/* How it works */}
-        <section id="how-it-works" className="py-16 md:py-24">
+        <section id="how-it-works" className="py-16 md:py-24 bg-background">
             <div className="container">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.howItWorks.title}</h2>
@@ -254,7 +254,7 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-16 md:py-24">
+        <section id="pricing" className="py-16 md:py-24 bg-background">
           <div className="container">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.pricing.title}</h2>
@@ -278,14 +278,12 @@ export default function LandingPage() {
                   <ul className="space-y-3">
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_starter}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_starter}</span></li>
-                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_templates}</span></li>
-                     <li className="flex items-center gap-2"><X className="h-5 w-5 text-muted-foreground flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_no}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_email}</span></li>
+                    <li className="flex items-center gap-2"><X className="h-5 w-5 text-muted-foreground flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_no}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
                     <Button asChild variant="outline" className="w-full">
-                        <Link href="#contact">{t.landingPage.pricing.cta_choose_starter}</Link>
+                        <Link href="#contact">{t.landingPage.pricing.cta_choose_plan}</Link>
                     </Button>
                 </CardFooter>
               </Card>
@@ -300,14 +298,13 @@ export default function LandingPage() {
                   <ul className="space-y-3">
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_pro}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_pro}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_ai_assistant}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_priority}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_pro}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
                     <Button asChild className="w-full">
-                       <Link href="#contact">{t.landingPage.pricing.cta_choose_pro}</Link>
+                       <Link href="#contact">{t.landingPage.pricing.cta_choose_plan}</Link>
                     </Button>
                 </CardFooter>
               </Card>
@@ -315,15 +312,15 @@ export default function LandingPage() {
                 <CardHeader>
                   <CardTitle>{t.landingPage.pricing.plan_enterprise_title}</CardTitle>
                   <CardDescription>{t.landingPage.pricing.plan_enterprise_target}</CardDescription>
-                  <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.price_custom}</p>
+                  <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.price_enterprise}</p>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                  <ul className="space-y-3">
+                   <ul className="space-y-3">
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_volume}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_api}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_sla}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_dedicated}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_schemas}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_enterprise}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
@@ -401,7 +398,7 @@ export default function LandingPage() {
         </section>
 
         {/* Final CTA Section */}
-        <section className="py-20 md:py-32">
+        <section className="py-20 md:py-32 bg-background">
           <div className="container text-center">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
               {t.landingPage.finalCta.title}
