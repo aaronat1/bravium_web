@@ -65,7 +65,6 @@ export default function LandingPage() {
                     <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">Un flujo simple y estandarizado para la emisión y verificación de credenciales.</p>
                 </div>
                 <div className="relative">
-                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2 hidden md:block"></div>
                     <div className="grid md:grid-cols-3 gap-8 relative">
                         <div className="flex flex-col items-center text-center">
                             <div className="bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center border-4 border-card mb-4 z-10">
