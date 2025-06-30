@@ -25,7 +25,7 @@ import { Switch } from '@/components/ui/switch';
 
 
 export default function LandingPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isAnnual, setIsAnnual] = useState(false);
@@ -216,7 +216,7 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
                     </ul>
                   </div>
-                  <Image src="https://placehold.co/600x400.png" alt={t.landingPage.useCases.tab1_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="university graduate" />
+                  <Image src="https://placehold.co/600x400.png" alt={t('landingPage.useCases.tab1_alt')} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="university diploma" />
                 </div>
               </TabsContent>
               <TabsContent value="ngos" className="mt-8">
@@ -231,7 +231,7 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit4}</span></li>
                     </ul>
                   </div>
-                   <Image src="https://placehold.co/600x400.png" alt={t.landingPage.useCases.tab2_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="community volunteers" />
+                   <Image src="https://placehold.co/600x400.png" alt={t('landingPage.useCases.tab2_alt')} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="community volunteers" />
                 </div>
               </TabsContent>
               <TabsContent value="companies" className="mt-8">
@@ -246,7 +246,7 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit4}</span></li>
                     </ul>
                   </div>
-                   <Image src="https://placehold.co/600x400.png" alt={t.landingPage.useCases.tab3_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="corporate meeting" />
+                   <Image src="https://placehold.co/600x400.png" alt={t('landingPage.useCases.tab3_alt')} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="corporate meeting" />
                 </div>
               </TabsContent>
             </Tabs>
@@ -272,7 +272,7 @@ export default function LandingPage() {
                 <CardHeader>
                   <CardTitle>{t.landingPage.pricing.plan_starter_title}</CardTitle>
                   <CardDescription>{t.landingPage.pricing.plan_starter_target}</CardDescription>
-                  <p className="text-4xl font-bold pt-4">{isAnnual ? '119€' : '149€'}<span className="text-lg font-normal text-muted-foreground">/mes</span></p>
+                  <p className="text-4xl font-bold pt-4">{isAnnual ? '119€' : '149€'}<span className="text-lg font-normal text-muted-foreground">/{locale === 'es' ? 'mes' : 'month'}</span></p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
@@ -292,7 +292,7 @@ export default function LandingPage() {
                 <CardHeader>
                   <CardTitle>{t.landingPage.pricing.plan_pro_title}</CardTitle>
                   <CardDescription>{t.landingPage.pricing.plan_pro_target}</CardDescription>
-                  <p className="text-4xl font-bold pt-4">{isAnnual ? '199€' : '249€'}<span className="text-lg font-normal text-muted-foreground">/mes</span></p>
+                  <p className="text-4xl font-bold pt-4">{isAnnual ? '199€' : '249€'}<span className="text-lg font-normal text-muted-foreground">/{locale === 'es' ? 'mes' : 'month'}</span></p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
@@ -332,7 +332,7 @@ export default function LandingPage() {
             </div>
             <div className="mt-16 text-center">
               <h3 className="text-2xl font-bold text-foreground">{t.landingPage.pricing.add_ons_title}</h3>
-              <div className="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
+              <div className="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 lg:grid-cols-2 gap-8 text-left">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">{t.landingPage.pricing.add_on_1_title}</CardTitle>
