@@ -216,7 +216,9 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
                     </ul>
                   </div>
-                  <Image src="https://images.unsplash.com/photo-1653945475312-03bb03fd1303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxNnx8QSVDMyVCMWFkZSUyMHVuYSUyMGltYWdlbiUyMHJlbGFjaW9uYWRhJTIwY29uJTIwZXN0dWRpYW50ZXMlMkMlMjBleCVDMyVBMW1lbmVzJTIweSUyMHVuaXZlcnNpZGFkfGVufDB8fHx8MTc1MTMxNjE5Nnww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab1_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="university students" />
+                  <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
+                    <Image src="https://images.unsplash.com/photo-1653945475312-03bb03fd1303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxNnx8QSVDMyVCMWFkZSUyMHVuYSUyMGltYWdlbiUyMHJlbGFjaW9uYWRhJTIwY29uJTIwZXN0dWRpYW50ZXMlMkMlMjBleCVDMyVBMW1lbmVzJTIweSUyMHVuaXZlcnNpZGFkfGVufDB8fHx8MTc1MTMxNjE5Nnww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab1_alt} width={600} height={400} className="w-full h-full object-cover" data-ai-hint="university students" />
+                  </div>
                 </div>
               </TabsContent>
               <TabsContent value="ngos" className="mt-8">
@@ -231,7 +233,9 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit4}</span></li>
                     </ul>
                   </div>
-                   <Image src="https://images.unsplash.com/photo-1589190887320-d1b6af2bdac3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxBeXVkYSUyMGh1bWFuaXRhcmlhfGVufDB8fHx8MTc1MTMxNjM0NXww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab2_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="community volunteers" />
+                   <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
+                    <Image src="https://images.unsplash.com/photo-1589190887320-d1b6af2bdac3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxBeXVkYSUyMGh1bWFuaXRhcmlhfGVufDB8fHx8MTc1MTMxNjM0NXww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab2_alt} width={600} height={400} className="w-full h-full object-cover" data-ai-hint="community volunteers" />
+                   </div>
                 </div>
               </TabsContent>
               <TabsContent value="companies" className="mt-8">
@@ -246,7 +250,9 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit4}</span></li>
                     </ul>
                   </div>
-                   <Image src="https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxQeW1lfGVufDB8fHx8MTc1MTMxNjUwMHww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab3_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="corporate meeting" />
+                   <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
+                    <Image src="https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxQeW1lfGVufDB8fHx8MTc1MTMxNjUwMHww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab3_alt} width={600} height={400} className="w-full h-full object-cover" data-ai-hint="corporate meeting" />
+                   </div>
                 </div>
               </TabsContent>
             </Tabs>
