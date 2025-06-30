@@ -46,11 +46,8 @@ export const en = {
     },
     howItWorks: {
       title: "Start Issuing in Three Simple Steps",
-      step1_title: "1. Create Your Template",
       step1_text: "Use our AI assistant to describe the credential you need or design your template in our editor. Define fields, rules, and attach files if necessary.",
-      step2_title: "2. Issue with a Click",
       step2_text: "Fill in the data individually or upload a CSV file to issue thousands of credentials at once. Our API handles the rest.",
-      step3_title: "3. User Receives and Shares",
       step3_text: "Your user receives the credential directly in their preferred digital wallet. It's ready to be shared and verified securely.",
       cta: "See a Use Case in Action"
     },
@@ -228,3 +225,5 @@ export const en = {
     logout: "Log out",
   },
 };
+
+    

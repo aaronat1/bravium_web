@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet, X } from 'lucide-react';
+import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet, X, FilePlus2, Send } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
 import { Input } from '@/components/ui/input';
@@ -168,19 +168,16 @@ export default function LandingPage() {
                     <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.howItWorks.title}</h2>
                 </div>
                 <div className="grid md:grid-cols-3 gap-8">
-                    <div className="text-center">
-                        <div className="text-5xl font-bold text-accent">1</div>
-                        <h3 className="mt-4 text-xl font-semibold">{t.landingPage.howItWorks.step1_title}</h3>
+                    <div className="flex flex-col items-center text-center">
+                        <FilePlus2 className="h-12 w-12 text-accent mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step1_text}</p>
                     </div>
-                     <div className="text-center">
-                        <div className="text-5xl font-bold text-accent">2</div>
-                        <h3 className="mt-4 text-xl font-semibold">{t.landingPage.howItWorks.step2_title}</h3>
+                     <div className="flex flex-col items-center text-center">
+                        <Send className="h-12 w-12 text-accent mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step2_text}</p>
                     </div>
-                     <div className="text-center">
-                        <div className="text-5xl font-bold text-accent">3</div>
-                        <h3 className="mt-4 text-xl font-semibold">{t.landingPage.howItWorks.step3_title}</h3>
+                     <div className="flex flex-col items-center text-center">
+                        <Wallet className="h-12 w-12 text-accent mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step3_text}</p>
                     </div>
                 </div>
@@ -505,5 +502,7 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
 
     

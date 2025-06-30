@@ -46,11 +46,8 @@ export const es = {
     },
     howItWorks: {
       title: "Empieza a Emitir en Tres Sencillos Pasos",
-      step1_title: "1. Crea tu Plantilla",
       step1_text: "Usa nuestro asistente con IA para describir la credencial que necesitas o diseña tu plantilla en nuestro editor. Define campos, reglas y adjunta archivos si es necesario.",
-      step2_title: "2. Emite con un Clic",
       step2_text: "Rellena los datos de forma individual o sube un archivo CSV para emitir miles de credenciales a la vez. Nuestra API se encarga del resto.",
-      step3_title: "3. El Usuario Recibe y Comparte",
       step3_text: "Tu usuario recibe la credencial directamente en su cartera digital preferida. Ya está lista para ser compartida y verificada de forma segura.",
       cta: "Ver un Caso de Uso en Acción",
     },
@@ -228,3 +225,5 @@ export const es = {
     logout: "Cerrar sesión",
   },
 };
+
+    
