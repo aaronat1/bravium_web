@@ -35,7 +35,9 @@ export default function VerifyPage() {
                             rows={12}
                             className="font-mono text-xs"
                         />
-                        <Button type="submit" className="w-full" size="lg">{t.verifyPage.cta}</Button>
+                        <div className="flex justify-center">
+                          <Button type="submit" size="lg">{t.verifyPage.cta}</Button>
+                        </div>
                     </form>
                     {/* Placeholder for verification result */}
                     <div className="mt-6 p-4 border rounded-md bg-muted/50 hidden">
