@@ -17,7 +17,7 @@ export default function LandingPage() {
               Plataforma de Credenciales Verificables como Servicio (VCaaS)
             </h1>
             <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground">
-              Construida sobre Google Firebase, BRAVIUM permite a instituciones emitir, gestionar y verificar credenciales digitales seguras, interoperables y controladas por el usuario.
+              BRAVIUM permite a instituciones emitir, gestionar y verificar credenciales digitales seguras, interoperables y controladas por el usuario.
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button asChild size="lg">
