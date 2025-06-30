@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Check, CheckCircle, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
