@@ -216,7 +216,7 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
                     </ul>
                   </div>
-                  <Image src="https://placehold.co/600x400.png" alt={t.landingPage.useCases.tab1_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="university diploma" />
+                  <Image src="https://images.unsplash.com/photo-1653945475312-03bb03fd1303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxNnx8QSVDMyVCMWFkZSUyMHVuYSUyMGltYWdlbiUyMHJlbGFjaW9uYWRhJTIwY29uJTIwZXN0dWRpYW50ZXMlMkMlMjBleCVDMyVBMW1lbmVzJTIweSUyMHVuaXZlcnNpZGFkfGVufDB8fHx8MTc1MTMxNjE5Nnww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab1_alt} width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="university diploma" />
                 </div>
               </TabsContent>
               <TabsContent value="ngos" className="mt-8">
