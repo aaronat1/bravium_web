@@ -21,9 +21,6 @@ export const es = {
       cta_prices: "Ver Precios",
       trust_text: "No se requiere tarjeta de crédito. Empieza a construir confianza hoy.",
     },
-    socialProof: {
-      title: "CON LA CONFIANZA DE INSTITUCIONES LÍDERES EN INNOVACIÓN",
-    },
     problem: {
       title: "Los Certificados Tradicionales son un Freno para el Mundo Digital",
       subtitle: "Los PDFs y los documentos en papel son fáciles de falsificar, difíciles de verificar y costosos de gestionar. Este sistema obsoleto genera desconfianza, procesos manuales y una mala experiencia para todos.",
@@ -225,5 +222,3 @@ export const es = {
     logout: "Cerrar sesión",
   },
 };
-
-    

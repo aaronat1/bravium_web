@@ -21,9 +21,6 @@ export const en = {
       cta_prices: "View Pricing",
       trust_text: "No credit card required. Start building trust today.",
     },
-    socialProof: {
-      title: "TRUSTED BY LEADING INSTITUTIONS IN INNOVATION",
-    },
     problem: {
       title: "Traditional Certificates Are a Drag on the Digital World",
       subtitle: "PDFs and paper documents are easy to forge, difficult to verify, and expensive to manage. This outdated system breeds distrust, manual processes, and a poor experience for everyone.",
@@ -225,5 +222,3 @@ export const en = {
     logout: "Log out",
   },
 };
-
-    

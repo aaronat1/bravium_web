@@ -94,19 +94,6 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* Social Proof Section */}
-        <section className="py-8 bg-muted">
-            <div className="container text-center">
-                <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">{t.landingPage.socialProof.title}</p>
-                <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center opacity-60">
-                    <p className="font-bold text-lg">W3C Member</p>
-                    <p className="font-bold text-lg">OpenWallet</p>
-                    <p className="font-bold text-lg">Alastria</p>
-                    <p className="font-bold text-lg">Hyperledger</p>
-                </div>
-            </div>
-        </section>
-
         {/* Problem Section */}
         <section id="problem" className="py-16 md:py-24 bg-background">
             <div className="container">
@@ -508,4 +495,5 @@ export default function LandingPage() {
     
 
     
+
 
