@@ -9,7 +9,7 @@ import { signOut } from "@/lib/firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
-  { name: "Panel", href: "/", icon: Home },
+  { name: "Panel", href: "/dashboard", icon: Home },
   { name: "Certificados", href: "/certificates", icon: FileText },
 ];
 
@@ -38,7 +38,7 @@ export default function Sidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-card border-r fixed h-full">
       <div className="flex items-center justify-center h-20 border-b">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-primary">
+        <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary">
           <ShieldCheck className="h-7 w-7" />
           <span>Bravium</span>
         </Link>

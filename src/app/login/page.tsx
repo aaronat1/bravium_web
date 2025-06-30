@@ -45,7 +45,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push("/");
+      router.push("/dashboard");
     }
   }, [user, authLoading, router]);
 
@@ -65,7 +65,7 @@ export default function LoginPage() {
         title: "Inicio de Sesión Exitoso",
         description: "¡Bienvenido de nuevo!",
       });
-      router.push("/");
+      router.push("/dashboard");
     }
   }
 
