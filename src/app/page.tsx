@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Check, CheckCircle, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet } from 'lucide-react';
+import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
 import { Input } from '@/components/ui/input';
@@ -210,10 +210,10 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab1_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab1_content_text}</p>
                     <ul className="space-y-3">
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab1_benefit1}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab1_benefit2}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab1_benefit3}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit1}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit2}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit3}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
                     </ul>
                   </div>
                   <Image src="https://placehold.co/600x400.png" alt="University use case" width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="student graduation" />
@@ -225,10 +225,10 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab2_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab2_content_text}</p>
                     <ul className="space-y-3">
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab2_benefit1}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab2_benefit2}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab2_benefit3}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab2_benefit4}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit1}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit2}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit3}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit4}</span></li>
                     </ul>
                   </div>
                    <Image src="https://placehold.co/600x400.png" alt="NGO use case" width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="charity donation" />
@@ -240,10 +240,10 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab3_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab3_content_text}</p>
                     <ul className="space-y-3">
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab3_benefit1}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab3_benefit2}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab3_benefit3}</span></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-accent mt-1" /><span>{t.landingPage.useCases.tab3_benefit4}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit1}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit2}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit3}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit4}</span></li>
                     </ul>
                   </div>
                    <Image src="https://placehold.co/600x400.png" alt="Company use case" width={600} height={400} className="rounded-lg shadow-lg" data-ai-hint="business team" />
@@ -276,10 +276,10 @@ export default function LandingPage() {
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_emissions_starter}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_verifications_starter}</span></li>
-                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_templates}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_support_email}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_starter}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_starter}</span></li>
+                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_templates}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_email}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -297,11 +297,11 @@ export default function LandingPage() {
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_emissions_pro}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_verifications_pro}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_ai_assistant}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_attachments}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_support_priority}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_pro}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_pro}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_ai_assistant}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_priority}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
@@ -318,10 +318,10 @@ export default function LandingPage() {
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_volume}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_api}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_sla}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-green-500" /><span>{t.landingPage.pricing.feature_support_dedicated}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_volume}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_api}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_sla}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_dedicated}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
@@ -463,3 +463,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
