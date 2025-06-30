@@ -15,6 +15,7 @@ const navItems = [
   { name: "Planes", href: "/#planes" },
   { name: "Verificar", href: "/verify" },
   { name: "Ayuda", href: "/help" },
+  { name: "Contacto", href: "/#contact" },
 ];
 
 export default function LandingHeader() {

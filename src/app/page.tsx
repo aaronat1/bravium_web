@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CheckCircle, Globe, Rocket, ShieldCheck, Users, Wallet, XCircle } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function LandingPage() {
   return (
@@ -167,6 +170,46 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Contact Section */}
+        <section id="contact" className="py-16 md:py-24 bg-card">
+          <div className="container">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-primary">Contacto</h2>
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+                ¿Tienes alguna pregunta o quieres solicitar una demo? Rellena el formulario y nos pondremos en contacto contigo.
+              </p>
+            </div>
+            <div className="max-w-2xl mx-auto">
+              <Card>
+                <CardContent className="pt-6">
+                  <form className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nombre</Label>
+                        <Input id="name" placeholder="Tu nombre" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Correo Electrónico</Label>
+                        <Input id="email" type="email" placeholder="tu@ejemplo.com" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="subject">Asunto</Label>
+                      <Input id="subject" placeholder="Ej: Solicitud de Demo" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Mensaje</Label>
+                      <Textarea id="message" placeholder="Escribe tu mensaje aquí..." rows={5} />
+                    </div>
+                    <Button type="submit" className="w-full" size="lg">Enviar Mensaje</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
       </main>
       <LandingFooter />
     </div>

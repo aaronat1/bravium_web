@@ -15,6 +15,7 @@ export default function LandingFooter() {
             <Link href="/#planes" className="text-sm text-muted-foreground hover:text-primary">Planes</Link>
             <Link href="/verify" className="text-sm text-muted-foreground hover:text-primary">Verificar</Link>
             <Link href="/help" className="text-sm text-muted-foreground hover:text-primary">Ayuda</Link>
+            <Link href="/#contact" className="text-sm text-muted-foreground hover:text-primary">Contacto</Link>
           </div>
           <p className="text-sm text-muted-foreground text-center md:text-right">© {new Date().getFullYear()} Bravium. Todos los derechos reservados.</p>
         </div>
