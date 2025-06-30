@@ -13,7 +13,6 @@ import { useState } from "react";
 const navItems = [
   { name: "Visión", href: "/#vision" },
   { name: "Planes", href: "/#planes" },
-  { name: "Tecnología", href: "/#tecnologia" },
   { name: "Verificar", href: "/verify" },
   { name: "Ayuda", href: "/help" },
 ];
