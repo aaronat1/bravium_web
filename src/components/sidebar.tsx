@@ -1,9 +1,9 @@
-
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, LogOut, ShieldCheck, FileText } from "lucide-react";
+import { Home, LogOut, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/firebase/auth";
@@ -40,10 +40,9 @@ export default function Sidebar() {
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-card border-r fixed h-full">
-      <div className="flex items-center justify-center h-20 border-b">
-        <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold text-primary">
-          <ShieldCheck className="h-7 w-7" />
-          <span>Bravium</span>
+      <div className="flex items-center justify-center h-20 border-b px-4">
+        <Link href="/dashboard">
+          <Image src="/logo.png" alt="Bravium logo" width={120} height={30} />
         </Link>
       </div>
       <nav className="flex-1 px-4 py-6 space-y-2">

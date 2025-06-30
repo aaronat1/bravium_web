@@ -1,8 +1,7 @@
-
 "use client";
 
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import Image from "next/image";
 import { useI18n } from "@/hooks/use-i18n";
 
 export default function LandingFooter() {
@@ -21,8 +20,7 @@ export default function LandingFooter() {
       <div className="container py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-7 w-7 text-primary" />
-            <span className="text-xl font-bold text-primary">Bravium</span>
+            <Image src="/logo.png" alt="Bravium logo" width={120} height={30} />
           </div>
           <div className="flex gap-4 flex-wrap justify-center">
             {navItems.map((item) => (

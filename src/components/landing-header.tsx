@@ -1,8 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
-import { ShieldCheck, Menu, Globe } from "lucide-react";
+import Image from "next/image";
+import { Menu, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -34,8 +34,7 @@ export default function LandingHeader() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <ShieldCheck className="h-7 w-7 text-primary" />
-          <span className="text-xl font-bold text-primary">Bravium</span>
+          <Image src="/logo.png" alt="Bravium logo" width={120} height={30} />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
@@ -83,8 +82,7 @@ export default function LandingHeader() {
             <SheetContent side="right">
               <div className="flex flex-col gap-6 p-6">
                 <Link href="/" className="flex items-center gap-2 mb-4" onClick={() => setIsOpen(false)}>
-                    <ShieldCheck className="h-7 w-7 text-primary" />
-                    <span className="text-xl font-bold text-primary">Bravium</span>
+                    <Image src="/logo.png" alt="Bravium logo" width={120} height={30} />
                 </Link>
                 {navItems.map((item) => (
                   <Link
