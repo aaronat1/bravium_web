@@ -28,13 +28,13 @@ export function UserNav() {
     if (error) {
       toast({
         variant: "destructive",
-        title: "Logout Failed",
+        title: "Fallo al Cerrar Sesión",
         description: error.message,
       });
     } else {
       toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
+        title: "Sesión Cerrada",
+        description: "Has cerrado sesión exitosamente.",
       });
       router.push("/login");
     }
@@ -60,7 +60,7 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {user.displayName || "User"}
+              {user.displayName || "Usuario"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
@@ -73,7 +73,7 @@ export function UserNav() {
         </DropdownMenuGroup>
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>Cerrar sesión</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

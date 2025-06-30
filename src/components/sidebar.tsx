@@ -9,8 +9,8 @@ import { signOut } from "@/lib/firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
-  { name: "Dashboard", href: "/", icon: Home },
-  { name: "Certificates", href: "/certificates", icon: FileText },
+  { name: "Panel", href: "/", icon: Home },
+  { name: "Certificados", href: "/certificates", icon: FileText },
 ];
 
 export default function Sidebar() {
@@ -23,13 +23,13 @@ export default function Sidebar() {
     if (error) {
       toast({
         variant: "destructive",
-        title: "Logout Failed",
+        title: "Fallo al Cerrar Sesión",
         description: error.message,
       });
     } else {
       toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
+        title: "Sesión Cerrada",
+        description: "Has cerrado sesión exitosamente.",
       });
       router.push("/login");
     }
@@ -61,7 +61,7 @@ export default function Sidebar() {
       <div className="p-4 mt-auto border-t">
         <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
           <LogOut className="mr-2 h-5 w-5" />
-          Logout
+          Cerrar Sesión
         </Button>
       </div>
     </aside>

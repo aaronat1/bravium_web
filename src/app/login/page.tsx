@@ -23,8 +23,8 @@ import { signIn } from "@/lib/firebase/auth";
 import { useAuth } from "@/hooks/use-auth";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  email: z.string().email({ message: "Dirección de correo electrónico inválida." }),
+  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
 });
 
 export default function LoginPage() {
@@ -55,13 +55,13 @@ export default function LoginPage() {
     if (error) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: error.message,
+        title: "Fallo de Inicio de Sesión",
+        description: "Credenciales incorrectas. Por favor, intente de nuevo.",
       });
     } else {
       toast({
-        title: "Login Successful",
-        description: "Welcome back!",
+        title: "Inicio de Sesión Exitoso",
+        description: "¡Bienvenido de nuevo!",
       });
       router.push("/");
     }
@@ -83,7 +83,7 @@ export default function LoginPage() {
             <ShieldCheck className="h-8 w-8" />
           </div>
           <CardTitle className="text-3xl font-bold">Bravium</CardTitle>
-          <CardDescription>Welcome to the Certificate Dashboard</CardDescription>
+          <CardDescription>Bienvenido al Panel de Certificados</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -93,9 +93,9 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Correo Electrónico</FormLabel>
                     <FormControl>
-                      <Input placeholder="name@example.com" {...field} />
+                      <Input placeholder="nombre@ejemplo.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Contraseña</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -116,7 +116,7 @@ export default function LoginPage() {
               />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Log In
+                Iniciar Sesión
               </Button>
             </form>
           </Form>
