@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet, X, FilePlus2, Send } from 'lucide-react';
+import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet, X, FilePlus2, Send, Globe, Layers } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
 import { Input } from '@/components/ui/input';
@@ -90,8 +90,34 @@ export default function LandingPage() {
                     <Link href="#pricing">{t.landingPage.hero.cta_prices}</Link>
                 </Button>
                 </div>
-                <p className="mt-4 text-sm text-muted-foreground">{t.landingPage.hero.trust_text}</p>
             </div>
+        </section>
+
+        {/* Standards Section */}
+        <section id="vision" className="py-16 md:py-24 bg-muted">
+          <div className="container">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.standards.title}</h2>
+              <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">{t.landingPage.standards.subtitle}</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="flex flex-col items-center text-center p-6">
+                <Globe className="h-12 w-12 text-accent mb-4"/>
+                <h3 className="text-xl font-semibold">{t.landingPage.standards.item1_title}</h3>
+                <p className="mt-2 text-muted-foreground">{t.landingPage.standards.item1_text}</p>
+              </div>
+              <div className="flex flex-col items-center text-center p-6">
+                <Wallet className="h-12 w-12 text-accent mb-4"/>
+                <h3 className="text-xl font-semibold">{t.landingPage.standards.item2_title}</h3>
+                <p className="mt-2 text-muted-foreground">{t.landingPage.standards.item2_text}</p>
+              </div>
+              <div className="flex flex-col items-center text-center p-6">
+                <Layers className="h-12 w-12 text-accent mb-4"/>
+                <h3 className="text-xl font-semibold">{t.landingPage.standards.item3_title}</h3>
+                <p className="mt-2 text-muted-foreground">{t.landingPage.standards.item3_text}</p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Problem Section */}
@@ -495,5 +521,6 @@ export default function LandingPage() {
     
 
     
+
 
 

@@ -19,7 +19,16 @@ export const es = {
       subtitle: "Bravium es la plataforma líder de Credenciales Verificables como Servicio (VCaaS) que permite a universidades, ONGs y empresas emitir títulos, certificados y cualquier documento digital con seguridad criptográfica. Elimina el fraude, automatiza la verificación y devuelve el control al usuario.",
       cta_demo: "Solicita una Demo",
       cta_prices: "Ver Precios",
-      trust_text: "No se requiere tarjeta de crédito. Empieza a construir confianza hoy.",
+    },
+    standards: {
+      title: "Construido sobre Estándares Abiertos y Globales",
+      subtitle: "BRAVIUM no reinventa la rueda; la perfecciona. Nos apoyamos en las tecnologías y estándares más robustos y reconocidos del mundo para ofrecerte una solución interoperable, segura y preparada para el futuro.",
+      item1_title: "Basado en el Estándar W3C",
+      item1_text: "Nuestra plataforma implementa las recomendaciones del World Wide Web Consortium (W3C) para Credenciales Verificables (VCs) e Identificadores Descentralizados (DIDs). Esto garantiza que las credenciales que emites son interoperables en todo el mundo.",
+      item2_title: "Compatible con el Ecosistema Abierto",
+      item2_text: "Las credenciales de BRAVIUM funcionan con las carteras digitales que tus usuarios ya tienen y en las que confían, como Apple Wallet, Google Wallet y las promovidas por la OpenWallet Foundation. No hay fricción, no hay apps que descargar.",
+      item3_title: "Alternativa Accesible a la Complejidad",
+      item3_text: "Ofrecemos la confianza y la inmutabilidad de tecnologías empresariales como Hyperledger Fabric, pero sin su coste y complejidad. BRAVIUM está diseñado para ser una solución SaaS \"llave en mano\", no un proyecto de ingeniería de meses."
     },
     problem: {
       title: "Los Certificados Tradicionales son un Freno para el Mundo Digital",
