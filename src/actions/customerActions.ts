@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
+import { KeyManagementServiceClient } from '@google-cloud/kms';
 
 const AddCustomerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -67,19 +68,51 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
       password: uid,
     });
 
+    // Create a crypto key for the new customer in Google Cloud KMS
+    const kmsClient = new KeyManagementServiceClient();
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const keyRingId = 'main';
+    const locationId = 'global';
+    const cryptoKeyId = `customer-${uid.substring(0, 12)}`;
+    
+    const keyRingName = kmsClient.keyRingPath(projectId!, locationId, keyRingId);
+
+    const [createdKey] = await kmsClient.createCryptoKey({
+        parent: keyRingName,
+        cryptoKeyId: cryptoKeyId,
+        cryptoKey: {
+            purpose: 'ENCRYPT_DECRYPT',
+            versionTemplate: {
+                algorithm: 'GOOGLE_SYMMETRIC_ENCRYPTION',
+                protectionLevel: 'SOFTWARE',
+            },
+        },
+    });
+
+    if (!createdKey.name) {
+        throw new Error('No se pudo crear la clave KMS para el cliente.');
+    }
+
     const customerData = {
       name,
       email,
       did: `did:bravium:${uid}`,
       subscriptionPlan,
       subscriptionStatus: 'active',
-      kmsKeyPath: `projects/bravium/locations/global/keyRings/main/cryptoKeys/customer-${uid.substring(0,8)}`,
+      kmsKeyPath: createdKey.name,
     };
 
     await adminDb.collection('customers').doc(uid).set(customerData);
 
     return { message: `Cliente "${name}" añadido correctamente.`, success: true };
   } catch (error: any) {
+    // Provide more specific error messages for KMS issues
+    if (error.code === 7) { // gRPC code for PERMISSION_DENIED
+        return { message: `Error de permisos de KMS: La cuenta de servicio no tiene permiso para crear claves. Asegúrate de que tenga el rol "Administrador de Cloud KMS".`, success: false };
+    }
+    if (error.code === 5) { // gRPC code for NOT_FOUND
+        return { message: `Error de KMS: No se encontró el llavero de claves '${process.env.KMS_KEY_RING_ID || 'main'}'. Por favor, créalo en Google Cloud.`, success: false };
+    }
     return { message: `Error al crear el cliente: ${error.message}`, success: false };
   }
 }
