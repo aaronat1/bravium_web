@@ -4,6 +4,8 @@
 import { useEffect, useState, useRef, useActionState, useMemo, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { collection, onSnapshot } from "firebase/firestore";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Users, PlusCircle, Loader2, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Pencil, Trash2, FileDown } from "lucide-react";
 
 import { db } from "@/lib/firebase/config";
@@ -20,7 +22,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/hooks/use-i18n";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 type Customer = {
   id: string;
@@ -240,10 +249,8 @@ export default function CustomersPage() {
         customer.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
     filteredCustomers.sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-      if (aValue === null || aValue === undefined) return 1;
-      if (bValue === null || bValue === undefined) return -1;
+      const aValue = a[sortConfig.key] || '';
+      const bValue = b[sortConfig.key] || '';
       if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
       if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
       return 0;
@@ -255,6 +262,54 @@ export default function CustomersPage() {
     setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'ascending' ? 'descending' : 'ascending' }));
   };
 
+  const handleExportCSV = () => {
+    const headers = ["ID", "Name", "Email", "DID", "KMS Key Path", "Plan", "Status"];
+    const csvContent = [
+      headers.join(","),
+      ...sortedAndFilteredCustomers.map(c => [
+        c.id,
+        `"${c.name}"`,
+        c.email,
+        c.did || '',
+        c.kmsKeyPath || '',
+        c.subscriptionPlan,
+        c.subscriptionStatus
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.href) {
+      URL.revokeObjectURL(link.href);
+    }
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `customers-export-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableData = sortedAndFilteredCustomers.map(c => [
+        c.name,
+        c.email,
+        c.subscriptionPlan,
+        c.subscriptionStatus
+    ]);
+
+    autoTable(doc, {
+        head: [['Name', 'Email', 'Plan', 'Status']],
+        body: tableData,
+        startY: 20,
+        didDrawPage: (data) => {
+            doc.text('Customer List', data.settings.margin.left, 15);
+        }
+    });
+
+    doc.save(`customers-export-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+  
   const SortableHeader = ({ sortKey, children }: { sortKey: keyof Customer, children: React.ReactNode }) => (
     <TableHead onClick={() => handleSort(sortKey)} className="cursor-pointer hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-2">
@@ -285,9 +340,15 @@ export default function CustomersPage() {
       default: return <Badge variant="outline">{plan}</Badge>;
     }
   }
+  
+  const truncateString = (str: string, num: number) => {
+    if (!str) return '';
+    if (str.length <= num) return str;
+    return '...' + str.slice(str.length - num);
+  }
 
   return (
-    <>
+    <TooltipProvider>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t.customersPage.title}</h1>
@@ -307,11 +368,11 @@ export default function CustomersPage() {
             <div className="flex items-center justify-between pb-4 gap-2">
                 <Input placeholder={t.customersPage.filter_placeholder} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="max-w-sm" />
                 <div className="flex gap-2">
-                    <Button variant="outline" disabled>
+                    <Button variant="outline" onClick={handleExportCSV}>
                         <FileDown className="mr-2 h-4 w-4" />
                         {t.customersPage.export_csv}
                     </Button>
-                    <Button variant="outline" disabled>
+                    <Button variant="outline" onClick={handleExportPDF}>
                         <FileDown className="mr-2 h-4 w-4" />
                         {t.customersPage.export_pdf}
                     </Button>
@@ -325,6 +386,8 @@ export default function CustomersPage() {
                 <TableRow>
                   <SortableHeader sortKey="name">{t.customersPage.col_name}</SortableHeader>
                   <SortableHeader sortKey="email">{t.customersPage.col_email}</SortableHeader>
+                  <SortableHeader sortKey="did">{t.customersPage.col_did}</SortableHeader>
+                  <SortableHeader sortKey="kmsKeyPath">{t.customersPage.col_kms_key}</SortableHeader>
                   <SortableHeader sortKey="subscriptionPlan">{t.customersPage.col_plan}</SortableHeader>
                   <SortableHeader sortKey="subscriptionStatus">{t.customersPage.col_status}</SortableHeader>
                   <TableHead>{t.customersPage.actions}</TableHead>
@@ -335,6 +398,17 @@ export default function CustomersPage() {
                   <TableRow key={customer.id}>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>{customer.email}</TableCell>
+                    <TableCell className="font-mono text-xs">{truncateString(customer.did || '', 20)}</TableCell>
+                    <TableCell>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                           <span className="font-mono text-xs cursor-help">{truncateString(customer.kmsKeyPath || '', 30)}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{customer.kmsKeyPath || 'N/A'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableCell>
                     <TableCell>{getPlanBadge(customer.subscriptionPlan)}</TableCell>
                     <TableCell>{getStatusBadge(customer.subscriptionStatus)}</TableCell>
                     <TableCell>
@@ -395,6 +469,6 @@ export default function CustomersPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
-    </>
+    </TooltipProvider>
   );
 }

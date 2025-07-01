@@ -223,7 +223,6 @@ export const es = {
   },
   sidebar: {
     link_dashboard: "Panel",
-    link_certificates: "Certificados",
     link_customers: "Clientes",
     logout: "Cerrar Sesión",
     toast_logout_success_title: "Sesión Cerrada",
@@ -271,7 +270,7 @@ export const es = {
     save_changes: "Guardar Cambios",
     cancel: "Cancelar",
     delete_customer_title: "¿Estás seguro?",
-    delete_customer_desc: "Esta acción no se puede deshacer. Se eliminará permanentemente al cliente y todos sus datos asociados, incluyendo su clave KMS.",
+    delete_customer_desc: "Esta acción no se puede deshacer. Se eliminará permanentemente al cliente y todos sus datos asociados.",
     confirm: "Confirmar",
     add_new_customer_button: "Añadir Nuevo Cliente",
     add_customer_dialog_title: "Crear Nuevo Cliente",

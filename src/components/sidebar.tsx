@@ -1,9 +1,10 @@
+
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, LogOut, FileText, Users } from "lucide-react";
+import { Home, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/firebase/auth";
@@ -18,7 +19,6 @@ export default function Sidebar() {
 
   const navItems = [
     { name: t.sidebar.link_dashboard, href: "/dashboard", icon: Home },
-    { name: t.sidebar.link_certificates, href: "/certificates", icon: FileText },
     { name: t.sidebar.link_customers, href: "/customers", icon: Users },
   ];
 

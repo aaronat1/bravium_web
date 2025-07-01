@@ -223,7 +223,6 @@ export const en = {
   },
   sidebar: {
     link_dashboard: "Dashboard",
-    link_certificates: "Certificates",
     link_customers: "Customers",
     logout: "Log Out",
     toast_logout_success_title: "Logged Out",
@@ -271,7 +270,7 @@ export const en = {
     save_changes: "Save Changes",
     cancel: "Cancel",
     delete_customer_title: "Are you sure?",
-    delete_customer_desc: "This action cannot be undone. This will permanently delete the customer and all associated data, including their KMS key.",
+    delete_customer_desc: "This action cannot be undone. This will permanently delete the customer and all associated data.",
     confirm: "Confirm",
     add_new_customer_button: "Add New Customer",
     add_customer_dialog_title: "Create New Customer",
