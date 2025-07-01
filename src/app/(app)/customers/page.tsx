@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useEffect, useState, useRef, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { collection, onSnapshot } from "firebase/firestore";
 import { Users, PlusCircle, Loader2 } from "lucide-react";
 
@@ -46,7 +46,7 @@ export default function CustomersPage() {
   const formRef = useRef<HTMLFormElement>(null);
 
   const initialState: AddCustomerState = { message: "", success: false };
-  const [state, formAction] = useFormState(addCustomer, initialState);
+  const [state, formAction] = useActionState(addCustomer, initialState);
 
   useEffect(() => {
     if (state.message) {
