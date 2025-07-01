@@ -13,29 +13,29 @@ export default function TermsOfUsePage() {
       <LandingHeader />
       <main className="flex-grow container py-12 md:py-20">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-5xl mb-8">{t.landingFooter.terms_of_use}</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-5xl mb-8">{t.termsOfUsePage.title}</h1>
           <div className="space-y-6 text-muted-foreground">
             <p>
-              Last updated: {new Date().toLocaleDateString()}
+              {t.termsOfUsePage.lastUpdated}: {new Date().toLocaleDateString()}
             </p>
             <p>
-              Please read these terms of use carefully before using Our Service.
+              {t.termsOfUsePage.p1}
             </p>
-            <h2 className="text-2xl font-bold text-foreground pt-4">Agreement to Terms</h2>
+            <h2 className="text-2xl font-bold text-foreground pt-4">{t.termsOfUsePage.h2}</h2>
             <p>
-              By using our services, you agree to be bound by these Terms. If you disagree with any part of the terms, then you may not access the Service.
+              {t.termsOfUsePage.p2}
             </p>
-            <h2 className="text-2xl font-bold text-foreground pt-4">Accounts</h2>
+            <h2 className="text-2xl font-bold text-foreground pt-4">{t.termsOfUsePage.h3}</h2>
             <p>
-              When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.
+              {t.termsOfUsePage.p3}
             </p>
-            <h2 className="text-2xl font-bold text-foreground pt-4">Intellectual Property</h2>
+            <h2 className="text-2xl font-bold text-foreground pt-4">{t.termsOfUsePage.h4}</h2>
             <p>
-              The Service and its original content, features and functionality are and will remain the exclusive property of Bravium and its licensors.
+              {t.termsOfUsePage.p4}
             </p>
-            <h2 className="text-2xl font-bold text-foreground pt-4">Contact Us</h2>
+            <h2 className="text-2xl font-bold text-foreground pt-4">{t.termsOfUsePage.h5}</h2>
             <p>
-              If you have any questions about these Terms, please contact us at: contact@bravium.com
+              {t.termsOfUsePage.p5}
             </p>
           </div>
         </div>

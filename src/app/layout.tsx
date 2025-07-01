@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/auth-provider';
 import { Toaster } from "@/components/ui/toaster"
 import { I18nProvider } from '@/contexts/i18n-provider';
+import CookieConsent from '@/components/cookie-consent';
 
 export const metadata: Metadata = {
   title: 'BraviumCertBoard',
@@ -26,6 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <I18nProvider>
             {children}
+            <CookieConsent />
           </I18nProvider>
         </AuthProvider>
         <Toaster />
