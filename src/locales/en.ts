@@ -273,6 +273,11 @@ export const en = {
     delete_customer_title: "Are you sure?",
     delete_customer_desc: "This action cannot be undone. This will permanently delete the customer and all associated data, including their KMS key.",
     confirm: "Confirm",
+    add_new_customer_button: "Add New Customer",
+    add_customer_dialog_title: "Create New Customer",
+    add_customer_dialog_desc: "Fill in the details to create a new customer.",
+    export_csv: "Export to CSV",
+    export_pdf: "Export to PDF",
   },
   cookieConsent: {
     message: "We use cookies to enhance your experience. By continuing to browse, you agree to our use of cookies.",

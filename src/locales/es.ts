@@ -273,6 +273,11 @@ export const es = {
     delete_customer_title: "¿Estás seguro?",
     delete_customer_desc: "Esta acción no se puede deshacer. Se eliminará permanentemente al cliente y todos sus datos asociados, incluyendo su clave KMS.",
     confirm: "Confirmar",
+    add_new_customer_button: "Añadir Nuevo Cliente",
+    add_customer_dialog_title: "Crear Nuevo Cliente",
+    add_customer_dialog_desc: "Rellena los datos para crear un nuevo cliente.",
+    export_csv: "Exportar a CSV",
+    export_pdf: "Exportar a PDF",
   },
   cookieConsent: {
     message: "Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptas nuestro uso de cookies.",
