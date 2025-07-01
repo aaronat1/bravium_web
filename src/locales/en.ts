@@ -249,7 +249,8 @@ export const en = {
     h4: "Security of Your Information",
     p4: "We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.",
     h5: "Contact Us",
-    p5: "If you have questions or comments about this Privacy Policy, please contact us at: contact@bravium.com",
+    p5_pre_link: "If you have questions or comments about this Privacy Policy, please",
+    p5_link_text: "contact us",
   },
   termsOfUsePage: {
     title: "Terms of Use",
@@ -262,7 +263,8 @@ export const en = {
     h4: "Intellectual Property",
     p4: "The Service and its original content, features and functionality are and will remain the exclusive property of Bravium and its licensors.",
     h5: "Contact Us",
-    p5: "If you have any questions about these Terms, please contact us at: contact@bravium.com",
+    p5_pre_link: "If you have any questions about these Terms, please",
+    p5_link_text: "contact us",
   },
   cookiesPolicyPage: {
     title: "Cookies Policy",
@@ -273,6 +275,7 @@ export const en = {
     h3: "How do we use cookies?",
     p3: "As most of the online services, our website uses first-party and third-party cookies for a number of purposes. The first-party cookies are mostly necessary for the website to function the right way, and they do not collect any of your personally identifiable data.",
     h4: "Contact Us",
-    p4: "If you have any questions about this Cookies Policy, please contact us at: contact@bravium.com",
+    p4_pre_link: "If you have any questions about this Cookies Policy, please",
+    p4_link_text: "contact us",
   },
 };

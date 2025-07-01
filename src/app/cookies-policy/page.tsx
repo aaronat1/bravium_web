@@ -4,6 +4,7 @@
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
 import { useI18n } from "@/hooks/use-i18n";
+import Link from "next/link";
 
 export default function CookiesPolicyPage() {
   const { t } = useI18n();
@@ -31,7 +32,11 @@ export default function CookiesPolicyPage() {
             </p>
             <h2 className="text-2xl font-bold text-foreground pt-4">{t.cookiesPolicyPage.h4}</h2>
             <p>
-              {t.cookiesPolicyPage.p4}
+              {t.cookiesPolicyPage.p4_pre_link}{' '}
+              <Link href="/#contact" className="underline text-primary hover:text-primary/80">
+                {t.cookiesPolicyPage.p4_link_text}
+              </Link>
+              .
             </p>
           </div>
         </div>

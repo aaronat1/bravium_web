@@ -249,7 +249,8 @@ export const es = {
     h4: "Seguridad de Tu Información",
     p4: "Utilizamos medidas de seguridad administrativas, técnicas y físicas para ayudar a proteger tu información personal. Si bien hemos tomado medidas razonables para proteger la información personal que nos proporcionas, ten en cuenta que a pesar de nuestros esfuerzos, ninguna medida de seguridad es perfecta o impenetrable, y no se puede garantizar ningún método de transmisión de datos contra ninguna interceptación u otro tipo de uso indebido.",
     h5: "Contáctanos",
-    p5: "Si tienes preguntas o comentarios sobre esta Política de Privacidad, por favor contáctanos en: contact@bravium.com",
+    p5_pre_link: "Si tienes preguntas o comentarios sobre esta Política de Privacidad, por favor",
+    p5_link_text: "contáctanos",
   },
   termsOfUsePage: {
     title: "Condiciones de Uso",
@@ -262,7 +263,8 @@ export const es = {
     h4: "Propiedad Intelectual",
     p4: "El Servicio y su contenido original, características y funcionalidad son y seguirán siendo propiedad exclusiva de Bravium y sus licenciantes.",
     h5: "Contáctanos",
-    p5: "Si tienes alguna pregunta sobre estos Términos, por favor contáctanos en: contact@bravium.com",
+    p5_pre_link: "Si tienes alguna pregunta sobre estos Términos, por favor",
+    p5_link_text: "contáctanos",
   },
   cookiesPolicyPage: {
     title: "Política de Cookies",
@@ -273,6 +275,7 @@ export const es = {
     h3: "¿Cómo usamos las cookies?",
     p3: "Como la mayoría de los servicios en línea, nuestro sitio web utiliza cookies de origen y de terceros para varios propósitos. Las cookies de origen son principalmente necesarias para que el sitio web funcione correctamente y no recopilan ninguno de tus datos de identificación personal.",
     h4: "Contáctanos",
-    p4: "Si tienes alguna pregunta sobre esta Política de Cookies, por favor contáctanos en: contact@bravium.com",
+    p4_pre_link: "Si tienes alguna pregunta sobre esta Política de Cookies, por favor",
+    p4_link_text: "contáctanos",
   },
 };

@@ -4,6 +4,7 @@
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
 import { useI18n } from "@/hooks/use-i18n";
+import Link from "next/link";
 
 export default function TermsOfUsePage() {
   const { t } = useI18n();
@@ -35,7 +36,11 @@ export default function TermsOfUsePage() {
             </p>
             <h2 className="text-2xl font-bold text-foreground pt-4">{t.termsOfUsePage.h5}</h2>
             <p>
-              {t.termsOfUsePage.p5}
+              {t.termsOfUsePage.p5_pre_link}{' '}
+              <Link href="/#contact" className="underline text-primary hover:text-primary/80">
+                {t.termsOfUsePage.p5_link_text}
+              </Link>
+              .
             </p>
           </div>
         </div>
