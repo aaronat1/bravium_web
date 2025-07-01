@@ -20,6 +20,13 @@ export type AddCustomerState = {
 };
 
 export async function addCustomer(prevState: AddCustomerState, formData: FormData): Promise<AddCustomerState> {
+  if (!adminAuth || !adminDb) {
+    return {
+      message: 'Error de configuración: Las funcionalidades de administrador no están disponibles. Revisa las credenciales del SDK de Firebase Admin en el servidor.',
+      success: false,
+    };
+  }
+
   const validatedFields = AddCustomerSchema.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
