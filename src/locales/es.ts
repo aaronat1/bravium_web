@@ -12,10 +12,13 @@ export const es = {
   },
   landingFooter: {
     rights: "© {year} Bravium. Todos los derechos reservados.",
+    privacy_policy: "Política de Privacidad",
+    terms_of_use: "Condiciones de Uso",
+    cookies_policy: "Política de Cookies",
   },
   landingPage: {
     hero: {
-      title: "La Nueva Era de la Confianza Digital. Emite Credenciales Verificables, Infalsificables y al Instante.",
+      title: "La Nueva Era de la Confianza Digital.\nEmite Credenciales Verificables, Infalsificables y al Instante.",
       subtitle: "Bravium es la plataforma líder de Credenciales Verificables como Servicio (VCaaS) que permite a universidades, ONGs y empresas emitir títulos, certificados y cualquier documento digital con seguridad criptográfica. Elimina el fraude, automatiza la verificación y devuelve el control al usuario.",
       cta_demo: "Solicita una Demo",
       cta_prices: "Ver Precios",

@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -24,7 +25,7 @@ export default function LandingHeader() {
 
   const navItems = [
     { name: t.landingHeader.vision, href: "/#vision" },
-    { name: t.landingHeader.plans, href: "/#planes" },
+    { name: t.landingHeader.plans, href: "/#pricing" },
     { name: t.landingHeader.verify, href: "/verify" },
     { name: t.landingHeader.help, href: "/help" },
     { name: t.landingHeader.contact, href: "/#contact" },
