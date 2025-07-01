@@ -3,7 +3,6 @@
 
 import { z } from 'zod';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
-import { KeyManagementServiceClient } from '@google-cloud/kms';
 
 const AddCustomerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -69,52 +68,20 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
       password: uid,
     });
 
-    // Create a crypto key for the new customer in Google Cloud KMS
-    const kmsClient = new KeyManagementServiceClient();
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    const keyRingId = 'main';
-    const locationId = 'global';
-    const cryptoKeyId = `customer-${uid.substring(0, 12)}`;
-    
-    const keyRingName = kmsClient.keyRingPath(projectId!, locationId, keyRingId);
-
-    const [createdKey] = await kmsClient.createCryptoKey({
-        parent: keyRingName,
-        cryptoKeyId: cryptoKeyId,
-        cryptoKey: {
-            purpose: 'ENCRYPT_DECRYPT',
-            versionTemplate: {
-                algorithm: 'GOOGLE_SYMMETRIC_ENCRYPTION',
-                protectionLevel: 'SOFTWARE',
-            },
-        },
-    });
-
-    if (!createdKey.name) {
-        throw new Error('No se pudo crear la clave KMS para el cliente.');
-    }
-
     const customerData = {
       id: uid,
       name,
       email,
-      did: `did:bravium:${uid}`,
+      did: "",
       subscriptionPlan,
       subscriptionStatus: 'active',
-      kmsKeyPath: createdKey.name,
+      kmsKeyPath: "",
     };
 
     await adminDb.collection('customers').doc(uid).set(customerData);
 
     return { message: `Cliente "${name}" añadido correctamente.`, success: true };
   } catch (error: any) {
-    // Provide more specific error messages for KMS issues
-    if (error.code === 7) { // gRPC code for PERMISSION_DENIED
-        return { message: `Error de permisos de KMS: La cuenta de servicio no tiene permiso para crear claves. Asegúrate de que tenga el rol "Administrador de Cloud KMS".`, success: false };
-    }
-    if (error.code === 5) { // gRPC code for NOT_FOUND
-        return { message: `Error de KMS: No se encontró el llavero de claves '${process.env.KMS_KEY_RING_ID || 'main'}'. Por favor, créalo en Google Cloud.`, success: false };
-    }
     return { message: `Error al crear el cliente: ${error.message}`, success: false };
   }
 }
@@ -193,28 +160,8 @@ export async function deleteCustomer(customerId: string): Promise<{ success: boo
   }
 
   try {
-    const customerDoc = await adminDb.collection('customers').doc(customerId).get();
+    // KMS key destruction will be handled by a Cloud Function trigger on customer deletion.
     
-    if (!customerDoc.exists) {
-        // If customer doc doesn't exist, we can still try to delete the auth user
-        await adminAuth.deleteUser(customerId);
-        return { message: 'Usuario de autenticación eliminado, pero no se encontró el documento del cliente.', success: true };
-    }
-    
-    const customerData = customerDoc.data();
-    const kmsKeyPath = customerData?.kmsKeyPath;
-
-    // Schedule KMS key for destruction first
-    if (kmsKeyPath) {
-        try {
-            const kmsClient = new KeyManagementServiceClient();
-            await kmsClient.destroyCryptoKey({ name: kmsKeyPath });
-        } catch (kmsError: any) {
-            console.error(`No se pudo programar la destrucción de la clave KMS ${kmsKeyPath}:`, kmsError);
-            return { message: `No se pudo eliminar el cliente. Error al programar la destrucción de la clave KMS. Revísalo manualmente en Google Cloud. Error: ${kmsError.message}`, success: false };
-        }
-    }
-
     // Delete Firestore document
     await adminDb.collection('customers').doc(customerId).delete();
 

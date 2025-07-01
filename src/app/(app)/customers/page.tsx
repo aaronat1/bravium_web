@@ -18,7 +18,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/hooks/use-i18n";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -27,10 +26,10 @@ type Customer = {
   id: string;
   name: string;
   email: string;
-  did: string;
+  did?: string;
   subscriptionPlan: 'starter' | 'pro' | 'enterprise';
   subscriptionStatus: 'active' | 'inactive' | 'cancelled';
-  kmsKeyPath: string;
+  kmsKeyPath?: string;
 };
 
 // --- DIALOGS AND FORMS ---
@@ -326,8 +325,6 @@ export default function CustomersPage() {
                 <TableRow>
                   <SortableHeader sortKey="name">{t.customersPage.col_name}</SortableHeader>
                   <SortableHeader sortKey="email">{t.customersPage.col_email}</SortableHeader>
-                  <SortableHeader sortKey="did">{t.customersPage.col_did}</SortableHeader>
-                  <SortableHeader sortKey="kmsKeyPath">{t.customersPage.col_kms_key}</SortableHeader>
                   <SortableHeader sortKey="subscriptionPlan">{t.customersPage.col_plan}</SortableHeader>
                   <SortableHeader sortKey="subscriptionStatus">{t.customersPage.col_status}</SortableHeader>
                   <TableHead>{t.customersPage.actions}</TableHead>
@@ -338,12 +335,6 @@ export default function CustomersPage() {
                   <TableRow key={customer.id}>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>{customer.email}</TableCell>
-                    <TableCell className="font-mono text-xs">{customer.did}</TableCell>
-                    <TableCell>
-                        <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <span className="font-mono text-xs block max-w-[150px] truncate cursor-help">{customer.kmsKeyPath}</span>
-                        </TooltipTrigger><TooltipContent><p className="font-mono text-xs">{customer.kmsKeyPath}</p></TooltipContent></Tooltip></TooltipProvider>
-                    </TableCell>
                     <TableCell>{getPlanBadge(customer.subscriptionPlan)}</TableCell>
                     <TableCell>{getStatusBadge(customer.subscriptionStatus)}</TableCell>
                     <TableCell>
