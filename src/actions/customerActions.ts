@@ -94,6 +94,7 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
     }
 
     const customerData = {
+      id: uid,
       name,
       email,
       did: `did:bravium:${uid}`,
