@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, LogOut, FileText } from "lucide-react";
+import { Home, LogOut, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/firebase/auth";
@@ -19,6 +19,7 @@ export default function Sidebar() {
   const navItems = [
     { name: t.sidebar.link_dashboard, href: "/dashboard", icon: Home },
     { name: t.sidebar.link_certificates, href: "/certificates", icon: FileText },
+    { name: t.sidebar.link_customers, href: "/customers", icon: Users },
   ];
 
   const handleLogout = async () => {
@@ -52,7 +53,7 @@ export default function Sidebar() {
             href={item.href}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-primary/10",
-              (pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))) && "bg-primary/10 text-primary font-semibold"
+              (pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))) && "bg-primary/10 text-primary font-semibold"
             )}
           >
             <item.icon className="h-5 w-5" />
