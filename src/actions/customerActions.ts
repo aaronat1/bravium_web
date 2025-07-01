@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -207,7 +208,7 @@ export async function deleteCustomer(customerId: string): Promise<{ success: boo
     if (kmsKeyPath) {
         try {
             const kmsClient = new KeyManagementServiceClient();
-            await kmsClient.scheduleCryptoKeyDestruction({ name: kmsKeyPath });
+            await kmsClient.destroyCryptoKey({ name: kmsKeyPath });
         } catch (kmsError: any) {
             console.error(`No se pudo programar la destrucción de la clave KMS ${kmsKeyPath}:`, kmsError);
             return { message: `No se pudo eliminar el cliente. Error al programar la destrucción de la clave KMS. Revísalo manualmente en Google Cloud. Error: ${kmsError.message}`, success: false };
