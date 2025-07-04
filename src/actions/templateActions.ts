@@ -7,7 +7,7 @@ import { generateTemplate } from '@/ai/flows/generate-template-flow';
 import type { GenerateTemplateOutput } from '@/ai/flows/generate-template-flow';
 import { revalidatePath } from 'next/cache';
 
-const templatesCollection = adminDb?.collection('credential_templates');
+const templatesCollection = adminDb?.collection('credentialSchemas');
 
 if (!adminDb) {
   console.warn("Firebase Admin DB is not initialized. Template actions will fail.");

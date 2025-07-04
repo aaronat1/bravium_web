@@ -26,7 +26,7 @@ export default function DashboardPage() {
       setCustomerCount(0);
     });
 
-    const unsubTemplates = onSnapshot(collection(db, "credential_templates"), (snap) => {
+    const unsubTemplates = onSnapshot(collection(db, "credentialSchemas"), (snap) => {
       setTemplateCount(snap.size);
     }, (error) => {
       console.error("Error fetching template count:", error);
@@ -36,7 +36,7 @@ export default function DashboardPage() {
     // Determine loading state
     Promise.all([
         new Promise(resolve => onSnapshot(collection(db, "customers"), resolve)),
-        new Promise(resolve => onSnapshot(collection(db, "credential_templates"), resolve))
+        new Promise(resolve => onSnapshot(collection(db, "credentialSchemas"), resolve))
     ]).then(() => {
         setLoading(false);
     });

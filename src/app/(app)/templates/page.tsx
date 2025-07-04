@@ -309,7 +309,7 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     setLoading(true);
-    const q = collection(db, "credential_templates");
+    const q = collection(db, "credentialSchemas");
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const templatesData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
       setTemplates(templatesData);
