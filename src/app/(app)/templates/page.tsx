@@ -46,6 +46,7 @@ export type CredentialTemplate = {
   name: string;
   description?: string;
   fields: TemplateField[];
+  customerId: string;
 };
 
 // ZOD SCHEMA
@@ -58,16 +59,20 @@ const fieldSchema = z.object({
   defaultValue: z.string().optional(),
 });
 
-const templateFormSchema = z.object({
-  name: z.string().min(1, "Template name is required"),
-  description: z.string().optional(),
-  fields: z.array(fieldSchema).min(1, "At least one field is required."),
-});
+type TemplateFormData = z.infer<ReturnType<typeof useTemplateFormSchema>>;
 
-type TemplateFormData = z.infer<typeof templateFormSchema>;
+function useTemplateFormSchema() {
+    const { t } = useI18n();
+    return z.object({
+        name: z.string().min(1, t.templatesPage.form_validation_name),
+        description: z.string().optional(),
+        fields: z.array(fieldSchema).min(1, t.templatesPage.form_validation_fields),
+        customerId: z.string().min(1, t.templatesPage.form_validation_customer),
+    });
+}
 
 // DIALOGS & FORMS
-function TemplateFormDialog({ isOpen, onOpenChange, template }: { isOpen: boolean, onOpenChange: (open: boolean) => void, template?: CredentialTemplate | null }) {
+function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isOpen: boolean, onOpenChange: (open: boolean) => void, template?: CredentialTemplate | null, customers: {id: string; name: string}[] }) {
   const { t } = useI18n();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -76,17 +81,20 @@ function TemplateFormDialog({ isOpen, onOpenChange, template }: { isOpen: boolea
   const [isGenerating, startGeneratingTransition] = useTransition();
 
   const isEditMode = !!template;
+  const templateFormSchema = useTemplateFormSchema();
 
   const form = useForm<TemplateFormData>({
     resolver: zodResolver(templateFormSchema),
     defaultValues: isEditMode && template ? {
       name: template.name,
       description: template.description || "",
-      fields: template.fields.map(f => ({ ...f, fieldName: f.fieldName.replace(/[^a-zA-Z0-9_]/g, '') }))
+      fields: template.fields.map(f => ({ ...f, fieldName: f.fieldName.replace(/[^a-zA-Z0-9_]/g, '') })),
+      customerId: template.customerId,
     } : {
       name: "",
       description: "",
-      fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true, options: [], defaultValue: "" }]
+      fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true, options: [], defaultValue: "" }],
+      customerId: "",
     }
   });
 
@@ -116,11 +124,13 @@ function TemplateFormDialog({ isOpen, onOpenChange, template }: { isOpen: boolea
         reset(isEditMode && template ? {
           name: template.name,
           description: template.description || "",
-          fields: template.fields
+          fields: template.fields,
+          customerId: template.customerId,
         } : {
           name: "",
           description: "",
-          fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true }]
+          fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true }],
+          customerId: "",
         });
         setActiveTab("designer");
         setAiPrompt("");
@@ -132,7 +142,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template }: { isOpen: boolea
     startGeneratingTransition(async () => {
         const result = await generateTemplateSchema(aiPrompt);
         if (result.success && result.data) {
-            reset(result.data);
+            reset({ ...form.getValues(), ...result.data });
             toast({ title: t.templatesPage.ai_success_title, description: t.templatesPage.ai_success_desc });
             setActiveTab("designer");
         } else {
@@ -184,6 +194,31 @@ function TemplateFormDialog({ isOpen, onOpenChange, template }: { isOpen: boolea
                         <FormMessage />
                     </FormItem>
                 )} />
+
+                <FormField
+                    control={control}
+                    name="customerId"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>{t.templatesPage.form_customer_label}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t.templatesPage.form_customer_placeholder} />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {customers.map(customer => (
+                                        <SelectItem key={customer.id} value={customer.id}>
+                                            {customer.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
                 <div className="space-y-4">
                     <Label>{t.templatesPage.fields_label}</Label>
@@ -300,6 +335,7 @@ export default function TemplatesPage() {
   const { t } = useI18n();
   const { toast } = useToast();
   const [templates, setTemplates] = useState<CredentialTemplate[]>([]);
+  const [customers, setCustomers] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -310,7 +346,7 @@ export default function TemplatesPage() {
   useEffect(() => {
     setLoading(true);
     const q = collection(db, "credentialSchemas");
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribeTemplates = onSnapshot(q, (querySnapshot) => {
       const templatesData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
       setTemplates(templatesData);
       setLoading(false);
@@ -319,8 +355,24 @@ export default function TemplatesPage() {
         toast({ variant: "destructive", title: t.toast_error_title, description: "Failed to load templates." });
         setLoading(false);
     });
-    return () => unsubscribe();
+
+    const custQ = collection(db, "customers");
+    const unsubscribeCustomers = onSnapshot(custQ, (querySnapshot) => {
+        setCustomers(querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name as string })));
+    });
+
+    return () => {
+        unsubscribeTemplates();
+        unsubscribeCustomers();
+    };
   }, [t, toast]);
+
+  const customerMap = useMemo(() => {
+    return customers.reduce((acc, customer) => {
+        acc[customer.id] = customer.name;
+        return acc;
+    }, {} as Record<string, string>);
+  }, [customers]);
   
   const handleDeleteTemplate = () => {
     if (!templateToDelete) return;
@@ -372,6 +424,7 @@ export default function TemplatesPage() {
                 <TableRow>
                   <TableHead>{t.templatesPage.col_name}</TableHead>
                   <TableHead>{t.templatesPage.col_desc}</TableHead>
+                  <TableHead>{t.templatesPage.col_customer}</TableHead>
                   <TableHead className="text-center">{t.templatesPage.col_fields}</TableHead>
                   <TableHead>{t.templatesPage.actions}</TableHead>
                 </TableRow>
@@ -381,6 +434,7 @@ export default function TemplatesPage() {
                   <TableRow key={template.id}>
                     <TableCell className="font-medium">{template.name}</TableCell>
                     <TableCell className="text-muted-foreground">{template.description}</TableCell>
+                    <TableCell>{customerMap[template.customerId] || template.customerId}</TableCell>
                     <TableCell className="text-center">{template.fields?.length || 0}</TableCell>
                     <TableCell>
                         <DropdownMenu>
@@ -418,6 +472,7 @@ export default function TemplatesPage() {
         isOpen={isFormOpen} 
         onOpenChange={setIsFormOpen} 
         template={templateToEdit} 
+        customers={customers}
       />
 
       <AlertDialog open={!!templateToDelete} onOpenChange={(open) => !open && setTemplateToDelete(null)}>
