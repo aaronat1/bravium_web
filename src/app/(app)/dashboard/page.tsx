@@ -1,123 +1,102 @@
 
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useI18n } from "@/hooks/use-i18n";
+import { useEffect, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { Users, ClipboardList, Loader2 } from "lucide-react";
+import Link from "next/link";
 
-const certificates = [
-  {
-    id: "CERT-001",
-    name: "Desarrollador Frontend Certificado",
-    recipient: "Alice Johnson",
-    issueDate: "2023-01-15",
-    expiryDate: "2025-01-15",
-    status: "Activo",
-  },
-  {
-    id: "CERT-002",
-    name: "Maestro en Desarrollo Backend",
-    recipient: "Bob Williams",
-    issueDate: "2022-11-20",
-    expiryDate: "2024-11-20",
-    status: "Activo",
-  },
-  {
-    id: "CERT-003",
-    name: "Profesional en Arquitectura Cloud",
-    recipient: "Charlie Brown",
-    issueDate: "2021-05-10",
-    expiryDate: "2023-05-10",
-    status: "Expirado",
-  },
-  {
-    id: "CERT-004",
-    name: "Especialista en Diseño UI/UX",
-    recipient: "Diana Prince",
-    issueDate: "2023-08-01",
-    expiryDate: "2025-08-01",
-    status: "Activo",
-  },
-  {
-    id: "CERT-005",
-    name: "Fundamentos de Ciencia de Datos",
-    recipient: "Ethan Hunt",
-    issueDate: "2023-03-22",
-    expiryDate: "2024-03-22",
-    status: "Advertencia",
-  },
-  {
-    id: "CERT-006",
-    name: "Gestión de Proyectos Agile",
-    recipient: "Fiona Glenanne",
-    issueDate: "2022-07-30",
-    expiryDate: "2024-07-30",
-    status: "Activo",
-  },
-];
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { db } from "@/lib/firebase/config";
+import { useI18n } from "@/hooks/use-i18n";
+import { Button } from "@/components/ui/button";
+
 
 export default function DashboardPage() {
   const { t } = useI18n();
+  const [customerCount, setCustomerCount] = useState<number | null>(null);
+  const [templateCount, setTemplateCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'activo':
-        return <Badge variant="secondary">{t.dashboard.status_active}</Badge>;
-      case 'expirado':
-        return <Badge variant="destructive">{t.dashboard.status_expired}</Badge>;
-      case 'advertencia':
-        return <Badge variant="default">{t.dashboard.status_warning}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  useEffect(() => {
+    const unsubCustomers = onSnapshot(collection(db, "customers"), (snap) => {
+      setCustomerCount(snap.size);
+    }, (error) => {
+      console.error("Error fetching customer count:", error);
+      setCustomerCount(0);
+    });
+
+    const unsubTemplates = onSnapshot(collection(db, "credential_templates"), (snap) => {
+      setTemplateCount(snap.size);
+    }, (error) => {
+      console.error("Error fetching template count:", error);
+      setTemplateCount(0);
+    });
+
+    // Determine loading state
+    Promise.all([
+        new Promise(resolve => onSnapshot(collection(db, "customers"), resolve)),
+        new Promise(resolve => onSnapshot(collection(db, "credential_templates"), resolve))
+    ]).then(() => {
+        setLoading(false);
+    });
+
+    return () => {
+      unsubCustomers();
+      unsubTemplates();
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">{t.dashboard.title}</h1>
-      <Card>
+      
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t.dashboard.total_customers}</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+                <div className="text-2xl font-bold">{customerCount}</div>
+            )}
+            <Button variant="link" asChild className="px-0">
+                <Link href="/customers">{t.dashboard.manage_customers}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t.dashboard.total_templates}</CardTitle>
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+                <div className="text-2xl font-bold">{templateCount}</div>
+            )}
+            <Button variant="link" asChild className="px-0">
+                <Link href="/templates">{t.dashboard.manage_templates}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+       <Card>
         <CardHeader>
-          <CardTitle>{t.dashboard.card_title}</CardTitle>
+            <CardTitle>{t.dashboard.welcome_title}</CardTitle>
+            <CardDescription>{t.dashboard.welcome_desc}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableCaption>{t.dashboard.table_caption}</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px]">{t.dashboard.col_id}</TableHead>
-                <TableHead>{t.dashboard.col_name}</TableHead>
-                <TableHead>{t.dashboard.col_recipient}</TableHead>
-                <TableHead>{t.dashboard.col_issue_date}</TableHead>
-                <TableHead>{t.dashboard.col_expiry_date}</TableHead>
-                <TableHead className="text-right">{t.dashboard.col_status}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {certificates.map((cert) => (
-                <TableRow key={cert.id} className="transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <TableCell className="font-medium">{cert.id}</TableCell>
-                  <TableCell>{cert.name}</TableCell>
-                  <TableCell>{cert.recipient}</TableCell>
-                  <TableCell>{cert.issueDate}</TableCell>
-                  <TableCell>{cert.expiryDate}</TableCell>
-                  <TableCell className="text-right">
-                    {getStatusBadge(cert.status)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            <p className="text-muted-foreground">{t.dashboard.welcome_text}</p>
         </CardContent>
-      </Card>
+       </Card>
+
     </div>
   );
 }
