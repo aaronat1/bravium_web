@@ -10,17 +10,23 @@ import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/hooks/use-i18n";
+import { useAuth } from "@/hooks/use-auth";
+
+const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
   const { t } = useI18n();
+  const { user } = useAuth();
+
+  const isAdmin = user?.uid === ADMIN_UID;
 
   const navItems = [
-    { name: t.sidebar.link_dashboard, href: "/dashboard", icon: Home },
-    { name: t.sidebar.link_customers, href: "/customers", icon: Users },
-    { name: t.sidebar.link_templates, href: "/templates", icon: ClipboardList },
+    { name: t.sidebar.link_dashboard, href: "/dashboard", icon: Home, adminOnly: false },
+    { name: t.sidebar.link_customers, href: "/customers", icon: Users, adminOnly: true },
+    { name: t.sidebar.link_templates, href: "/templates", icon: ClipboardList, adminOnly: false },
   ];
 
   const handleLogout = async () => {
@@ -48,19 +54,24 @@ export default function Sidebar() {
         </Link>
       </div>
       <nav className="flex-1 px-4 py-6 space-y-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-primary/10",
-              (pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))) && "bg-primary/10 text-primary font-semibold"
-            )}
-          >
-            <item.icon className="h-5 w-5" />
-            {item.name}
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          if (item.adminOnly && !isAdmin) {
+            return null;
+          }
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-primary/10",
+                (pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))) && "bg-primary/10 text-primary font-semibold"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.name}
+            </Link>
+          );
+        })}
       </nav>
       <div className="p-4 mt-auto border-t">
         <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>

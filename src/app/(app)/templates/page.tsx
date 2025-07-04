@@ -6,12 +6,13 @@ import { useForm, useFieldArray, useFormContext, Controller } from "react-hook-f
 import { useFormStatus } from "react-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { PlusCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users, ClipboardList, GripVertical, Sparkles, FileText, Calendar, ToyBrick, Type, Trash, File } from "lucide-react";
 
 import { db } from "@/lib/firebase/config";
 import { createTemplate, updateTemplate, deleteTemplate, generateTemplateSchema } from "@/actions/templateActions";
 import type { TemplateState } from "@/actions/templateActions";
+import { useAuth } from "@/hooks/use-auth";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
+
+const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
 // DATA TYPES
 export type TemplateField = {
@@ -75,12 +78,14 @@ function useTemplateFormSchema() {
 function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isOpen: boolean, onOpenChange: (open: boolean) => void, template?: CredentialTemplate | null, customers: {id: string; name: string}[] }) {
   const { t } = useI18n();
   const { toast } = useToast();
+  const { user } = useAuth();
   const formRef = useRef<HTMLFormElement>(null);
   const [activeTab, setActiveTab] = useState("designer");
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, startGeneratingTransition] = useTransition();
 
   const isEditMode = !!template;
+  const isAdmin = user?.uid === ADMIN_UID;
   const templateFormSchema = useTemplateFormSchema();
 
   const form = useForm<TemplateFormData>({
@@ -94,7 +99,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
       name: "",
       description: "",
       fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true, options: [], defaultValue: "" }],
-      customerId: "",
+      customerId: isAdmin ? "" : user?.uid || "",
     }
   });
 
@@ -121,6 +126,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
   
   useEffect(() => {
      if (isOpen) {
+        const defaultCustomerId = isAdmin ? "" : user?.uid || "";
         reset(isEditMode && template ? {
           name: template.name,
           description: template.description || "",
@@ -130,12 +136,12 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
           name: "",
           description: "",
           fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true }],
-          customerId: "",
+          customerId: defaultCustomerId,
         });
         setActiveTab("designer");
         setAiPrompt("");
      }
-  }, [isOpen, template, isEditMode, reset])
+  }, [isOpen, template, isEditMode, reset, isAdmin, user])
 
   const handleGenerate = async () => {
     if (!aiPrompt) return;
@@ -195,30 +201,33 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
                     </FormItem>
                 )} />
 
-                <FormField
-                    control={control}
-                    name="customerId"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>{t.templatesPage.form_customer_label}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={t.templatesPage.form_customer_placeholder} />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {customers.map(customer => (
-                                        <SelectItem key={customer.id} value={customer.id}>
-                                            {customer.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                {isAdmin && (
+                  <FormField
+                      control={control}
+                      name="customerId"
+                      render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>{t.templatesPage.form_customer_label}</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                      <SelectTrigger>
+                                          <SelectValue placeholder={t.templatesPage.form_customer_placeholder} />
+                                      </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                      {customers.map(customer => (
+                                          <SelectItem key={customer.id} value={customer.id}>
+                                              {customer.name}
+                                          </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                              </Select>
+                              <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                )}
+
 
                 <div className="space-y-4">
                     <Label>{t.templatesPage.fields_label}</Label>
@@ -334,6 +343,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
 export default function TemplatesPage() {
   const { t } = useI18n();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [templates, setTemplates] = useState<CredentialTemplate[]>([]);
   const [customers, setCustomers] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -343,10 +353,16 @@ export default function TemplatesPage() {
   const [templateToDelete, setTemplateToDelete] = useState<CredentialTemplate | null>(null);
   const [isDeleting, startDeleteTransition] = useTransition();
 
+  const isAdmin = user?.uid === ADMIN_UID;
+
   useEffect(() => {
+    if (!user) return;
     setLoading(true);
-    const q = collection(db, "credentialSchemas");
-    const unsubscribeTemplates = onSnapshot(q, (querySnapshot) => {
+
+    const templatesCollection = collection(db, "credentialSchemas");
+    const templatesQuery = isAdmin ? templatesCollection : query(templatesCollection, where("customerId", "==", user.uid));
+    
+    const unsubscribeTemplates = onSnapshot(templatesQuery, (querySnapshot) => {
       const templatesData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
       setTemplates(templatesData);
       setLoading(false);
@@ -356,16 +372,19 @@ export default function TemplatesPage() {
         setLoading(false);
     });
 
-    const custQ = collection(db, "customers");
-    const unsubscribeCustomers = onSnapshot(custQ, (querySnapshot) => {
-        setCustomers(querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name as string })));
-    });
+    let unsubscribeCustomers = () => {};
+    if (isAdmin) {
+      const custQ = collection(db, "customers");
+      unsubscribeCustomers = onSnapshot(custQ, (querySnapshot) => {
+          setCustomers(querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name as string })));
+      });
+    }
 
     return () => {
         unsubscribeTemplates();
         unsubscribeCustomers();
     };
-  }, [t, toast]);
+  }, [t, toast, user, isAdmin]);
 
   const customerMap = useMemo(() => {
     return customers.reduce((acc, customer) => {
@@ -424,7 +443,7 @@ export default function TemplatesPage() {
                 <TableRow>
                   <TableHead>{t.templatesPage.col_name}</TableHead>
                   <TableHead>{t.templatesPage.col_desc}</TableHead>
-                  <TableHead>{t.templatesPage.col_customer}</TableHead>
+                  {isAdmin && <TableHead>{t.templatesPage.col_customer}</TableHead>}
                   <TableHead className="text-center">{t.templatesPage.col_fields}</TableHead>
                   <TableHead>{t.templatesPage.actions}</TableHead>
                 </TableRow>
@@ -434,7 +453,7 @@ export default function TemplatesPage() {
                   <TableRow key={template.id}>
                     <TableCell className="font-medium">{template.name}</TableCell>
                     <TableCell className="text-muted-foreground">{template.description}</TableCell>
-                    <TableCell>{customerMap[template.customerId] || template.customerId}</TableCell>
+                    {isAdmin && <TableCell>{customerMap[template.customerId] || template.customerId}</TableCell>}
                     <TableCell className="text-center">{template.fields?.length || 0}</TableCell>
                     <TableCell>
                         <DropdownMenu>

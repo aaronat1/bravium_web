@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useRef, useActionState, useMemo, useTransition } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import { collection, onSnapshot } from "firebase/firestore";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -10,6 +11,7 @@ import { Users, PlusCircle, Loader2, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizo
 
 import { db } from "@/lib/firebase/config";
 import { addCustomer, type AddCustomerState, deleteCustomer, updateCustomer, type UpdateCustomerState } from "@/actions/customerActions";
+import { useAuth } from "@/hooks/use-auth";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +26,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -202,6 +206,8 @@ function EditCustomerDialog({ customer, isOpen, onOpenChange }: { customer: Cust
 
 // --- MAIN PAGE COMPONENT ---
 export default function CustomersPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const { t } = useI18n();
   const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -215,6 +221,14 @@ export default function CustomersPage() {
   const [isDeleting, startDeleteTransition] = useTransition();
 
   useEffect(() => {
+    if (!authLoading && user?.uid !== ADMIN_UID) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (user?.uid !== ADMIN_UID) return;
+
     setLoading(true);
     const q = collection(db, "customers");
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -226,7 +240,7 @@ export default function CustomersPage() {
         setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
   
   const handleDeleteCustomer = () => {
     if (!customerToDelete) return;
@@ -345,6 +359,14 @@ export default function CustomersPage() {
     if (!str) return '';
     if (str.length <= num) return str;
     return '...' + str.slice(str.length - num);
+  }
+
+  if (authLoading || user?.uid !== ADMIN_UID) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
