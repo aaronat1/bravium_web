@@ -4,7 +4,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, LogOut, Users, ClipboardList } from "lucide-react";
+import { Home, LogOut, Users, ClipboardList, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/firebase/auth";
@@ -27,6 +27,7 @@ export default function Sidebar() {
     { name: t.sidebar.link_dashboard, href: "/dashboard", icon: Home, adminOnly: false },
     { name: t.sidebar.link_customers, href: "/customers", icon: Users, adminOnly: true },
     { name: t.sidebar.link_templates, href: "/templates", icon: ClipboardList, adminOnly: false },
+    { name: t.sidebar.link_credentials, href: "/credentials", icon: BadgeCheck, adminOnly: false },
   ];
 
   const handleLogout = async () => {
