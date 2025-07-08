@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { revalidatePath } from 'next/cache';
 
 if (!adminDb) {
   console.warn("Firebase Admin DB is not initialized. Issuance actions will fail.");
@@ -33,8 +34,28 @@ export async function saveIssuedCredential(data: z.infer<typeof IssuedCredential
             ...validatedFields.data,
             issuedAt: FieldValue.serverTimestamp(),
         });
+        revalidatePath('/credentials');
         return { success: true, message: 'Credential issuance recorded.' };
     } catch (error: any) {
         return { success: false, message: `Failed to record credential: ${error.message}` };
     }
+}
+
+// --- DELETE ISSUED CREDENTIAL ---
+export async function deleteIssuedCredential(credentialId: string): Promise<{ success: boolean; message: string }> {
+  if (!adminDb) {
+    return { message: 'Server configuration error.', success: false };
+  }
+
+  if (!credentialId) {
+    return { message: 'Invalid credential ID.', success: false };
+  }
+
+  try {
+    await adminDb.collection('issuedCredentials').doc(credentialId).delete();
+    revalidatePath('/credentials');
+    return { message: 'Credential record deleted successfully.', success: true };
+  } catch (error: any) {
+    return { message: `Error deleting credential record: ${error.message}`, success: false };
+  }
 }

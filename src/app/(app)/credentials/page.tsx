@@ -1,23 +1,27 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, query, where, orderBy, type Timestamp } from "firebase/firestore";
-import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck } from "lucide-react";
+import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import QRCode from "qrcode.react";
 
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
+import { deleteIssuedCredential } from "@/actions/issuanceActions";
+import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
@@ -71,12 +75,19 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
     );
 }
 
+// MAIN PAGE COMPONENT
 export default function CredentialsPage() {
     const { t } = useI18n();
+    const { toast } = useToast();
     const { user } = useAuth();
     const [credentials, setCredentials] = useState<IssuedCredential[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewingCredential, setViewingCredential] = useState<IssuedCredential | null>(null);
+    const [credentialToDelete, setCredentialToDelete] = useState<IssuedCredential | null>(null);
+    const [isDeleting, startDeleteTransition] = useTransition();
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortConfig, setSortConfig] = useState<{ key: keyof IssuedCredential | 'recipient'; direction: "ascending" | "descending"; }>({ key: "issuedAt", direction: "descending" });
 
     const isAdmin = user?.uid === ADMIN_UID;
 
@@ -101,10 +112,72 @@ export default function CredentialsPage() {
     }, [user, isAdmin]);
 
     const getRecipientPrimaryInfo = (recipientData: Record<string, any>) => {
+        if (!recipientData) return 'N/A';
         const name = Object.values(recipientData).find(val => typeof val === 'string' && val.split(' ').length > 1);
         const email = Object.values(recipientData).find(val => typeof val === 'string' && val.includes('@'));
-        return name || email || Object.values(recipientData)[0] || 'N/A';
+        return String(name || email || Object.values(recipientData)[0] || 'N/A');
     }
+
+    const handleDeleteCredential = () => {
+        if (!credentialToDelete) return;
+
+        startDeleteTransition(async () => {
+            const result = await deleteIssuedCredential(credentialToDelete.id);
+            toast({
+                title: result.success ? t.credentialsPage.toast_delete_success_title : t.credentialsPage.toast_delete_error_title,
+                description: result.message,
+                variant: result.success ? "default" : "destructive",
+            });
+            setCredentialToDelete(null);
+        });
+    };
+    
+    const sortedAndFilteredCredentials = useMemo(() => {
+        let filtered = credentials.filter(c =>
+            c.templateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            getRecipientPrimaryInfo(c.recipientData).toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        return filtered.sort((a, b) => {
+            let aValue: any;
+            let bValue: any;
+
+            if (sortConfig.key === 'recipient') {
+                aValue = getRecipientPrimaryInfo(a.recipientData);
+                bValue = getRecipientPrimaryInfo(b.recipientData);
+            } else if (sortConfig.key === 'issuedAt' && a.issuedAt && b.issuedAt) {
+                aValue = a.issuedAt.toMillis();
+                bValue = b.issuedAt.toMillis();
+            } else {
+                aValue = a[sortConfig.key as keyof IssuedCredential] || '';
+                bValue = b[sortConfig.key as keyof IssuedCredential] || '';
+            }
+            
+            if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+            return 0;
+        });
+    }, [credentials, searchTerm, sortConfig]);
+
+    const handleSort = (key: keyof IssuedCredential | 'recipient') => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'ascending' ? 'descending' : 'ascending'
+        }));
+    };
+
+    const SortableHeader = ({ sortKey, children }: { sortKey: keyof IssuedCredential | 'recipient', children: React.ReactNode }) => (
+        <TableHead onClick={() => handleSort(sortKey)} className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-2">
+                {children}
+                {sortConfig.key === sortKey ? (
+                    sortConfig.direction === 'ascending' ? <ArrowUp className="h-4 w-4 text-primary" /> : <ArrowDown className="h-4 w-4 text-primary" />
+                ) : (
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />
+                )}
+            </div>
+        </TableHead>
+    );
 
     return (
         <div className="space-y-6">
@@ -123,39 +196,61 @@ export default function CredentialsPage() {
                     <CardDescription>{t.credentialsPage.list_desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="pb-4">
+                        <Input
+                            placeholder={t.credentialsPage.filter_placeholder}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="max-w-sm"
+                        />
+                    </div>
                     {loading ? (
                         <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
                     ) : (
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>{t.credentialsPage.col_template}</TableHead>
-                                    <TableHead>{t.credentialsPage.col_recipient}</TableHead>
-                                    <TableHead>{t.credentialsPage.col_issued_at}</TableHead>
-                                    <TableHead>{t.credentialsPage.col_actions}</TableHead>
+                                    <SortableHeader sortKey="templateName">{t.credentialsPage.col_template}</SortableHeader>
+                                    <SortableHeader sortKey="recipient">{t.credentialsPage.col_recipient}</SortableHeader>
+                                    <SortableHeader sortKey="issuedAt">{t.credentialsPage.col_issued_at}</SortableHeader>
+                                    <TableHead>{t.credentialsPage.actions}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {credentials.length > 0 ? credentials.map((cred) => (
+                                {sortedAndFilteredCredentials.length > 0 ? sortedAndFilteredCredentials.map((cred) => (
                                     <TableRow key={cred.id}>
                                         <TableCell className="font-medium">{cred.templateName}</TableCell>
                                         <TableCell>{getRecipientPrimaryInfo(cred.recipientData)}</TableCell>
                                         <TableCell>{cred.issuedAt ? new Date(cred.issuedAt.toDate()).toLocaleString() : 'N/A'}</TableCell>
                                         <TableCell>
-                                            <Button variant="outline" size="sm" onClick={() => setViewingCredential(cred)}>
-                                                <Eye className="mr-2 h-4 w-4" />
-                                                {t.credentialsPage.view_button}
-                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => setViewingCredential(cred)}>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        <span>{t.credentialsPage.view_button}</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setCredentialToDelete(cred)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        <span>{t.credentialsPage.delete}</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 )) : null}
                             </TableBody>
                         </Table>
                     )}
-                    {!loading && credentials.length === 0 && (
+                    {!loading && sortedAndFilteredCredentials.length === 0 && (
                         <div className="text-center py-10 text-muted-foreground">
                             <BadgeCheck className="mx-auto h-12 w-12" />
-                            <p className="mt-4">{t.credentialsPage.no_credentials}</p>
+                            <p className="mt-4">{credentials.length > 0 && searchTerm ? t.credentialsPage.no_credentials_filter : t.credentialsPage.no_credentials}</p>
                         </div>
                     )}
                 </CardContent>
@@ -166,6 +261,22 @@ export default function CredentialsPage() {
                 isOpen={!!viewingCredential}
                 onOpenChange={(open) => !open && setViewingCredential(null)}
             />
+
+            <AlertDialog open={!!credentialToDelete} onOpenChange={(open) => !open && setCredentialToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t.credentialsPage.delete_dialog_title}</AlertDialogTitle>
+                        <AlertDialogDescription>{t.credentialsPage.delete_dialog_desc}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>{t.credentialsPage.cancel}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteCredential} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {t.credentialsPage.confirm}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
