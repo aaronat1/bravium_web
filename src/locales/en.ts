@@ -359,6 +359,13 @@ export const en = {
     no_credentials_filter: "No credentials match your filter.",
     toast_delete_success_title: "Credential Deleted",
     toast_delete_error_title: "Deletion Error",
+    export_csv: "Export to CSV",
+    export_pdf: "Export to PDF",
+    filter_date_placeholder: "Filter by date",
+    pagination_showing: "Showing {start} to {end} of {total} credentials",
+    pagination_page: "Page {current} of {total}",
+    pagination_previous: "Previous",
+    pagination_next: "Next",
   },
   issueCredentialPage: {
     title: "Issue New Credential",
@@ -423,3 +430,5 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
+
+    

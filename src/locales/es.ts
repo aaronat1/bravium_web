@@ -359,6 +359,13 @@ export const es = {
     no_credentials_filter: "Ninguna credencial coincide con tu filtro.",
     toast_delete_success_title: "Credencial Eliminada",
     toast_delete_error_title: "Error al Eliminar",
+    export_csv: "Exportar a CSV",
+    export_pdf: "Exportar a PDF",
+    filter_date_placeholder: "Filtrar por fecha",
+    pagination_showing: "Mostrando {start} a {end} de {total} credenciales",
+    pagination_page: "Página {current} de {total}",
+    pagination_previous: "Anterior",
+    pagination_next: "Siguiente",
   },
   issueCredentialPage: {
     title: "Emitir Nueva Credencial",
@@ -423,3 +430,5 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
+
+    

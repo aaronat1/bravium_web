@@ -4,8 +4,12 @@
 import { useEffect, useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, query, where, orderBy, type Timestamp } from "firebase/firestore";
-import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon } from "lucide-react";
 import QRCode from "qrcode.react";
+import { format, isSameDay } from 'date-fns';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,8 +26,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+const ITEMS_PER_PAGE = 10;
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 type IssuedCredential = {
     id: string;
@@ -87,7 +101,9 @@ export default function CredentialsPage() {
     const [isDeleting, startDeleteTransition] = useTransition();
 
     const [searchTerm, setSearchTerm] = useState("");
+    const [dateFilter, setDateFilter] = useState<Date | undefined>();
     const [sortConfig, setSortConfig] = useState<{ key: keyof IssuedCredential | 'recipient'; direction: "ascending" | "descending"; }>({ key: "issuedAt", direction: "descending" });
+    const [currentPage, setCurrentPage] = useState(1);
 
     const isAdmin = user?.uid === ADMIN_UID;
 
@@ -95,8 +111,6 @@ export default function CredentialsPage() {
         if (!user) return;
         setLoading(true);
         const credsCollection = collection(db, "issuedCredentials");
-        // For non-admin users, we perform a simpler query to avoid needing a composite index in Firestore.
-        // The sorting is handled client-side by the `useMemo` hook below.
         const q = isAdmin 
             ? query(credsCollection, orderBy("issuedAt", "desc"))
             : query(credsCollection, where("customerId", "==", user.uid));
@@ -113,12 +127,14 @@ export default function CredentialsPage() {
         return () => unsubscribe();
     }, [user, isAdmin]);
 
-    const getRecipientPrimaryInfo = (recipientData: Record<string, any>) => {
-        if (!recipientData) return 'N/A';
-        const name = Object.values(recipientData).find(val => typeof val === 'string' && val.split(' ').length > 1);
-        const email = Object.values(recipientData).find(val => typeof val === 'string' && val.includes('@'));
-        return String(name || email || Object.values(recipientData)[0] || 'N/A');
-    }
+    const formatRecipientData = (recipientData: Record<string, any>) => {
+        if (!recipientData || Object.keys(recipientData).length === 0) return 'N/A';
+        return Object.keys(recipientData)
+            .sort()
+            .map(key => recipientData[key])
+            .filter(val => val !== null && val !== undefined && val !== '')
+            .join(', ');
+    };
 
     const handleDeleteCredential = () => {
         if (!credentialToDelete) return;
@@ -135,18 +151,22 @@ export default function CredentialsPage() {
     };
     
     const sortedAndFilteredCredentials = useMemo(() => {
-        let filtered = credentials.filter(c =>
-            c.templateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            getRecipientPrimaryInfo(c.recipientData).toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        let filtered = credentials.filter(c => {
+            const textMatch = c.templateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                formatRecipientData(c.recipientData).toLowerCase().includes(searchTerm.toLowerCase());
+            
+            const dateMatch = !dateFilter || (c.issuedAt && isSameDay(c.issuedAt.toDate(), dateFilter));
+            
+            return textMatch && dateMatch;
+        });
 
         return filtered.sort((a, b) => {
             let aValue: any;
             let bValue: any;
 
             if (sortConfig.key === 'recipient') {
-                aValue = getRecipientPrimaryInfo(a.recipientData);
-                bValue = getRecipientPrimaryInfo(b.recipientData);
+                aValue = formatRecipientData(a.recipientData);
+                bValue = formatRecipientData(b.recipientData);
             } else if (sortConfig.key === 'issuedAt' && a.issuedAt && b.issuedAt) {
                 aValue = a.issuedAt.toMillis();
                 bValue = b.issuedAt.toMillis();
@@ -159,13 +179,69 @@ export default function CredentialsPage() {
             if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
             return 0;
         });
-    }, [credentials, searchTerm, sortConfig]);
+    }, [credentials, searchTerm, dateFilter, sortConfig]);
+
+    const paginatedCredentials = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        const items = sortedAndFilteredCredentials.slice(start, end);
+        const totalPages = Math.ceil(sortedAndFilteredCredentials.length / ITEMS_PER_PAGE);
+        return { items, totalPages };
+    }, [sortedAndFilteredCredentials, currentPage]);
+
+    useEffect(() => {
+        if(currentPage !== 1) {
+            setCurrentPage(1);
+        }
+    }, [searchTerm, dateFilter, sortConfig]);
+
 
     const handleSort = (key: keyof IssuedCredential | 'recipient') => {
         setSortConfig(prev => ({
             key,
             direction: prev.key === key && prev.direction === 'ascending' ? 'descending' : 'ascending'
         }));
+    };
+
+    const handleExportCSV = () => {
+        const headers = ["ID", "Template Name", "Recipient Data", "Issued At"];
+        const csvContent = [
+          headers.join(","),
+          ...sortedAndFilteredCredentials.map(c => [
+            c.id,
+            `"${c.templateName}"`,
+            `"${formatRecipientData(c.recipientData).replace(/"/g, '""')}"`,
+            c.issuedAt ? c.issuedAt.toDate().toISOString() : 'N/A'
+          ].join(","))
+        ].join("\n");
+    
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", `credentials-export-${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        const tableData = sortedAndFilteredCredentials.map(c => [
+            c.templateName,
+            formatRecipientData(c.recipientData),
+            c.issuedAt ? new Date(c.issuedAt.toDate()).toLocaleString() : 'N/A'
+        ]);
+    
+        autoTable(doc, {
+            head: [['Template', 'Recipient', 'Issued At']],
+            body: tableData,
+            startY: 20,
+            didDrawPage: (data) => {
+                doc.text('Issued Credentials List', data.settings.margin.left, 15);
+            }
+        });
+    
+        doc.save(`credentials-export-${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     const SortableHeader = ({ sortKey, children }: { sortKey: keyof IssuedCredential | 'recipient', children: React.ReactNode }) => (
@@ -198,13 +274,47 @@ export default function CredentialsPage() {
                     <CardDescription>{t.credentialsPage.list_desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="pb-4">
-                        <Input
-                            placeholder={t.credentialsPage.filter_placeholder}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="max-w-sm"
-                        />
+                    <div className="flex items-center justify-between pb-4 gap-2 flex-wrap">
+                        <div className="flex gap-2 flex-wrap">
+                            <Input
+                                placeholder={t.credentialsPage.filter_placeholder}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="max-w-sm"
+                            />
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-[240px] justify-start text-left font-normal",
+                                            !dateFilter && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {dateFilter ? format(dateFilter, "PPP") : <span>{t.credentialsPage.filter_date_placeholder}</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={dateFilter}
+                                        onSelect={setDateFilter}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={handleExportCSV}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                {t.credentialsPage.export_csv}
+                            </Button>
+                            <Button variant="outline" onClick={handleExportPDF}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                {t.credentialsPage.export_pdf}
+                            </Button>
+                        </div>
                     </div>
                     {loading ? (
                         <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -219,10 +329,10 @@ export default function CredentialsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {sortedAndFilteredCredentials.length > 0 ? sortedAndFilteredCredentials.map((cred) => (
+                                {paginatedCredentials.items.length > 0 ? paginatedCredentials.items.map((cred) => (
                                     <TableRow key={cred.id}>
                                         <TableCell className="font-medium">{cred.templateName}</TableCell>
-                                        <TableCell>{getRecipientPrimaryInfo(cred.recipientData)}</TableCell>
+                                        <TableCell>{formatRecipientData(cred.recipientData)}</TableCell>
                                         <TableCell>{cred.issuedAt ? new Date(cred.issuedAt.toDate()).toLocaleString() : 'N/A'}</TableCell>
                                         <TableCell>
                                             <DropdownMenu>
@@ -252,7 +362,46 @@ export default function CredentialsPage() {
                     {!loading && sortedAndFilteredCredentials.length === 0 && (
                         <div className="text-center py-10 text-muted-foreground">
                             <BadgeCheck className="mx-auto h-12 w-12" />
-                            <p className="mt-4">{credentials.length > 0 && searchTerm ? t.credentialsPage.no_credentials_filter : t.credentialsPage.no_credentials}</p>
+                             <p className="mt-4">
+                                {credentials.length > 0 && (searchTerm || dateFilter)
+                                    ? t.credentialsPage.no_credentials_filter
+                                    : t.credentialsPage.no_credentials}
+                            </p>
+                        </div>
+                    )}
+                     { !loading && sortedAndFilteredCredentials.length > 0 && (
+                        <div className="flex items-center justify-between pt-4">
+                            <div className="text-sm text-muted-foreground">
+                            {t.credentialsPage.pagination_showing
+                                .replace('{start}', Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, sortedAndFilteredCredentials.length).toString())
+                                .replace('{end}', Math.min(currentPage * ITEMS_PER_PAGE, sortedAndFilteredCredentials.length).toString())
+                                .replace('{total}', sortedAndFilteredCredentials.length.toString())
+                            }
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    {t.credentialsPage.pagination_previous}
+                                </Button>
+                                <span className="text-sm font-medium whitespace-nowrap">
+                                {t.credentialsPage.pagination_page
+                                    .replace('{current}', currentPage.toString())
+                                    .replace('{total}', paginatedCredentials.totalPages > 0 ? paginatedCredentials.totalPages.toString() : "1")
+                                }
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, paginatedCredentials.totalPages))}
+                                    disabled={currentPage === paginatedCredentials.totalPages || paginatedCredentials.totalPages === 0}
+                                >
+                                    {t.credentialsPage.pagination_next}
+                                </Button>
+                            </div>
                         </div>
                     )}
                 </CardContent>
@@ -282,3 +431,5 @@ export default function CredentialsPage() {
         </div>
     );
 }
+
+    
