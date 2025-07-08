@@ -6,7 +6,9 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { PlusCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users, ClipboardList, Sparkles, FileText, Calendar, ToyBrick, Type, Trash, File } from "lucide-react";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { PlusCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users, ClipboardList, Sparkles, FileText, Calendar, ToyBrick, Type, Trash, File, ArrowUpDown, ArrowUp, ArrowDown, FileDown } from "lucide-react";
 
 import { db } from "@/lib/firebase/config";
 import { createTemplate, updateTemplate, deleteTemplate, generateTemplateSchema } from "@/actions/templateActions";
@@ -27,10 +29,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+
+// Augment jsPDF for autoTable plugin
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 // DATA TYPES
 export type TemplateField = {
@@ -280,6 +289,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
                                     <FormItem>
                                         <FormLabel>{t.templatesPage.field_options}</FormLabel>
                                         <FormControl><Input placeholder="Option 1, Option 2, ..." {...field} onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))} value={Array.isArray(field.value) ? field.value.join(', ') : ''} /></FormControl>
+                                        <FormDescription>{t.templatesPage.field_options_desc}</FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -342,6 +352,9 @@ export default function TemplatesPage() {
   const [templateToEdit, setTemplateToEdit] = useState<CredentialTemplate | null>(null);
   const [templateToDelete, setTemplateToDelete] = useState<CredentialTemplate | null>(null);
   const [isDeleting, startDeleteTransition] = useTransition();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'description' | 'customerName' | 'fieldCount'; direction: "ascending" | "descending"; }>({ key: "name", direction: "ascending" });
 
   const isAdmin = user?.uid === ADMIN_UID;
 
@@ -407,6 +420,106 @@ export default function TemplatesPage() {
     setIsFormOpen(true);
   }
 
+  const sortedAndFilteredTemplates = useMemo(() => {
+    let filtered = templates.filter(t =>
+        t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (isAdmin && (customerMap[t.customerId] || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    return filtered.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        const key = sortConfig.key;
+
+        if (key === 'customerName') {
+            aValue = customerMap[a.customerId] || '';
+            bValue = customerMap[b.customerId] || '';
+        } else if (key === 'fieldCount') {
+            aValue = a.fields?.length || 0;
+            bValue = b.fields?.length || 0;
+        } else {
+            aValue = a[key as keyof Omit<CredentialTemplate, 'fields'>] || '';
+            bValue = b[key as keyof Omit<CredentialTemplate, 'fields'>] || '';
+        }
+
+        if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
+        return 0;
+    });
+  }, [templates, searchTerm, sortConfig, isAdmin, customerMap]);
+
+  const handleSort = (key: 'name' | 'description' | 'customerName' | 'fieldCount') => {
+      setSortConfig(prev => ({
+          key,
+          direction: prev.key === key && prev.direction === 'ascending' ? 'descending' : 'ascending'
+      }));
+  };
+
+  const handleExportCSV = () => {
+    const headers = isAdmin 
+        ? ["ID", "Name", "Description", "Customer Name", "Fields Count"]
+        : ["ID", "Name", "Description", "Fields Count"];
+
+    const csvContent = [
+      headers.join(","),
+      ...sortedAndFilteredTemplates.map(t => [
+        t.id,
+        `"${t.name}"`,
+        `"${t.description || ''}"`,
+        ...(isAdmin ? [`"${customerMap[t.customerId] || ''}"`] : []),
+        t.fields?.length || 0
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `templates-export-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const head = isAdmin 
+        ? [['Name', 'Description', 'Customer', 'Fields']]
+        : [['Name', 'Description', 'Fields']];
+
+    const body = sortedAndFilteredTemplates.map(t => [
+        t.name,
+        t.description || '',
+        ...(isAdmin ? [customerMap[t.customerId] || 'N/A'] : []),
+        t.fields?.length.toString() || '0'
+    ]);
+
+    autoTable(doc, {
+        head: head,
+        body: body,
+        startY: 20,
+        didDrawPage: (data) => {
+            doc.text('Template List', data.settings.margin.left, 15);
+        }
+    });
+
+    doc.save(`templates-export-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  const SortableHeader = ({ sortKey, children }: { sortKey: 'name' | 'description' | 'customerName' | 'fieldCount', children: React.ReactNode }) => (
+      <TableHead onClick={() => handleSort(sortKey)} className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <div className="flex items-center gap-2">
+              {children}
+              {sortConfig.key === sortKey ? (
+                  sortConfig.direction === 'ascending' ? <ArrowUp className="h-4 w-4 text-primary" /> : <ArrowDown className="h-4 w-4 text-primary" />
+              ) : (
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />
+              )}
+          </div>
+      </TableHead>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -425,21 +538,39 @@ export default function TemplatesPage() {
           <CardDescription>{t.templatesPage.list_desc}</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between pb-4 gap-2">
+              <Input 
+                  placeholder={t.templatesPage.filter_placeholder}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+              />
+              <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleExportCSV}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      {t.templatesPage.export_csv}
+                  </Button>
+                  <Button variant="outline" onClick={handleExportPDF}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      {t.templatesPage.export_pdf}
+                  </Button>
+              </div>
+          </div>
           {loading ? (
              <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t.templatesPage.col_name}</TableHead>
-                  <TableHead>{t.templatesPage.col_desc}</TableHead>
-                  {isAdmin && <TableHead>{t.templatesPage.col_customer}</TableHead>}
-                  <TableHead className="text-center">{t.templatesPage.col_fields}</TableHead>
+                  <SortableHeader sortKey="name">{t.templatesPage.col_name}</SortableHeader>
+                  <SortableHeader sortKey="description">{t.templatesPage.col_desc}</SortableHeader>
+                  {isAdmin && <SortableHeader sortKey="customerName">{t.templatesPage.col_customer}</SortableHeader>}
+                  <SortableHeader sortKey="fieldCount">{t.templatesPage.col_fields}</SortableHeader>
                   <TableHead>{t.templatesPage.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {templates.map((template) => (
+                {sortedAndFilteredTemplates.map((template) => (
                   <TableRow key={template.id}>
                     <TableCell className="font-medium">{template.name}</TableCell>
                     <TableCell className="text-muted-foreground">{template.description}</TableCell>
@@ -468,10 +599,10 @@ export default function TemplatesPage() {
               </TableBody>
             </Table>
           )}
-           { !loading && templates.length === 0 && (
+           { !loading && sortedAndFilteredTemplates.length === 0 && (
               <div className="text-center py-10 text-muted-foreground">
                 <ClipboardList className="mx-auto h-12 w-12" />
-                <p className="mt-4">{t.templatesPage.no_templates}</p>
+                <p className="mt-4">{templates.length > 0 && searchTerm ? t.templatesPage.no_templates_filter : t.templatesPage.no_templates}</p>
               </div>
             )}
         </CardContent>
