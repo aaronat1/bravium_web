@@ -17,12 +17,13 @@ import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileCheck, Copy, Check, Calendar, Type, ToyBrick, File as FileIcon } from "lucide-react";
+import { Loader2, FileCheck, Copy, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
@@ -41,7 +42,7 @@ export default function IssueCredentialPage() {
     const isAdmin = user?.uid === ADMIN_UID;
 
     const form = useForm();
-    const { handleSubmit, register, reset, control } = form;
+    const { handleSubmit, reset, control } = form;
 
     useEffect(() => {
         if (!user) return;
@@ -63,7 +64,11 @@ export default function IssueCredentialPage() {
     const handleTemplateChange = (templateId: string) => {
         const template = templates.find(t => t.id === templateId) || null;
         setSelectedTemplate(template);
-        reset({});
+        const defaultValues = template?.fields.reduce((acc, field) => {
+            acc[field.fieldName] = field.defaultValue || '';
+            return acc;
+        }, {} as Record<string, any>) || {};
+        reset(defaultValues);
     };
 
     const onSubmit = async (data: any) => {
@@ -109,35 +114,6 @@ export default function IssueCredentialPage() {
         setTimeout(() => setHasCopied(false), 2000);
     };
 
-    const renderField = (field: CredentialTemplate['fields'][0]) => {
-        const commonProps = {
-            id: field.fieldName,
-            ...register(field.fieldName, { required: field.required ? t.issueCredentialPage.required_field_error : false })
-        };
-
-        switch(field.type) {
-            case 'date':
-                return <Input type="date" {...commonProps} />;
-            case 'select':
-                return (
-                    <Select onValueChange={(value) => form.setValue(field.fieldName, value)} >
-                        <SelectTrigger><SelectValue placeholder={field.label} /></SelectTrigger>
-                        <SelectContent>
-                            {(field.options || []).map(option => (
-                                <SelectItem key={option} value={option}>{option}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                );
-            case 'file': // For now, file is a text input for a URL
-                 return <Input type="text" placeholder={t.issueCredentialPage.file_placeholder} {...commonProps} />;
-            case 'text':
-            default:
-                return <Input type="text" {...commonProps} />;
-        }
-    };
-
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -176,16 +152,39 @@ export default function IssueCredentialPage() {
                     <CardContent>
                         <Form {...form}>
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                {selectedTemplate.fields.map(field => (
+                                {selectedTemplate.fields.map(fieldInfo => (
                                     <FormField
-                                        key={field.fieldName}
+                                        key={fieldInfo.fieldName}
                                         control={control}
-                                        name={field.fieldName}
-                                        rules={{ required: field.required }}
-                                        render={() => (
+                                        name={fieldInfo.fieldName}
+                                        rules={{ required: fieldInfo.required ? t.issueCredentialPage.required_field_error : false }}
+                                        render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>{field.label} {field.required && '*'}</FormLabel>
-                                                {renderField(field)}
+                                                <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
+                                                <FormControl>
+                                                    {(() => {
+                                                        switch(fieldInfo.type) {
+                                                            case 'date':
+                                                                return <Input type="date" {...field} />;
+                                                            case 'select':
+                                                                return (
+                                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                        <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {(fieldInfo.options || []).map(option => (
+                                                                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                );
+                                                            case 'file':
+                                                                 return <Input type="text" placeholder={t.issueCredentialPage.file_placeholder} {...field} />;
+                                                            case 'text':
+                                                            default:
+                                                                return <Input type="text" {...field} />;
+                                                        }
+                                                    })()}
+                                                </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -212,7 +211,7 @@ export default function IssueCredentialPage() {
                             <QRCode value={issuedCredential!} size={256} />
                         </div>
                         <div className="w-full space-y-2">
-                             <FormLabel htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</FormLabel>
+                             <Label htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</Label>
                             <div className="relative">
                                 <Textarea id="jws-output" readOnly value={issuedCredential || ""} rows={6} className="font-mono text-xs pr-10"/>
                                 <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={handleCopy}>

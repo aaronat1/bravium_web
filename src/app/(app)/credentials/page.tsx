@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { FormLabel } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
@@ -54,7 +54,7 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
                         <QRCode value={credential.jws} size={256} />
                     </div>
                     <div className="w-full space-y-2">
-                         <FormLabel htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</FormLabel>
+                         <Label htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</Label>
                         <div className="relative">
                             <Textarea id="jws-output" readOnly value={credential.jws} rows={6} className="font-mono text-xs pr-10"/>
                             <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={handleCopy}>
