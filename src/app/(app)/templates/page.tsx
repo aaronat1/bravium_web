@@ -1,13 +1,12 @@
 
 "use client";
 
-import { useEffect, useState, useRef, useActionState, useMemo, useTransition } from "react";
-import { useForm, useFieldArray, useFormContext, Controller } from "react-hook-form";
-import { useFormStatus } from "react-dom";
+import { useEffect, useState, useActionState, useMemo, useTransition } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { PlusCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users, ClipboardList, GripVertical, Sparkles, FileText, Calendar, ToyBrick, Type, Trash, File } from "lucide-react";
+import { PlusCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users, ClipboardList, Sparkles, FileText, Calendar, ToyBrick, Type, Trash, File } from "lucide-react";
 
 import { db } from "@/lib/firebase/config";
 import { createTemplate, updateTemplate, deleteTemplate, generateTemplateSchema } from "@/actions/templateActions";
@@ -28,7 +27,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
@@ -79,10 +78,10 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
   const { t } = useI18n();
   const { toast } = useToast();
   const { user } = useAuth();
-  const formRef = useRef<HTMLFormElement>(null);
   const [activeTab, setActiveTab] = useState("designer");
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, startGeneratingTransition] = useTransition();
+  const [isSubmitting, startSubmitTransition] = useTransition();
 
   const isEditMode = !!template;
   const isAdmin = user?.uid === ADMIN_UID;
@@ -104,7 +103,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
   });
 
   const { control, handleSubmit, reset, watch } = form;
-  const { fields, append, remove, move } = useFieldArray({ control, name: "fields" });
+  const { fields, append, remove } = useFieldArray({ control, name: "fields" });
   
   const watchedFields = watch("fields");
 
@@ -157,15 +156,16 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
     });
   };
 
-  const submitButton = () => {
-    const { pending } = useFormStatus();
-    return (
-        <Button type="submit" disabled={pending}>
-            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEditMode ? t.templatesPage.form_save : t.templatesPage.form_create}
-        </Button>
-    )
-  }
+  const processFormSubmit = (data: TemplateFormData) => {
+    startSubmitTransition(() => {
+        const templateData = new FormData();
+        if (isEditMode && template) {
+            templateData.append('templateId', template.id);
+        }
+        templateData.append('templateData', JSON.stringify(data));
+        formAction(templateData);
+    });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -182,8 +182,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
           </TabsList>
 
           <Form {...form}>
-            <form action={formAction} className="flex-grow flex flex-col min-h-0">
-            {isEditMode && <input type="hidden" name="templateId" value={template.id} />}
+            <form onSubmit={handleSubmit(processFormSubmit)} className="flex-grow flex flex-col min-h-0">
 
             <TabsContent value="designer" className="flex-grow space-y-4 overflow-y-auto p-1 pr-4">
                 <FormField control={control} name="name" render={({ field }) => (
@@ -281,7 +280,6 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
                                     <FormItem>
                                         <FormLabel>{t.templatesPage.field_options}</FormLabel>
                                         <FormControl><Input placeholder="Option 1, Option 2, ..." {...field} onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))} value={Array.isArray(field.value) ? field.value.join(', ') : ''} /></FormControl>
-                                        <FormDescription>{t.templatesPage.field_options_desc}</FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -316,19 +314,11 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
             </TabsContent>
             
             <DialogFooter className="mt-4 pt-4 border-t">
-              <input type="hidden" {...form.register('form_data_json')} />
-              <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>{t.templatesPage.cancel}</Button>
-              <Button type="submit" disabled={useFormStatus().pending} onClick={handleSubmit((data) => {
-                  const templateData = new FormData();
-                  if (isEditMode) {
-                    templateData.append('templateId', template.id);
-                  }
-                  templateData.append('templateData', JSON.stringify(data));
-                  formAction(templateData);
-              })}>
-                {useFormStatus().pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              <Button variant="ghost" type="button" onClick={() => onOpenChange(false)} disabled={isSubmitting}>{t.templatesPage.cancel}</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isEditMode ? t.templatesPage.form_save : t.templatesPage.form_create}
-            </Button>
+              </Button>
             </DialogFooter>
             </form>
           </Form>
