@@ -215,6 +215,8 @@ export const en = {
     manage_customers: "Manage Customers",
     total_templates: "Total Templates",
     manage_templates: "Manage Templates",
+    total_credentials: "Total Credentials",
+    manage_credentials: "Manage Credentials",
     welcome_title: "Welcome to Bravium",
     welcome_desc: "Your central hub for managing digital credentials.",
     welcome_text: "Use the sidebar to navigate between customer management and credential templates. Here you can create, issue, and manage the entire lifecycle of your verifiable credentials.",
@@ -430,5 +432,3 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-    

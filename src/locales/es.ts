@@ -215,6 +215,8 @@ export const es = {
     manage_customers: "Gestionar Clientes",
     total_templates: "Total Plantillas",
     manage_templates: "Gestionar Plantillas",
+    total_credentials: "Total Credenciales",
+    manage_credentials: "Gestionar Credenciales",
     welcome_title: "Bienvenido a Bravium",
     welcome_desc: "Tu centro de mando para la gestión de credenciales digitales.",
     welcome_text: "Usa el menú lateral para navegar entre la gestión de clientes y las plantillas de credenciales. Desde aquí podrás crear, emitir y gestionar todo el ciclo de vida de tus credenciales verificables.",
@@ -430,5 +432,3 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
-
-    

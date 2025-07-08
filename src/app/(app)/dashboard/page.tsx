@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { Users, ClipboardList, Loader2 } from "lucide-react";
+import { Users, ClipboardList, Loader2, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [customerCount, setCustomerCount] = useState<number | null>(null);
   const [templateCount, setTemplateCount] = useState<number | null>(null);
+  const [credentialCount, setCredentialCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isAdmin = user?.uid === ADMIN_UID;
@@ -28,14 +29,26 @@ export default function DashboardPage() {
 
     setLoading(true);
     const customerQuery = collection(db, "customers");
+    
     const templateCollection = collection(db, "credentialSchemas");
     const templateQuery = isAdmin ? templateCollection : query(templateCollection, where("customerId", "==", user.uid));
+    
+    const credentialCollection = collection(db, "issuedCredentials");
+    const credentialQuery = isAdmin ? credentialCollection : query(credentialCollection, where("customerId", "==", user.uid));
+
 
     const unsubTemplates = onSnapshot(templateQuery, (snap) => {
       setTemplateCount(snap.size);
     }, (error) => {
       console.error("Error fetching template count:", error);
       setTemplateCount(0);
+    });
+
+    const unsubCredentials = onSnapshot(credentialQuery, (snap) => {
+      setCredentialCount(snap.size);
+    }, (error) => {
+        console.error("Error fetching credential count:", error);
+        setCredentialCount(0);
     });
 
     let unsubCustomers: () => void = () => {};
@@ -50,6 +63,7 @@ export default function DashboardPage() {
 
     const promises = [
         new Promise(resolve => onSnapshot(templateQuery, resolve)),
+        new Promise(resolve => onSnapshot(credentialQuery, resolve)),
     ];
 
     if (isAdmin) {
@@ -63,6 +77,7 @@ export default function DashboardPage() {
     return () => {
       unsubCustomers();
       unsubTemplates();
+      unsubCredentials();
     };
   }, [user, isAdmin]);
 
@@ -103,6 +118,23 @@ export default function DashboardPage() {
             )}
             <Button variant="link" asChild className="px-0">
                 <Link href="/templates">{t.dashboard.manage_templates}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t.dashboard.total_credentials}</CardTitle>
+            <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             {loading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+                <div className="text-2xl font-bold">{credentialCount}</div>
+            )}
+            <Button variant="link" asChild className="px-0">
+                <Link href="/credentials">{t.dashboard.manage_credentials}</Link>
             </Button>
           </CardContent>
         </Card>
