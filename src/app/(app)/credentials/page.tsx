@@ -204,7 +204,7 @@ export default function CredentialsPage() {
     };
 
     const handleExportCSV = () => {
-        const headers = ["Template Name", "Recipient Data", "Issued At"];
+        const headers = [t.credentialsPage.col_template, t.credentialsPage.col_recipient, t.credentialsPage.col_issued_at];
         const csvContent = [
           headers.join(","),
           ...sortedAndFilteredCredentials.map(c => [
@@ -232,7 +232,7 @@ export default function CredentialsPage() {
         ]);
     
         autoTable(doc, {
-            head: [['Template', 'Recipient', 'Issued At']],
+            head: [[t.credentialsPage.col_template, t.credentialsPage.col_recipient, t.credentialsPage.col_issued_at]],
             body: tableData,
             startY: 20,
             didDrawPage: (data) => {

@@ -476,8 +476,8 @@ export default function TemplatesPage() {
 
   const handleExportCSV = () => {
     const headers = isAdmin 
-        ? ["Name", "Description", "Customer Name", "Fields Count"]
-        : ["Name", "Description", "Fields Count"];
+        ? [t.templatesPage.col_name, t.templatesPage.col_desc, t.templatesPage.col_customer, t.templatesPage.col_fields]
+        : [t.templatesPage.col_name, t.templatesPage.col_desc, t.templatesPage.col_fields];
 
     const csvContent = [
       headers.join(","),
@@ -501,8 +501,8 @@ export default function TemplatesPage() {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const head = isAdmin 
-        ? [['Name', 'Description', 'Customer', 'Fields']]
-        : [['Name', 'Description', 'Fields']];
+        ? [[t.templatesPage.col_name, t.templatesPage.col_desc, t.templatesPage.col_customer, t.templatesPage.col_fields]]
+        : [[t.templatesPage.col_name, t.templatesPage.col_desc, t.templatesPage.col_fields]];
 
     const body = filteredAndSortedTemplates.map(t => [
         t.name,

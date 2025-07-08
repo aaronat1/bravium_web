@@ -275,9 +275,27 @@ export default function CustomersPage() {
   const handleSort = (key: keyof Customer) => {
     setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'ascending' ? 'descending' : 'ascending' }));
   };
+  
+  const getPlanText = (plan: string) => {
+    switch (plan?.toLowerCase()) {
+      case 'starter': return t.customersPage.plan_starter;
+      case 'pro': return t.customersPage.plan_pro;
+      case 'enterprise': return t.customersPage.plan_enterprise;
+      default: return plan;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active': return t.customersPage.status_active;
+      case 'inactive': return t.customersPage.status_inactive;
+      case 'cancelled': return t.customersPage.status_cancelled;
+      default: return status;
+    }
+  };
 
   const handleExportCSV = () => {
-    const headers = ["Name", "Email", "DID", "KMS Key Path", "Plan", "Status"];
+    const headers = [t.customersPage.col_name, t.customersPage.col_email, t.customersPage.col_did, t.customersPage.col_kms_key, t.customersPage.col_plan, t.customersPage.col_status];
     const csvContent = [
       headers.join(","),
       ...sortedAndFilteredCustomers.map(c => [
@@ -285,8 +303,8 @@ export default function CustomersPage() {
         c.email,
         c.did || '',
         c.kmsKeyPath || '',
-        c.subscriptionPlan,
-        c.subscriptionStatus
+        getPlanText(c.subscriptionPlan),
+        getStatusText(c.subscriptionStatus)
       ].join(","))
     ].join("\n");
 
@@ -309,12 +327,12 @@ export default function CustomersPage() {
         c.email,
         c.did || 'N/A',
         c.kmsKeyPath || 'N/A',
-        c.subscriptionPlan,
-        c.subscriptionStatus
+        getPlanText(c.subscriptionPlan),
+        getStatusText(c.subscriptionStatus)
     ]);
 
     autoTable(doc, {
-        head: [['Name', 'Email', 'DID', 'KMS Key Path', 'Plan', 'Status']],
+        head: [[t.customersPage.col_name, t.customersPage.col_email, t.customersPage.col_did, t.customersPage.col_kms_key, t.customersPage.col_plan, t.customersPage.col_status]],
         body: tableData,
         startY: 20,
         didDrawPage: (data) => {
