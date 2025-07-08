@@ -95,9 +95,11 @@ export default function CredentialsPage() {
         if (!user) return;
         setLoading(true);
         const credsCollection = collection(db, "issuedCredentials");
+        // For non-admin users, we perform a simpler query to avoid needing a composite index in Firestore.
+        // The sorting is handled client-side by the `useMemo` hook below.
         const q = isAdmin 
             ? query(credsCollection, orderBy("issuedAt", "desc"))
-            : query(credsCollection, where("customerId", "==", user.uid), orderBy("issuedAt", "desc"));
+            : query(credsCollection, where("customerId", "==", user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as IssuedCredential));
