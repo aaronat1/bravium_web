@@ -476,13 +476,12 @@ export default function TemplatesPage() {
 
   const handleExportCSV = () => {
     const headers = isAdmin 
-        ? ["ID", "Name", "Description", "Customer Name", "Fields Count"]
-        : ["ID", "Name", "Description", "Fields Count"];
+        ? ["Name", "Description", "Customer Name", "Fields Count"]
+        : ["Name", "Description", "Fields Count"];
 
     const csvContent = [
       headers.join(","),
       ...filteredAndSortedTemplates.map(t => [
-        t.id,
         `"${t.name}"`,
         `"${t.description || ''}"`,
         ...(isAdmin ? [`"${customerMap[t.customerId] || ''}"`] : []),

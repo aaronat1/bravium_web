@@ -112,7 +112,7 @@ export default function CredentialsPage() {
         setLoading(true);
         const credsCollection = collection(db, "issuedCredentials");
         const q = isAdmin 
-            ? query(credsCollection, orderBy("issuedAt", "desc"))
+            ? query(credsCollection)
             : query(credsCollection, where("customerId", "==", user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -204,11 +204,10 @@ export default function CredentialsPage() {
     };
 
     const handleExportCSV = () => {
-        const headers = ["ID", "Template Name", "Recipient Data", "Issued At"];
+        const headers = ["Template Name", "Recipient Data", "Issued At"];
         const csvContent = [
           headers.join(","),
           ...sortedAndFilteredCredentials.map(c => [
-            c.id,
             `"${c.templateName}"`,
             `"${formatRecipientData(c.recipientData).replace(/"/g, '""')}"`,
             c.issuedAt ? c.issuedAt.toDate().toISOString() : 'N/A'
@@ -431,5 +430,3 @@ export default function CredentialsPage() {
         </div>
     );
 }
-
-    

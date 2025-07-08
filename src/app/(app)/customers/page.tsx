@@ -277,11 +277,10 @@ export default function CustomersPage() {
   };
 
   const handleExportCSV = () => {
-    const headers = ["ID", "Name", "Email", "DID", "KMS Key Path", "Plan", "Status"];
+    const headers = ["Name", "Email", "DID", "KMS Key Path", "Plan", "Status"];
     const csvContent = [
       headers.join(","),
       ...sortedAndFilteredCustomers.map(c => [
-        c.id,
         `"${c.name}"`,
         c.email,
         c.did || '',
@@ -308,12 +307,14 @@ export default function CustomersPage() {
     const tableData = sortedAndFilteredCustomers.map(c => [
         c.name,
         c.email,
+        c.did || 'N/A',
+        c.kmsKeyPath || 'N/A',
         c.subscriptionPlan,
         c.subscriptionStatus
     ]);
 
     autoTable(doc, {
-        head: [['Name', 'Email', 'Plan', 'Status']],
+        head: [['Name', 'Email', 'DID', 'KMS Key Path', 'Plan', 'Status']],
         body: tableData,
         startY: 20,
         didDrawPage: (data) => {
