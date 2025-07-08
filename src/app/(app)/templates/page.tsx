@@ -33,6 +33,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+const ITEMS_PER_PAGE = 10;
 
 // Augment jsPDF for autoTable plugin
 declare module 'jspdf' {
@@ -355,6 +356,7 @@ export default function TemplatesPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'description' | 'customerName' | 'fieldCount'; direction: "ascending" | "descending"; }>({ key: "name", direction: "ascending" });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const isAdmin = user?.uid === ADMIN_UID;
 
@@ -420,7 +422,7 @@ export default function TemplatesPage() {
     setIsFormOpen(true);
   }
 
-  const sortedAndFilteredTemplates = useMemo(() => {
+  const filteredAndSortedTemplates = useMemo(() => {
     let filtered = templates.filter(t =>
         t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -430,7 +432,6 @@ export default function TemplatesPage() {
     return filtered.sort((a, b) => {
         let aValue: any;
         let bValue: any;
-
         const key = sortConfig.key;
 
         if (key === 'customerName') {
@@ -449,8 +450,24 @@ export default function TemplatesPage() {
         return 0;
     });
   }, [templates, searchTerm, sortConfig, isAdmin, customerMap]);
+  
+  const paginatedTemplates = useMemo(() => {
+    const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+    const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+    const currentItems = filteredAndSortedTemplates.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredAndSortedTemplates.length / ITEMS_PER_PAGE);
+    
+    return { items: currentItems, totalPages };
+  }, [filteredAndSortedTemplates, currentPage]);
+  
+  useEffect(() => {
+    if(currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [searchTerm, sortConfig]);
 
   const handleSort = (key: 'name' | 'description' | 'customerName' | 'fieldCount') => {
+      setCurrentPage(1);
       setSortConfig(prev => ({
           key,
           direction: prev.key === key && prev.direction === 'ascending' ? 'descending' : 'ascending'
@@ -464,7 +481,7 @@ export default function TemplatesPage() {
 
     const csvContent = [
       headers.join(","),
-      ...sortedAndFilteredTemplates.map(t => [
+      ...filteredAndSortedTemplates.map(t => [
         t.id,
         `"${t.name}"`,
         `"${t.description || ''}"`,
@@ -488,7 +505,7 @@ export default function TemplatesPage() {
         ? [['Name', 'Description', 'Customer', 'Fields']]
         : [['Name', 'Description', 'Fields']];
 
-    const body = sortedAndFilteredTemplates.map(t => [
+    const body = filteredAndSortedTemplates.map(t => [
         t.name,
         t.description || '',
         ...(isAdmin ? [customerMap[t.customerId] || 'N/A'] : []),
@@ -570,7 +587,7 @@ export default function TemplatesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedAndFilteredTemplates.map((template) => (
+                {paginatedTemplates.items.map((template) => (
                   <TableRow key={template.id}>
                     <TableCell className="font-medium">{template.name}</TableCell>
                     <TableCell className="text-muted-foreground">{template.description}</TableCell>
@@ -599,10 +616,46 @@ export default function TemplatesPage() {
               </TableBody>
             </Table>
           )}
-           { !loading && sortedAndFilteredTemplates.length === 0 && (
+           { !loading && filteredAndSortedTemplates.length === 0 && (
               <div className="text-center py-10 text-muted-foreground">
                 <ClipboardList className="mx-auto h-12 w-12" />
                 <p className="mt-4">{templates.length > 0 && searchTerm ? t.templatesPage.no_templates_filter : t.templatesPage.no_templates}</p>
+              </div>
+            )}
+            
+            { !loading && filteredAndSortedTemplates.length > 0 && (
+              <div className="flex items-center justify-between pt-4">
+                <div className="text-sm text-muted-foreground">
+                  {t.templatesPage.pagination_showing
+                    .replace('{start}', Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, filteredAndSortedTemplates.length).toString())
+                    .replace('{end}', Math.min(currentPage * ITEMS_PER_PAGE, filteredAndSortedTemplates.length).toString())
+                    .replace('{total}', filteredAndSortedTemplates.length.toString())
+                  }
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    >
+                        {t.templatesPage.pagination_previous}
+                    </Button>
+                    <span className="text-sm font-medium whitespace-nowrap">
+                      {t.templatesPage.pagination_page
+                        .replace('{current}', currentPage.toString())
+                        .replace('{total}', paginatedTemplates.totalPages > 0 ? paginatedTemplates.totalPages.toString() : "1")
+                      }
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, paginatedTemplates.totalPages))}
+                        disabled={currentPage === paginatedTemplates.totalPages || paginatedTemplates.totalPages === 0}
+                    >
+                        {t.templatesPage.pagination_next}
+                    </Button>
+                </div>
               </div>
             )}
         </CardContent>

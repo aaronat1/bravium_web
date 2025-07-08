@@ -331,6 +331,10 @@ export const es = {
     ai_generate_button: "Generar con IA",
     ai_success_title: "¡Plantilla Generada!",
     ai_success_desc: "La IA ha rellenado el formulario por ti. Por favor, revísalo y guárdalo.",
+    pagination_showing: "Mostrando {start} a {end} de {total} plantillas",
+    pagination_page: "Página {current} de {total}",
+    pagination_previous: "Anterior",
+    pagination_next: "Siguiente",
   },
   credentialsPage: {
     title: "Gestión de Credenciales",

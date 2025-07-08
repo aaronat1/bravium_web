@@ -331,6 +331,10 @@ export const en = {
     ai_generate_button: "Generate with AI",
     ai_success_title: "Template Generated!",
     ai_success_desc: "The AI has filled out the form for you. Please review and save.",
+    pagination_showing: "Showing {start} to {end} of {total} templates",
+    pagination_page: "Page {current} of {total}",
+    pagination_previous: "Previous",
+    pagination_next: "Next",
   },
   credentialsPage: {
     title: "Credential Management",
