@@ -8,6 +8,7 @@ import type { GenerateTemplateOutput } from '@/ai/flows/generate-template-flow';
 import { revalidatePath } from 'next/cache';
 
 const templatesCollection = adminDb?.collection('credentialSchemas');
+const credentialsCollection = adminDb?.collection('issuedCredentials');
 
 if (!adminDb) {
   console.warn("Firebase Admin DB is not initialized. Template actions will fail.");
@@ -108,7 +109,7 @@ export async function updateTemplate(prevState: TemplateState, formData: FormDat
 
 // --- DELETE TEMPLATE ---
 export async function deleteTemplate(templateId: string): Promise<{ success: boolean; message: string }> {
-  if (!templatesCollection) {
+  if (!templatesCollection || !credentialsCollection || !adminDb) {
     return { message: 'Error de configuración del servidor.', success: false };
   }
 
@@ -117,11 +118,30 @@ export async function deleteTemplate(templateId: string): Promise<{ success: boo
   }
 
   try {
-    await templatesCollection.doc(templateId).delete();
+    const batch = adminDb.batch();
+
+    // Find and prepare to delete associated credentials
+    const credentialsSnapshot = await credentialsCollection.where('templateId', '==', templateId).get();
+    const deletedCredentialsCount = credentialsSnapshot.size;
+
+    credentialsSnapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    // Prepare to delete the template itself
+    const templateRef = templatesCollection.doc(templateId);
+    batch.delete(templateRef);
+
+    // Commit the atomic batch
+    await batch.commit();
+
     revalidatePath('/templates');
-    return { message: 'Plantilla eliminada correctamente.', success: true };
+    revalidatePath('/credentials');
+
+    const message = `Plantilla eliminada. Se borraron ${deletedCredentialsCount} credenciales asociadas.`;
+    return { message: message, success: true };
   } catch (error: any) {
-    return { message: `Error al eliminar la plantilla: ${error.message}`, success: false };
+    return { message: `Error al eliminar la plantilla y sus credenciales: ${error.message}`, success: false };
   }
 }
 
