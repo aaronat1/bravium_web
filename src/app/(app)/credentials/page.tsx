@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useEffect, useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, query, where, orderBy, type Timestamp } from "firebase/firestore";
-import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon } from "lucide-react";
+import { collection, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
+import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X } from "lucide-react";
 import QRCode from "qrcode.react";
 import { format, isSameDay } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -275,34 +274,60 @@ export default function CredentialsPage() {
                 <CardContent>
                     <div className="flex items-center justify-between pb-4 gap-2 flex-wrap">
                         <div className="flex gap-2 flex-wrap">
-                            <Input
-                                placeholder={t.credentialsPage.filter_placeholder}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="max-w-sm"
-                            />
-                             <Popover>
-                                <PopoverTrigger asChild>
+                            <div className="relative">
+                                <Input
+                                    placeholder={t.credentialsPage.filter_placeholder}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="max-w-sm pr-8"
+                                />
+                                {searchTerm && (
                                     <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-[240px] justify-start text-left font-normal",
-                                            !dateFilter && "text-muted-foreground"
-                                        )}
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                                        onClick={() => setSearchTerm('')}
+                                        aria-label="Clear search"
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {dateFilter ? format(dateFilter, "PPP") : <span>{t.credentialsPage.filter_date_placeholder}</span>}
+                                        <X className="h-4 w-4" />
                                     </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={dateFilter}
-                                        onSelect={setDateFilter}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
+                                )}
+                            </div>
+                             <div className="relative">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-[240px] justify-start text-left font-normal pr-8",
+                                                !dateFilter && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {dateFilter ? format(dateFilter, "PPP") : <span>{t.credentialsPage.filter_date_placeholder}</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={dateFilter}
+                                            onSelect={setDateFilter}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                {dateFilter && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                                        onClick={() => setDateFilter(undefined)}
+                                        aria-label="Clear date"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                         <div className="flex gap-2">
                             <Button variant="outline" onClick={handleExportCSV}>

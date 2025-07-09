@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useActionState, useMemo, useTransition } from "react";
@@ -8,7 +7,7 @@ import { z } from "zod";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { PlusCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users, ClipboardList, Sparkles, FileText, Calendar, ToyBrick, Type, Trash, File, ArrowUpDown, ArrowUp, ArrowDown, FileDown } from "lucide-react";
+import { PlusCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users, ClipboardList, Sparkles, FileText, Calendar, ToyBrick, Type, Trash, File, ArrowUpDown, ArrowUp, ArrowDown, FileDown, X } from "lucide-react";
 
 import { db } from "@/lib/firebase/config";
 import { createTemplate, updateTemplate, deleteTemplate, generateTemplateSchema } from "@/actions/templateActions";
@@ -555,12 +554,25 @@ export default function TemplatesPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between pb-4 gap-2">
-              <Input 
-                  placeholder={t.templatesPage.filter_placeholder}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-sm"
-              />
+              <div className="relative">
+                <Input 
+                    placeholder={t.templatesPage.filter_placeholder}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm pr-8"
+                />
+                {searchTerm && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 text-muted-foreground"
+                        onClick={() => setSearchTerm('')}
+                        aria-label="Clear search"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                )}
+              </div>
               <div className="flex gap-2">
                   <Button variant="outline" onClick={handleExportCSV}>
                       <FileDown className="mr-2 h-4 w-4" />
