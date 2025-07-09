@@ -6,6 +6,7 @@ import { collection, onSnapshot, query, where, type Timestamp } from "firebase/f
 import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X } from "lucide-react";
 import QRCode from "qrcode.react";
 import { format, isSameDay } from 'date-fns';
+import { es, enUS } from "date-fns/locale";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -90,7 +91,7 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
 
 // MAIN PAGE COMPONENT
 export default function CredentialsPage() {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const { toast } = useToast();
     const { user } = useAuth();
     const [credentials, setCredentials] = useState<IssuedCredential[]>([]);
@@ -111,7 +112,7 @@ export default function CredentialsPage() {
         setLoading(true);
         const credsCollection = collection(db, "issuedCredentials");
         const q = isAdmin 
-            ? query(credsCollection)
+            ? credsCollection
             : query(credsCollection, where("customerId", "==", user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -209,7 +210,7 @@ export default function CredentialsPage() {
           ...sortedAndFilteredCredentials.map(c => [
             `"${c.templateName}"`,
             `"${formatRecipientData(c.recipientData).replace(/"/g, '""')}"`,
-            c.issuedAt ? c.issuedAt.toDate().toISOString() : 'N/A'
+            c.issuedAt ? format(c.issuedAt.toDate(), 'Pp', { locale: locale === 'es' ? es : enUS }) : 'N/A'
           ].join(","))
         ].join("\n");
     
@@ -227,7 +228,7 @@ export default function CredentialsPage() {
         const tableData = sortedAndFilteredCredentials.map(c => [
             c.templateName,
             formatRecipientData(c.recipientData),
-            c.issuedAt ? new Date(c.issuedAt.toDate()).toLocaleString() : 'N/A'
+            c.issuedAt ? format(c.issuedAt.toDate(), 'Pp', { locale: locale === 'es' ? es : enUS }) : 'N/A'
         ]);
     
         autoTable(doc, {
@@ -235,7 +236,7 @@ export default function CredentialsPage() {
             body: tableData,
             startY: 20,
             didDrawPage: (data) => {
-                doc.text('Issued Credentials List', data.settings.margin.left, 15);
+                doc.text(t.credentialsPage.list_title, data.settings.margin.left, 15);
             }
         });
     
@@ -304,7 +305,7 @@ export default function CredentialsPage() {
                                             )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {dateFilter ? format(dateFilter, "PPP") : <span>{t.credentialsPage.filter_date_placeholder}</span>}
+                                            {dateFilter ? format(dateFilter, "PPP", { locale: locale === 'es' ? es : enUS }) : <span>{t.credentialsPage.filter_date_placeholder}</span>}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
@@ -312,6 +313,7 @@ export default function CredentialsPage() {
                                             mode="single"
                                             selected={dateFilter}
                                             onSelect={setDateFilter}
+                                            locale={locale === 'es' ? es : enUS}
                                             initialFocus
                                         />
                                     </PopoverContent>
@@ -357,7 +359,7 @@ export default function CredentialsPage() {
                                     <TableRow key={cred.id}>
                                         <TableCell className="font-medium">{cred.templateName}</TableCell>
                                         <TableCell>{formatRecipientData(cred.recipientData)}</TableCell>
-                                        <TableCell>{cred.issuedAt ? new Date(cred.issuedAt.toDate()).toLocaleString() : 'N/A'}</TableCell>
+                                        <TableCell>{cred.issuedAt ? format(cred.issuedAt.toDate(), 'Pp', { locale: locale === 'es' ? es : enUS }) : 'N/A'}</TableCell>
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
@@ -455,3 +457,5 @@ export default function CredentialsPage() {
         </div>
     );
 }
+
+    
