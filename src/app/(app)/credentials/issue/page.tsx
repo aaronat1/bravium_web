@@ -7,11 +7,12 @@ import { useForm } from "react-hook-form";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import QRCode from "qrcode.react";
 import { httpsCallable } from 'firebase/functions';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
-import { db, functions } from "@/lib/firebase/config";
+import { db, functions, storage } from "@/lib/firebase/config";
 import { saveIssuedCredential } from "@/actions/issuanceActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
@@ -72,14 +73,39 @@ export default function IssueCredentialPage() {
     };
 
     const onSubmit = async (data: any) => {
-        if (!selectedTemplate) return;
+        if (!selectedTemplate || !user) return;
 
         setIsIssuing(true);
-        const issueCredential = httpsCallable(functions, 'issueCredential');
 
         try {
+            const credentialSubject: Record<string, any> = {};
+
+            // Handle file uploads first
+            for (const fieldInfo of selectedTemplate.fields) {
+                const fieldName = fieldInfo.fieldName;
+                const value = data[fieldName];
+
+                if (fieldInfo.type === 'file' && value instanceof FileList && value.length > 0) {
+                    const file: File = value[0];
+                    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+                    if (!allowedTypes.includes(file.type)) {
+                        throw new Error(`Invalid file type for ${fieldInfo.label}. Accepted formats: PDF, PNG, JPG.`);
+                    }
+
+                    const filePath = `credential-attachments/${user.uid}/${Date.now()}_${file.name}`;
+                    const fileRef = ref(storage, filePath);
+                    
+                    await uploadBytes(fileRef, file);
+                    const downloadURL = await getDownloadURL(fileRef);
+                    credentialSubject[fieldName] = downloadURL;
+                } else {
+                    credentialSubject[fieldName] = value;
+                }
+            }
+            
+            const issueCredential = httpsCallable(functions, 'issueCredential');
             const result: any = await issueCredential({
-                credentialSubject: data,
+                credentialSubject,
                 credentialType: selectedTemplate.name
             });
             
@@ -93,7 +119,7 @@ export default function IssueCredentialPage() {
                 templateId: selectedTemplate.id,
                 templateName: selectedTemplate.name,
                 customerId: selectedTemplate.customerId,
-                recipientData: data,
+                recipientData: credentialSubject,
                 jws,
             });
 
@@ -161,30 +187,38 @@ export default function IssueCredentialPage() {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
-                                                <FormControl>
-                                                    {(() => {
-                                                        switch(fieldInfo.type) {
-                                                            case 'date':
-                                                                return <Input type="date" {...field} />;
-                                                            case 'select':
-                                                                return (
-                                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                {(() => {
+                                                    switch(fieldInfo.type) {
+                                                        case 'date':
+                                                            return <FormControl><Input type="date" {...field} /></FormControl>;
+                                                        case 'select':
+                                                            return (
+                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                    <FormControl>
                                                                         <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {(fieldInfo.options || []).map(option => (
-                                                                                <SelectItem key={option} value={option}>{option}</SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                );
-                                                            case 'file':
-                                                                 return <Input type="text" placeholder={t.issueCredentialPage.file_placeholder} {...field} />;
-                                                            case 'text':
-                                                            default:
-                                                                return <Input type="text" {...field} />;
-                                                        }
-                                                    })()}
-                                                </FormControl>
+                                                                    </FormControl>
+                                                                    <SelectContent>
+                                                                        {(fieldInfo.options || []).map(option => (
+                                                                            <SelectItem key={option} value={option}>{option}</SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            );
+                                                        case 'file':
+                                                             return (
+                                                                <FormControl>
+                                                                    <Input 
+                                                                        type="file" 
+                                                                        accept=".pdf,.png,.jpeg,.jpg" 
+                                                                        onChange={(e) => field.onChange(e.target.files)}
+                                                                    />
+                                                                </FormControl>
+                                                             );
+                                                        case 'text':
+                                                        default:
+                                                            return <FormControl><Input type="text" {...field} /></FormControl>;
+                                                    }
+                                                })()}
                                                 <FormMessage />
                                             </FormItem>
                                         )}
