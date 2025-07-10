@@ -15,24 +15,31 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import * as jwt from "jsonwebtoken";
 
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-// Initialize Firebase Admin SDK only if it hasn't been initialized yet
+// NOTE: This is a separate Firebase Admin initialization for the Cloud Functions environment.
+// It uses credentials from the functions/.env file.
 if (admin.apps.length === 0) {
-    if (projectId && clientEmail && privateKey) {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey,
-          }),
-        });
-    } else {
-        logger.warn("Firebase Admin credentials not found in environment variables.");
-    }
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (projectId && clientEmail && privateKey) {
+      try {
+          admin.initializeApp({
+            credential: admin.credential.cert({
+              projectId,
+              clientEmail,
+              privateKey,
+            }),
+          });
+          logger.info("Firebase Admin SDK initialized successfully for functions.");
+      } catch (error) {
+          logger.error("Error initializing Firebase Admin SDK for functions:", error);
+      }
+  } else {
+      logger.warn("Firebase Admin credentials not found in functions/ folder .env variables. Functions may not work correctly.");
+  }
 }
+
 const db = admin.firestore();
 
 // This Cloud Function acts as a "direct_post" endpoint for the wallet.
