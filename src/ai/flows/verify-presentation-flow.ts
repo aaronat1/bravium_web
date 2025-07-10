@@ -95,27 +95,38 @@ const generateRequestFlow = ai.defineFlow(
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
 
     const requestObject = {
-      response_type: "vp_token",
       client_id: clientId,
+      nonce: nonce,
       presentation_definition: presentationDefinition,
-      redirect_uri: responseUri,
       response_mode: "direct_post",
-      state,
-      nonce,
+      response_type: "vp_token",
+      response_uri: responseUri,
+      state: state
     };
     
-    // Store the full session state in Firestore
+    // Store the session state in Firestore for later verification
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
         nonce,
-        requestObject
+        requestObject: { // Store the request for auditing/debugging
+            client_id: clientId,
+            presentation_definition: presentationDefinition,
+            response_uri: responseUri,
+            state: state,
+            nonce: nonce,
+        }
     });
     
-    // Build the full URL embedding the request object as a JSON string under the 'request' parameter.
-    // This is a common pattern for wallets that don't support request_uri.
+    // Build the full URL for the QR code by encoding the request object parameters directly
     const requestParams = new URLSearchParams({
-        request: JSON.stringify(requestObject)
+        client_id: requestObject.client_id,
+        nonce: requestObject.nonce,
+        presentation_definition: JSON.stringify(requestObject.presentation_definition),
+        response_mode: requestObject.response_mode,
+        response_type: requestObject.response_type,
+        response_uri: requestObject.response_uri,
+        state: requestObject.state,
     });
 
     return {
@@ -191,5 +202,3 @@ const verifyPresentationFlow = ai.defineFlow(
     }
   }
 );
-
-    
