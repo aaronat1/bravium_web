@@ -76,9 +76,10 @@ const generateRequestFlow = ai.defineFlow(
     };
     
     const clientId = `did:web:bravium-d1e08.web.app`;
-    // THIS IS THE CRITICAL CHANGE: Point to our own app's API route now.
+
+    const productionHost = process.env.NEXT_PUBLIC_VERCEL_URL || 'studio--braviumcertboard.us-central1.hosted.app';
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL || 'bravium.org'}` // Fallback to a production domain
+      ? `https://${productionHost}`
       : 'http://localhost:9002';
       
     const requestUri = `${baseUrl}/api/openid4vp?state=${state}`;
