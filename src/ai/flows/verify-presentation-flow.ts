@@ -73,15 +73,18 @@ const generateRequestFlow = ai.defineFlow(
         input_descriptors: [{
             id: uuidv4(),
             name: "Bravium Issued Credential",
-            purpose: "Please provide a credential issued by Bravium.",
+            purpose: "Please provide any credential.",
             // No constraints, allowing any VC to be presented.
         }]
     };
     
     console.log("Generated Presentation Definition:", JSON.stringify(presentationDefinition, null, 2));
 
+    // This is the correct project ID for the client ID.
     const clientId = `did:web:bravium-d1e08.web.app`; 
+    // This is the URL the wallet will call to get the request details
     const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
+    // This is the URL the wallet will POST the presentation to
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
 
     const requestObject = {
@@ -94,12 +97,14 @@ const generateRequestFlow = ai.defineFlow(
       state: state
     };
     
+    // Store the full session state in Firestore, which includes the requestObject for the GET request.
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
         requestObject
     });
     
+    // Build the full URL for the QR code, using request_uri as required by Authenticator.
     const requestParams = new URLSearchParams({
         client_id: clientId,
         request_uri: requestUri,
@@ -148,6 +153,7 @@ const verifyPresentationFlow = ai.defineFlow(
     }
 
     try {
+        // Assuming vp_token is the JWS string for simplicity
         const jws = vp_token; 
         const { output } = await verifyPrompt({ jws });
 
