@@ -15,19 +15,23 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let functions: Functions;
-let storage: Storage;
-
-// Initialize Firebase
-app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-auth = getAuth(app);
-db = getFirestore(app);
-functions = getFunctions(app);
-storage = getStorage(app);
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+let functions: Functions | undefined;
+let storage: Storage | undefined;
 
 
-// @ts-ignore
+if (!firebaseConfig.apiKey) {
+    console.error("Firebase API Key is missing. Please add it to your .env file.");
+} else {
+    // Initialize Firebase
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
+    functions = getFunctions(app);
+    storage = getStorage(app);
+}
+
+
 export { app, auth, db, functions, storage };
