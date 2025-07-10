@@ -13,7 +13,13 @@ dotenv.config();
 import {onRequest} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import { verifyPresentation } from '../../src/ai/flows/verify-presentation-flow';
+
+// We need to lazy-import the flow to avoid initializing it when the function is deployed.
+// This is a common pattern for using Genkit flows within Cloud Functions.
+const getVerifyPresentationFlow = async () => {
+    const { verifyPresentation } = await import("../../src/ai/flows/verify-presentation-flow");
+    return verifyPresentation;
+};
 
 
 // Initialize Firebase Admin SDK for the Cloud Functions environment.
@@ -104,6 +110,7 @@ export const openid4vp_handler = onRequest(
     
           logger.info(`Session ${state} updated with vp_token. Now invoking verification flow...`);
           
+          const verifyPresentation = await getVerifyPresentationFlow();
           const verificationResult = await verifyPresentation({ vp_token, state });
     
           if (verificationResult.isValid) {
