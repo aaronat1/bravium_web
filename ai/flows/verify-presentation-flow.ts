@@ -16,28 +16,13 @@ if (!adminDb) {
 
 const verificationSessions = adminDb.collection('verificationSessions');
 
-// Schema for the presentation definition
-const PresentationDefinitionSchema = z.object({
-  id: z.string().describe("A unique identifier for this presentation definition."),
-  input_descriptors: z.array(z.object({
-    id: z.string().describe("A unique identifier for this input descriptor."),
-    name: z.string().optional().describe("A human-readable name for the requested information."),
-    purpose: z.string().optional().describe("A human-readable purpose for the requested information."),
-    constraints: z.object({
-      fields: z.array(z.object({
-        path: z.array(z.string()).describe("A JSONPath string expression to select a field from the credential."),
-      })),
-    }),
-  })),
-});
-
 // Input for generating the request
 const GenerateRequestInputSchema = z.object({}); // Empty for now, could be parameterized later
 export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
 
 // Output for the generated request
 const GenerateRequestOutputSchema = z.object({
-    requestUrl: z.string().describe("The full OpenID4VP request URL."),
+    requestUrl: z.string().describe("The full OpenID4VP request URL for the QR code."),
     state: z.string().describe("The unique state for this verification session."),
 });
 export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
@@ -78,6 +63,7 @@ const generateRequestFlow = ai.defineFlow(
   async () => {
     const state = uuidv4();
     const nonce = uuidv4();
+    
     const presentationDefinition = {
         id: uuidv4(),
         input_descriptors: [{
@@ -92,28 +78,33 @@ const generateRequestFlow = ai.defineFlow(
     
     // Using a fixed, reliable DID for the client ID.
     const clientId = "did:web:example.com"; 
+    // This is the URL the wallet will call to get the request details
+    const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
+    // This is the URL the wallet will POST the presentation to
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
 
     const requestObject = {
-      response_type: "vp_token",
       client_id: clientId,
+      nonce: nonce,
       presentation_definition: presentationDefinition,
-      redirect_uri: responseUri,
       response_mode: "direct_post",
-      state,
-      nonce,
+      response_type: "vp_token",
+      redirect_uri: responseUri,
+      state: state
     };
     
     // Store the full session state in Firestore
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
-        nonce,
         requestObject
     });
     
     // Build the full URL for the QR code
-    const requestParams = new URLSearchParams(requestObject as any);
+    const requestParams = new URLSearchParams({
+        client_id: clientId,
+        request_uri: requestUri,
+    });
 
     return {
       requestUrl: `openid-vc://?${requestParams.toString()}`,

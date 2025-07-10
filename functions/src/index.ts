@@ -43,62 +43,94 @@ if (admin.apps.length === 0) {
 
 const db = admin.firestore();
 
-// This Cloud Function acts as a "direct_post" endpoint for the wallet.
-// The wallet sends the verified presentation here.
+// This Cloud Function has a dual purpose:
+// 1. GET request with a 'state' query param: Serves the request object for the wallet (acts as request_uri).
+// 2. POST request with 'vp_token' and 'state': Handles the presentation response from the wallet.
 export const openid4vp_handler = onRequest(
   {cors: true},
   async (request, response) => {
-    logger.info("Received presentation:", {body: request.body});
-
-    if (request.method !== "POST") {
-      response.status(405).send("Method Not Allowed");
-      return;
-    }
-
-    const {vp_token, state} = request.body;
-
-    if (!vp_token || !state) {
-      response.status(400).send("Missing vp_token or state");
-      return;
-    }
-
-    const sessionRef = db.collection("verificationSessions").doc(state);
     
-    try {
-      // First, update the session to indicate receipt
-      await sessionRef.update({
-        status: "received",
-        vp_token,
-      });
-
-      logger.info(`Session ${state} updated with vp_token. Now invoking verification flow...`);
-      
-      // Directly invoke the Genkit verification flow
-      const verificationResult = await verifyPresentation({ vp_token, state });
-
-      // The flow itself handles updating Firestore with success or error.
-      // We just need to respond to the wallet.
-      if (verificationResult.isValid) {
-          logger.info(`Session ${state} successfully verified by Genkit flow.`);
-          response.status(200).send({ message: verificationResult.message });
-      } else {
-          logger.warn(`Session ${state} verification failed: ${verificationResult.message}`);
-          response.status(400).send({ error: verificationResult.message });
+    // --- Case 1: Wallet is requesting the presentation details ---
+    if (request.method === "GET") {
+      const state = request.query.state as string;
+      if (!state) {
+        logger.error("GET request missing state parameter.");
+        response.status(400).send("Bad Request: Missing state parameter.");
+        return;
       }
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
-      logger.error("Error handling presentation for state", state, ":", error);
-       try {
-            // Ensure the session is marked as failed even if the flow throws an unhandled error
-            await sessionRef.update({
-                status: "error",
-                error: errorMessage,
-            });
-        } catch (updateError) {
-            logger.error("Failed to even update session with error state:", updateError);
+      
+      try {
+        const sessionRef = db.collection("verificationSessions").doc(state);
+        const sessionDoc = await sessionRef.get();
+        if (!sessionDoc.exists) {
+          logger.error(`Session not found for state: ${state}`);
+          response.status(404).send("Not Found: Invalid or expired state.");
+          return;
         }
-      response.status(500).send({ error: errorMessage });
+        const sessionData = sessionDoc.data();
+        if (!sessionData?.requestObject) {
+          logger.error(`Request object missing in session for state: ${state}`);
+          response.status(500).send("Internal Server Error: Request object not found.");
+          return;
+        }
+        logger.info(`Serving request object for state: ${state}`);
+        response.status(200).json(sessionData.requestObject);
+        return;
+      } catch (error) {
+        logger.error(`Error serving request object for state ${state}:`, error);
+        response.status(500).send("Internal Server Error");
+        return;
+      }
     }
+
+    // --- Case 2: Wallet is submitting the presentation ---
+    if (request.method === "POST") {
+        logger.info("Received presentation POST request:", {body: request.body});
+
+        const {vp_token, state} = request.body;
+    
+        if (!vp_token || !state) {
+          response.status(400).send("Missing vp_token or state");
+          return;
+        }
+    
+        const sessionRef = db.collection("verificationSessions").doc(state);
+        
+        try {
+          await sessionRef.update({
+            status: "received",
+            vp_token,
+          });
+    
+          logger.info(`Session ${state} updated with vp_token. Now invoking verification flow...`);
+          
+          const verificationResult = await verifyPresentation({ vp_token, state });
+    
+          if (verificationResult.isValid) {
+              logger.info(`Session ${state} successfully verified by Genkit flow.`);
+              response.status(200).send({ message: verificationResult.message });
+          } else {
+              logger.warn(`Session ${state} verification failed: ${verificationResult.message}`);
+              response.status(400).send({ error: verificationResult.message });
+          }
+    
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+          logger.error("Error handling presentation for state", state, ":", error);
+           try {
+                await sessionRef.update({
+                    status: "error",
+                    error: errorMessage,
+                });
+            } catch (updateError) {
+                logger.error("Failed to even update session with error state:", updateError);
+            }
+          response.status(500).send({ error: errorMessage });
+        }
+        return;
+    }
+    
+    // If not GET or POST
+    response.status(405).send("Method Not Allowed");
   },
 );
