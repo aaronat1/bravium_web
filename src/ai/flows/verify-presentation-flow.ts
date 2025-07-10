@@ -9,7 +9,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { adminDb } from '@/lib/firebase/admin';
-import jwt from 'jsonwebtoken';
 
 if (!adminDb) {
   throw new Error("Firebase Admin DB is not initialized. Verification flows will fail.");
@@ -95,15 +94,18 @@ const generateRequestFlow = ai.defineFlow(
         status: 'pending',
         createdAt: new Date(),
         nonce,
-        requestObject
+        requestObject // Store the request for context during verification
     });
     
-    // Create an unsigned JWT for the request object, as expected by many wallets
-    const requestJwt = jwt.sign(requestObject, "dummy-secret-for-unsigned-jwt", { algorithm: 'none' });
-
-    // Build the full URL for the QR code
+    // Build the full URL for the QR code by embedding the presentation_definition
     const requestParams = new URLSearchParams({
-        request: requestJwt,
+        client_id: requestObject.client_id,
+        response_type: requestObject.response_type,
+        response_mode: requestObject.response_mode,
+        redirect_uri: requestObject.redirect_uri,
+        state: requestObject.state,
+        nonce: requestObject.nonce,
+        presentation_definition: JSON.stringify(requestObject.presentation_definition)
     });
 
     return {
