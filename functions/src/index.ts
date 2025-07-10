@@ -17,6 +17,8 @@ import * as admin from "firebase-admin";
 // We need to lazy-import the flow to avoid initializing it when the function is deployed.
 // This is a common pattern for using Genkit flows within Cloud Functions.
 const getVerifyPresentationFlow = async () => {
+    // This assumes the function is deployed from the root of the project.
+    // The path might need adjustment based on the deployment setup.
     const { verifyPresentation } = await import("../../src/ai/flows/verify-presentation-flow");
     return verifyPresentation;
 };
@@ -24,26 +26,12 @@ const getVerifyPresentationFlow = async () => {
 
 // Initialize Firebase Admin SDK for the Cloud Functions environment.
 if (admin.apps.length === 0) {
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  // Make sure to handle the newline characters correctly for the private key
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  if (projectId && clientEmail && privateKey) {
-      try {
-          admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId,
-              clientEmail,
-              privateKey,
-            }),
-          });
-          logger.info("Firebase Admin SDK initialized successfully for functions.");
-      } catch (error) {
-          logger.error("Error initializing Firebase Admin SDK for functions:", error);
-      }
-  } else {
-      logger.warn("Firebase Admin credentials not found in functions/.env variables. Functions requiring admin rights may not work correctly.");
+  logger.info("Initializing Firebase Admin SDK for functions...");
+  try {
+      admin.initializeApp();
+      logger.info("Firebase Admin SDK initialized successfully.");
+  } catch (error) {
+      logger.error("FATAL: Error initializing Firebase Admin SDK for functions:", error);
   }
 }
 
@@ -55,6 +43,7 @@ const db = admin.firestore();
 export const openid4vp_handler = onRequest(
   {cors: true, region: "us-central1"},
   async (request, response) => {
+    logger.info(`openid4vp_handler received a ${request.method} request.`);
     
     // --- Case 1: Wallet is requesting the presentation details ---
     if (request.method === "GET") {
@@ -65,11 +54,12 @@ export const openid4vp_handler = onRequest(
         return;
       }
       
+      logger.info(`GET request received for state: ${state}`);
       try {
         const sessionRef = db.collection("verificationSessions").doc(state);
         const sessionDoc = await sessionRef.get();
         if (!sessionDoc.exists) {
-          logger.error(`Session not found for state: ${state}`);
+          logger.error(`Session not found in Firestore for state: ${state}`);
           response.status(404).send("Not Found: Invalid or expired state.");
           return;
         }
@@ -79,7 +69,7 @@ export const openid4vp_handler = onRequest(
           response.status(500).send("Internal Server Error: Request object not found.");
           return;
         }
-        logger.info(`Serving request object for state: ${state}`);
+        logger.info(`Serving request object for state: ${state}`, { requestObject: sessionData.requestObject });
         response.status(200).json(sessionData.requestObject);
         return;
       } catch (error) {
@@ -99,7 +89,8 @@ export const openid4vp_handler = onRequest(
         const state = body.state;
     
         if (!vp_token || !state) {
-          response.status(400).send("Missing vp_token or state");
+          logger.error("POST request missing vp_token or state", {body: request.body});
+          response.status(400).send("Bad Request: Missing vp_token or state");
           return;
         }
     
@@ -122,7 +113,7 @@ export const openid4vp_handler = onRequest(
               response.status(200).send();
           } else {
               logger.warn(`Session ${state} verification failed: ${verificationResult.message}`);
-              response.status(400).send({ error: verificationResult.message });
+              response.status(400).json({ error: verificationResult.message });
           }
     
         } catch (error) {
@@ -136,12 +127,14 @@ export const openid4vp_handler = onRequest(
             } catch (updateError) {
                 logger.error("Failed to even update session with error state:", updateError);
             }
-          response.status(500).send({ error: errorMessage });
+          response.status(500).json({ error: errorMessage });
         }
         return;
     }
     
     // If not GET or POST
+    logger.warn(`Received unsupported method: ${request.method}`);
+    response.setHeader("Allow", "GET, POST");
     response.status(405).send("Method Not Allowed");
   },
 );
