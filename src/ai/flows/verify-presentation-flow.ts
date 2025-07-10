@@ -2,12 +2,11 @@
 'use server';
 /**
  * @fileOverview An AI agent for verifying presentations based on OpenID4VP.
- * This flow generates a presentation request and verifies the subsequent presentation.
+ * This flow now focuses exclusively on verifying the presentation, not generating it.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
 import { adminDb } from '@/lib/firebase/admin';
 
 if (!adminDb) {
@@ -15,32 +14,6 @@ if (!adminDb) {
 }
 
 const verificationSessions = adminDb.collection('verificationSessions');
-
-// Schema for the presentation definition
-const PresentationDefinitionSchema = z.object({
-  id: z.string().describe("A unique identifier for this presentation definition."),
-  input_descriptors: z.array(z.object({
-    id: z.string().describe("A unique identifier for this input descriptor."),
-    name: z.string().optional().describe("A human-readable name for the requested information."),
-    purpose: z.string().optional().describe("A human-readable purpose for the requested information."),
-    constraints: z.object({
-      fields: z.array(z.object({
-        path: z.array(z.string()).describe("A JSONPath string expression to select a field from the credential."),
-      })),
-    }),
-  })),
-});
-
-// Input for generating the request
-const GenerateRequestInputSchema = z.object({}); // Empty for now, could be parameterized later
-export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
-
-// Output for the generated request
-const GenerateRequestOutputSchema = z.object({
-    requestUrl: z.string().describe("The full OpenID4VP request URL."),
-    state: z.string().describe("The unique state for this verification session."),
-});
-export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
 
 // Input for verifying the presentation
 const VerifyPresentationInputSchema = z.object({
@@ -58,66 +31,10 @@ const VerifyPresentationOutputSchema = z.object({
 export type VerifyPresentationOutput = z.infer<typeof VerifyPresentationOutputSchema>;
 
 
-// The exported function to generate a request
-export async function generateRequest(input: GenerateRequestInput = {}): Promise<GenerateRequestOutput> {
-  return generateRequestFlow(input);
-}
-
 // The exported function to verify a presentation
 export async function verifyPresentation(input: VerifyPresentationInput): Promise<VerifyPresentationOutput> {
   return verifyPresentationFlow(input);
 }
-
-// Genkit flow to generate the request URL
-const generateRequestFlow = ai.defineFlow(
-  {
-    name: 'generateRequestFlow',
-    inputSchema: GenerateRequestInputSchema,
-    outputSchema: GenerateRequestOutputSchema,
-  },
-  async () => {
-    const state = uuidv4();
-    const nonce = uuidv4();
-    const presentationDefinition = {
-        id: uuidv4(),
-        input_descriptors: [{
-            id: uuidv4(),
-            name: "Bravium Issued Credential",
-            purpose: "Please provide a credential issued by Bravium.",
-            constraints: {
-                fields: [{ path: ["$.type"] }] // Requesting any VC
-            }
-        }]
-    };
-    
-    // IMPORTANT: This must match what the Cloud Function expects and should be a valid DID format.
-    // Using the default Firebase Hosting domain is a robust way to ensure consistency.
-    const clientId = `did:web:${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.web.app`; 
-    const responseUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp_handler`;
-
-    // Store the session state in Firestore
-    await verificationSessions.doc(state).set({
-        status: 'pending',
-        createdAt: new Date(),
-        presentationDefinition,
-        clientId,
-        responseUri,
-        nonce,
-    });
-    
-    const requestUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/request_handler?state=${state}`;
-
-    const requestParams = new URLSearchParams({
-      client_id: clientId,
-      request_uri: requestUri
-    });
-
-    return {
-      requestUrl: `openid-vc://?${requestParams.toString()}`,
-      state: state
-    };
-  }
-);
 
 
 const verifyPrompt = ai.definePrompt({

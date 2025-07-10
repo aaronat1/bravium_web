@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import QRCode from "qrcode.react";
+import { v4 as uuidv4 } from "uuid";
 
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
@@ -10,67 +11,100 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
-import { useToast } from "@/hooks/use-toast";
-import { generateVerificationRequest, type GenerateVerificationRequestOutput } from "@/actions/verificationActions";
-import { onSnapshot, doc } from "firebase/firestore";
+import { onSnapshot, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
+type RequestData = {
+  requestUrl: string;
+  state: string;
+};
 
 export default function VerifyPage() {
   const { t } = useI18n();
-  const { toast } = useToast();
-  const [request, setRequest] = useState<GenerateVerificationRequestOutput | null>(null);
+  const [request, setRequest] = useState<RequestData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<{ status: VerificationStatus, message?: string } | null>(null);
+  const [sessionState, setSessionState] = useState<string | null>(null);
 
   const createVerificationRequest = useCallback(async () => {
     setLoading(true);
     setError(null);
     setVerificationResult(null);
     setRequest(null);
+    setSessionState(null);
+    
     try {
-      const result = await generateVerificationRequest();
-      if (result.success && result.data) {
-        setRequest(result.data);
-      } else {
-        setError(result.message || "Failed to generate request.");
-        toast({ variant: "destructive", title: t.toast_error_title, description: result.message });
+      // 1. Generate state locally
+      const state = uuidv4();
+      setSessionState(state);
+
+      // 2. Create a placeholder document in Firestore
+      // The Cloud Function will populate it with the full request details.
+      const sessionDocRef = doc(db, "verificationSessions", state);
+      await setDoc(sessionDocRef, { 
+        status: "initializing",
+        createdAt: new Date(),
+      });
+
+      // 3. Construct the request URL for the QR code
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      if (!projectId) {
+        throw new Error("Firebase Project ID is not configured.");
       }
+      
+      const clientId = `did:web:${projectId}.web.app`;
+      const requestHandlerUrl = `https://us-central1-${projectId}.cloudfunctions.net/request_handler?state=${state}`;
+
+      const requestParams = new URLSearchParams({
+        client_id: clientId,
+        request_uri: requestHandlerUrl
+      });
+  
+      const openIdUrl = `openid-vc://?${requestParams.toString()}`;
+
+      setRequest({
+        requestUrl: openIdUrl,
+        state: state
+      });
+
     } catch (e: any) {
       setError(e.message);
-      toast({ variant: "destructive", title: t.toast_error_title, description: e.message });
     } finally {
       setLoading(false);
     }
-  }, [t, toast]);
+  }, []);
 
   useEffect(() => {
     createVerificationRequest();
   }, [createVerificationRequest]);
 
   useEffect(() => {
-    if (!request?.state || verificationResult) {
+    if (!sessionState || verificationResult) {
       return;
     }
 
-    const sessionDocRef = doc(db, "verificationSessions", request.state);
+    const sessionDocRef = doc(db, "verificationSessions", sessionState);
 
     const unsubscribe = onSnapshot(sessionDocRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
+        // Ignore the 'initializing' and 'pending' statuses
         if (data.status === "success") {
           setVerificationResult({ status: "success", message: data.message || "Credential verified successfully!" });
+          unsubscribe();
         } else if (data.status === "error") {
           setVerificationResult({ status: "error", message: data.error || "Verification failed." });
+          unsubscribe();
         }
       }
     });
-
+    
     const timer = setTimeout(() => {
         if (!verificationResult) {
             setVerificationResult({ status: "expired", message: "The request has expired."});
+            unsubscribe();
         }
     }, 300000); // 5 minutes
 
@@ -79,7 +113,7 @@ export default function VerifyPage() {
         clearTimeout(timer);
     };
 
-  }, [request?.state, verificationResult]);
+  }, [sessionState, verificationResult]);
 
 
   const renderContent = () => {

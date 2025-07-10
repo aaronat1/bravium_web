@@ -14,6 +14,7 @@ import {onRequest} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import * as jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 import { verifyPresentation } from '../../src/ai/flows/verify-presentation-flow';
 
 
@@ -119,33 +120,55 @@ export const request_handler = onRequest(
     }
 
     try {
-      const sessionDoc = await db.collection("verificationSessions").doc(state)
-        .get();
+      const sessionDocRef = db.collection("verificationSessions").doc(state);
+      const sessionDoc = await sessionDocRef.get();
+
       if (!sessionDoc.exists) {
         logger.error(`Verification session not found for state: ${state}`);
         response.status(404).send("Verification session not found.");
         return;
       }
-
-      const sessionData = sessionDoc.data();
-      if (!sessionData) {
-        response.status(404).send("Session data not found.");
-        return;
-      }
       
-      const projectID = process.env.GCLOUD_PROJECT || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-      if (!projectID) {
+      const projectId = process.env.GCLOUD_PROJECT || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      if (!projectId) {
           throw new Error("Project ID is not configured in the environment.");
       }
 
+      // ** NEW LOGIC: This function now creates the presentation definition **
+      const presentationDefinition = {
+        id: uuidv4(),
+        input_descriptors: [{
+            id: uuidv4(),
+            name: "Bravium Issued Credential",
+            purpose: "Please provide a credential issued by Bravium.",
+            constraints: {
+                fields: [{ path: ["$.type"] }] // Requesting any VC
+            }
+        }]
+      };
+      
+      const clientId = `did:web:${projectId}.web.app`;
+      const responseUri = `https://us-central1-${projectId}.cloudfunctions.net/openid4vp_handler`;
+      const nonce = uuidv4();
+
+      // Update the placeholder document with the full session details
+      await sessionDocRef.set({
+          status: 'pending', // Update status from 'initializing' to 'pending'
+          createdAt: new Date(),
+          presentationDefinition,
+          clientId,
+          responseUri,
+          nonce,
+      }, { merge: true });
+
       const requestObject = {
         response_type: "vp_token",
-        client_id: sessionData.clientId,
-        presentation_definition: sessionData.presentationDefinition,
-        redirect_uri: sessionData.responseUri,
+        client_id: clientId,
+        presentation_definition: presentationDefinition,
+        redirect_uri: responseUri,
         response_mode: "direct_post",
         state: state,
-        nonce: sessionData.nonce,
+        nonce: nonce,
       };
 
       // In a real implementation, this JWT should be signed with a key
@@ -157,6 +180,7 @@ export const request_handler = onRequest(
 
       response.setHeader("Content-Type", "application/oauth-authz-req+jwt");
       response.status(200).send(token);
+
     } catch (error) {
       logger.error("Error handling request:", error);
       response.status(500).send("Internal Server Error");
