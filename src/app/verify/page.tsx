@@ -12,17 +12,14 @@ import { ShieldCheck, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
 import { onSnapshot, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { generateRequest } from "@/ai/flows/verify-presentation-flow";
+import { generateRequest, type GenerateRequestOutput } from "@/ai/flows/verify-presentation-flow";
+import CodeBlock from "@/components/code-block";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
-type RequestData = {
-  requestUrl: string;
-  state: string;
-};
 
 export default function VerifyPage() {
   const { t } = useI18n();
-  const [request, setRequest] = useState<RequestData | null>(null);
+  const [request, setRequest] = useState<GenerateRequestOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<{ status: VerificationStatus, message?: string } | null>(null);
@@ -154,6 +151,12 @@ export default function VerifyPage() {
                         <span>{t.verifyPage.waiting_for_presentation}</span>
                     </div>
                 </div>
+                {request.presentationDefinition && (
+                    <div className="w-full mt-4">
+                        <h4 className="text-lg font-semibold mb-2 text-center">Presentation Definition (JSON)</h4>
+                        <CodeBlock code={JSON.stringify(request.presentationDefinition, null, 2)} />
+                    </div>
+                )}
             </div>
         )
     }
