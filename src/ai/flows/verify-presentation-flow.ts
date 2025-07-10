@@ -90,6 +90,7 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
+    // Using a fixed, reliable DID for the client ID.
     const clientId = "did:web:example.com"; 
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
 
@@ -103,7 +104,7 @@ const generateRequestFlow = ai.defineFlow(
       nonce,
     };
     
-    // Store the session state in Firestore for later verification
+    // Store the full session state in Firestore
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
@@ -111,7 +112,8 @@ const generateRequestFlow = ai.defineFlow(
         requestObject
     });
     
-    // Build the full URL embedding the request object directly
+    // Build the full URL embedding the request object as a JSON string under the 'request' parameter.
+    // This is a common pattern for wallets that don't support request_uri.
     const requestParams = new URLSearchParams({
         request: JSON.stringify(requestObject)
     });
@@ -189,3 +191,5 @@ const verifyPresentationFlow = ai.defineFlow(
     }
   }
 );
+
+    
