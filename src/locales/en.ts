@@ -166,11 +166,15 @@ export const en = {
   verifyPage: {
     title: "Public Verification Page",
     subtitle: "Validate the authenticity of a credential presented by the holder.",
-    description: "Paste the content of the 'Verifiable Presentation' (in JSON format) in the field below to validate its cryptographic authenticity. The system will check the issuer's signature against their public Decentralized Identifier (DID).",
-    placeholder: "Paste the Verifiable Presentation here...",
-    cta: "Verify Credential",
-    result_title: "Verification Result:",
-    result_success: "✓ Verified",
+    scan_qr_description: "Scan this QR code with a compatible digital wallet to present your credential.",
+    waiting_for_presentation: "Waiting for presentation...",
+    loading_request: "Generating verification request...",
+    retry_button: "Try Again",
+    new_verification_button: "New Verification",
+    result_success_title: "Verified!",
+    result_success_message: "The presented credential is valid.",
+    result_error_title: "Verification Failed",
+    result_expired_title: "Request Expired"
   },
   helpPage: {
     title: "Digital Wallets Guide",

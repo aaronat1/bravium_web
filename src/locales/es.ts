@@ -166,11 +166,15 @@ export const es = {
   verifyPage: {
     title: "Página de Verificación Pública",
     subtitle: "Valide la autenticidad de una credencial presentada por el titular.",
-    description: "Pegue el contenido de la 'Presentación Verificable' (en formato JSON) en el siguiente campo para validar su autenticidad criptográfica. El sistema comprobará la firma del emisor contra su Identificador Descentralizado (DID) público.",
-    placeholder: "Pegue aquí la Presentación Verificable...",
-    cta: "Verificar Credencial",
-    result_title: "Resultado de la Verificación:",
-    result_success: "✓ Verificado",
+    scan_qr_description: "Escanee este código QR con una cartera digital compatible para presentar su credencial.",
+    waiting_for_presentation: "Esperando presentación...",
+    loading_request: "Generando solicitud de verificación...",
+    retry_button: "Reintentar",
+    new_verification_button: "Nueva Verificación",
+    result_success_title: "¡Verificado!",
+    result_success_message: "La credencial presentada es válida.",
+    result_error_title: "Verificación Fallida",
+    result_expired_title: "Solicitud Expirada"
   },
   helpPage: {
     title: "Guía para Carteras Digitales",
