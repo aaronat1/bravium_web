@@ -9,6 +9,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { adminDb } from '@/lib/firebase/admin';
+import jwt from 'jsonwebtoken';
 
 if (!adminDb) {
   throw new Error("Firebase Admin DB is not initialized. Verification flows will fail.");
@@ -97,9 +98,12 @@ const generateRequestFlow = ai.defineFlow(
         requestObject
     });
     
+    // Create an unsigned JWT for the request object, as expected by many wallets
+    const requestJwt = jwt.sign(requestObject, "dummy-secret-for-unsigned-jwt", { algorithm: 'none' });
+
     // Build the full URL for the QR code
     const requestParams = new URLSearchParams({
-        request: JSON.stringify(requestObject),
+        request: requestJwt,
     });
 
     return {
@@ -141,7 +145,6 @@ const verifyPresentationFlow = ai.defineFlow(
   async ({ vp_token, state }) => {
     const sessionDoc = await verificationSessions.doc(state).get();
     if (!sessionDoc.exists) {
-        // This update is crucial for the frontend to react.
         await verificationSessions.doc(state).set({ status: 'error', error: 'Invalid or expired state.' }, { merge: true });
         throw new Error("Invalid or expired state.");
     }
@@ -157,23 +160,21 @@ const verifyPresentationFlow = ai.defineFlow(
         }
 
         if (output.isValid) {
-            const successMessage = "Presentation verified successfully.";
             await verificationSessions.doc(state).set({ 
                 status: 'success', 
                 verifiedAt: new Date(),
                 claims: output.claims,
-                message: successMessage
+                message: "Presentation verified successfully."
             }, { merge: true });
             return { isValid: true, message: "Presentation verified.", claims: output.claims };
         } else {
-            const errorMessage = output.error || "Verification failed due to untrusted issuer or malformed JWS.";
+             const errorMessage = output.error || "Verification failed due to untrusted issuer or malformed JWS.";
             await verificationSessions.doc(state).set({ status: 'error', error: errorMessage }, { merge: true });
             return { isValid: false, message: errorMessage };
         }
 
     } catch (error: any) {
         await verificationSessions.doc(state).set({ status: 'error', error: error.message }, { merge: true });
-        // Re-throw the error so the calling function (Cloud Function) knows about the failure.
         throw error;
     }
   }
