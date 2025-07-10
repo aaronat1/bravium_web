@@ -1,50 +1,47 @@
 
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import {onRequest} from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
+import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import * as logger from "firebase-functions/logger";
 
-// We need to lazy-import the flow to avoid initializing it when the function is deployed.
-// This is a common pattern for using Genkit flows within Cloud Functions.
-const getVerifyPresentationFlow = async () => {
-    // This assumes the function is deployed from the root of the project.
-    // The path might need adjustment based on the deployment setup.
-    const { verifyPresentation } = await import("../../src/ai/flows/verify-presentation-flow");
-    return verifyPresentation;
-};
+// Import Genkit flow statically
+import { verifyPresentation } from "../../src/ai/flows/verify-presentation-flow";
 
 
-// Initialize Firebase Admin SDK for the Cloud Functions environment.
-if (admin.apps.length === 0) {
-  logger.info("Initializing Firebase Admin SDK for functions...");
-  try {
-      admin.initializeApp();
-      logger.info("Firebase Admin SDK initialized successfully.");
-  } catch (error) {
-      logger.error("FATAL: Error initializing Firebase Admin SDK for functions:", error);
+// Initialize Firebase Admin SDK.
+// It is safe to call this multiple times.
+try {
+  if (admin.apps.length === 0) {
+    admin.initializeApp();
+    logger.info("Firebase Admin SDK initialized for functions.");
   }
+} catch (e) {
+  logger.error("Error initializing Firebase Admin SDK in functions/src/index.ts", e);
 }
 
 const db = admin.firestore();
 
-// This Cloud Function has a dual purpose:
-// 1. GET request with a 'state' query param: Serves the request object for the wallet (acts as request_uri).
-// 2. POST request with 'vp_token' and 'state': Handles the presentation response from the wallet.
-export const openid4vp_handler = onRequest(
-  {cors: true, region: "us-central1"},
+/**
+ * This Cloud Function has a dual purpose for OpenID4VP:
+ * 1. GET request with 'state' query param: Serves the request object for the wallet (acts as request_uri).
+ * 2. POST request with 'vp_token' and 'state': Handles the presentation response from the wallet.
+ */
+export const openid4vp_handler = functions.region("us-central1").https.onRequest(
   async (request, response) => {
-    logger.info(`openid4vp_handler received a ${request.method} request.`);
+    // Enable CORS for all origins, required by wallets.
+    response.set("Access-Control-Allow-Origin", "*");
+    response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response.set("Access-Control-Allow-Headers", "Content-Type");
+
+    if (request.method === "OPTIONS") {
+      response.status(204).send("");
+      return;
+    }
     
+    logger.info(`openid4vp_handler received a ${request.method} request.`);
+
     // --- Case 1: Wallet is requesting the presentation details ---
     if (request.method === "GET") {
       const state = request.query.state as string;
@@ -83,7 +80,6 @@ export const openid4vp_handler = onRequest(
     if (request.method === "POST") {
         logger.info("Received presentation POST request:", {body: request.body});
 
-        // The body might be URL-encoded, so we need to handle that.
         const body = request.body;
         const vp_token = body.vp_token;
         const state = body.state;
@@ -104,7 +100,6 @@ export const openid4vp_handler = onRequest(
     
           logger.info(`Session ${state} updated with vp_token. Now invoking verification flow...`);
           
-          const verifyPresentation = await getVerifyPresentationFlow();
           const verificationResult = await verifyPresentation({ vp_token, state });
     
           if (verificationResult.isValid) {
