@@ -16,21 +16,6 @@ if (!adminDb) {
 
 const verificationSessions = adminDb.collection('verificationSessions');
 
-// Schema for the presentation definition
-const PresentationDefinitionSchema = z.object({
-  id: z.string().describe("A unique identifier for this presentation definition."),
-  input_descriptors: z.array(z.object({
-    id: z.string().describe("A unique identifier for this input descriptor."),
-    name: z.string().optional().describe("A human-readable name for the requested information."),
-    purpose: z.string().optional().describe("A human-readable purpose for the requested information."),
-    constraints: z.object({
-      fields: z.array(z.object({
-        path: z.array(z.string()).describe("A JSONPath string expression to select a field from the credential."),
-      })),
-    }),
-  })),
-});
-
 // Input for generating the request
 const GenerateRequestInputSchema = z.object({}); // Empty for now, could be parameterized later
 export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
@@ -78,6 +63,7 @@ const generateRequestFlow = ai.defineFlow(
   async () => {
     const state = uuidv4();
     const nonce = uuidv4();
+    
     const presentationDefinition = {
         id: uuidv4(),
         input_descriptors: [{
@@ -93,40 +79,24 @@ const generateRequestFlow = ai.defineFlow(
     // Using a fixed, reliable DID for the client ID.
     const clientId = "did:web:example.com"; 
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
-
-    const requestObject = {
-      client_id: clientId,
-      nonce: nonce,
-      presentation_definition: presentationDefinition,
-      response_mode: "direct_post",
-      response_type: "vp_token",
-      response_uri: responseUri,
-      state: state
-    };
     
-    // Store the session state in Firestore for later verification
+    // Store the full session state in Firestore
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
         nonce,
-        requestObject: { // Store the request for auditing/debugging
-            client_id: clientId,
-            presentation_definition: presentationDefinition,
-            response_uri: responseUri,
-            state: state,
-            nonce: nonce,
-        }
+        presentation_definition: presentationDefinition
     });
     
-    // Build the full URL for the QR code by encoding the request object parameters directly
+    // Build the full URL for the QR code
     const requestParams = new URLSearchParams({
-        client_id: requestObject.client_id,
-        nonce: requestObject.nonce,
-        presentation_definition: JSON.stringify(requestObject.presentation_definition),
-        response_mode: requestObject.response_mode,
-        response_type: requestObject.response_type,
-        response_uri: requestObject.response_uri,
-        state: requestObject.state,
+        response_type: "vp_token",
+        client_id: clientId,
+        presentation_definition: JSON.stringify(presentationDefinition), // CRUCIAL: Stringify the JSON object
+        redirect_uri: responseUri,
+        response_mode: "direct_post",
+        state,
+        nonce,
     });
 
     return {
