@@ -5,7 +5,9 @@ const {KeyManagementServiceClient} = require('@google-cloud/kms');
 const { createHash, randomUUID } = require('crypto');
 
 // Este polyfill es necesario para que la librería 'jose' funcione en el entorno de Cloud Functions.
-require('crypto').webcrypto;
+if (typeof globalThis.crypto === 'undefined') {
+  globalThis.crypto = require('crypto').webcrypto;
+}
 
 // Inicializa Firebase y los clientes de Google Cloud
 admin.initializeApp();
@@ -366,5 +368,6 @@ async function createJws(payload, kmsKeyPath) {
 
   return jws;
 }
+
 
     
