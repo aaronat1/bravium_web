@@ -49,17 +49,33 @@ const generateRequestFlow = ai.defineFlow(
     const nonce = uuidv4();
     
     const presentationDefinition = {
-        id: uuidv4(),
-        input_descriptors: [{
-            id: uuidv4(),
-            name: "Bravium Issued Credential",
-            purpose: "Please provide any credential.",
-        }]
+      "id": uuidv4(),
+      "input_descriptors": [
+        {
+          "id": uuidv4(),
+          "name": "Bravium Credential",
+          "purpose": "Please provide a credential issued by Bravium.",
+          "constraints": {
+            "fields": [
+              {
+                "path": [
+                  "$.type"
+                ],
+                "filter": {
+                  "type": "string",
+                  "const": "VerifiableCredential"
+                }
+              }
+            ]
+          }
+        }
+      ]
     };
     
-    const clientId = `did:web:bravium-d1e08.web.app`;
+    // The client_id MUST be a simple HTTPS URL for Microsoft Authenticator.
+    const clientId = baseUrl;
     
-    // This now points to the real Cloud Function URL
+    // This points to the real Cloud Function URL
     const functionUrl = 'https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp';
     const requestUri = `${functionUrl}?state=${state}`;
 
@@ -69,7 +85,7 @@ const generateRequestFlow = ai.defineFlow(
       presentation_definition: presentationDefinition,
       response_mode: "direct_post",
       response_type: "vp_token",
-      redirect_uri: functionUrl, 
+      redirect_uri: functionUrl, // The URI to post the response to.
       state: state
     };
     

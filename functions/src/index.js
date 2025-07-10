@@ -106,7 +106,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
   try {
     // 3. Recuperar la Clave: Busca el documento del cliente para obtener su kmsKeyPath y su DID.
     const customerDocRef = db.collection('customers').doc(customerId);
-    const customerDoc = await customerDoc.get();
+    const customerDoc = await customerDocRef.get();
 
     if (!customerDoc.exists) {
       throw new functions.https.HttpsError('not-found', 'No se encontró el documento del cliente.');

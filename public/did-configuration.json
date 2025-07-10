@@ -1,0 +1,19 @@
+{
+    "@context": "https://identity.foundation/.well-known/did-configuration/v1",
+    "linked_dids": [
+        {
+            "@context": [
+                "https://www.w3.org/2018/credentials/v1"
+            ],
+            "id": "did:web:bravium.org",
+            "type": "VerifiedCredential",
+            "issuer": "did:web:bravium.org",
+            "issuanceDate": "2024-01-01T00:00:00Z",
+            "credentialSubject": {
+                "id": "did:web:bravium.org",
+                "domain": "bravium.org",
+                "name": "Bravium Verifier"
+            }
+        }
+    ]
+}

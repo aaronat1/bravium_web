@@ -24,6 +24,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/.well-known/did-configuration.json',
+        destination: '/did-configuration.json',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;
