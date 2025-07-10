@@ -5,3 +5,7 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+# By default, backends are private. Make the backend publicly available.
+iam:
+  invoker: ["public"]
