@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import QRCode from "qrcode.react";
-import { v4 as uuidv4 } from "uuid";
 
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
@@ -11,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
-import { onSnapshot, doc, setDoc } from "firebase/firestore";
+import { onSnapshot, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
+import { generateRequest } from "@/ai/flows/verify-presentation-flow";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
 type RequestData = {
@@ -36,39 +36,9 @@ export default function VerifyPage() {
     setSessionState(null);
     
     try {
-      // 1. Generate state locally
-      const state = uuidv4();
-      setSessionState(state);
-
-      // 2. Create a placeholder document in Firestore
-      // The Cloud Function will populate it with the full request details.
-      const sessionDocRef = doc(db, "verificationSessions", state);
-      await setDoc(sessionDocRef, { 
-        status: "initializing",
-        createdAt: new Date(),
-      });
-
-      // 3. Construct the request URL for the QR code
-      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-      if (!projectId) {
-        throw new Error("Firebase Project ID is not configured.");
-      }
-      
-      const clientId = `did:web:${projectId}.web.app`;
-      const requestHandlerUrl = `https://us-central1-${projectId}.cloudfunctions.net/request_handler?state=${state}`;
-
-      const requestParams = new URLSearchParams({
-        client_id: clientId,
-        request_uri: requestHandlerUrl
-      });
-  
-      const openIdUrl = `openid-vc://?${requestParams.toString()}`;
-
-      setRequest({
-        requestUrl: openIdUrl,
-        state: state
-      });
-
+      const response = await generateRequest();
+      setRequest(response);
+      setSessionState(response.state);
     } catch (e: any) {
       setError(e.message);
     } finally {

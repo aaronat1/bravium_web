@@ -90,28 +90,30 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
+    // Using a fixed, reliable DID for the client ID.
     const clientId = "did:web:example.com"; 
-    const responseUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp_handler`;
+    const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
 
-    // Store the session state in Firestore
-    // This now includes the full request details which the request-handler function will need.
+    const requestObject = {
+      response_type: "vp_token",
+      client_id: clientId,
+      presentation_definition: presentationDefinition,
+      redirect_uri: responseUri,
+      response_mode: "direct_post",
+      state,
+      nonce,
+    };
+    
+    // Store the full session state in Firestore
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
-        presentationDefinition,
-        clientId,
-        responseUri,
         nonce,
+        requestObject
     });
     
-    // The URL for the QR code now points to our new request-handler function,
-    // passing the session state as a query parameter.
-    const requestUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/request_handler?state=${state}`;
-
-    const requestParams = new URLSearchParams({
-      client_id: clientId,
-      request_uri: requestUri
-    });
+    // Build the full URL for the QR code
+    const requestParams = new URLSearchParams(requestObject as any);
 
     return {
       requestUrl: `openid-vc://?${requestParams.toString()}`,
@@ -170,12 +172,14 @@ const verifyPresentationFlow = ai.defineFlow(
             await verificationSessions.doc(state).set({ 
                 status: 'success', 
                 verifiedAt: new Date(),
-                claims: output.claims 
+                claims: output.claims,
+                message: "Presentation verified successfully."
             }, { merge: true });
             return { isValid: true, message: "Presentation verified.", claims: output.claims };
         } else {
-            await verificationSessions.doc(state).set({ status: 'error', error: output.error }, { merge: true });
-            return { isValid: false, message: output.error || "Verification failed." };
+             const errorMessage = output.error || "Verification failed due to untrusted issuer or malformed JWS.";
+            await verificationSessions.doc(state).set({ status: 'error', error: errorMessage }, { merge: true });
+            return { isValid: false, message: errorMessage };
         }
 
     } catch (error: any) {
