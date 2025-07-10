@@ -203,18 +203,48 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
 
         const sessionDocRef = db.collection('verificationSessions').doc(state);
         try {
-            const verificationResult = await verifyJwsWithGenkit(vp_token);
+            const { genkit, googleAI } = await import('genkit'); // Importar dinámicamente
+            const { z } = await import('zod');
 
-            if (verificationResult.isValid && verificationResult.claims) {
+            const ai = genkit({
+                plugins: [googleAI()],
+                logLevel: 'debug',
+                enableTracingAndMetrics: true,
+            });
+
+            const verifyPrompt = ai.definePrompt({
+                name: 'verifyPresentationPromptInFunction',
+                input: { schema: z.object({ jws: z.string() }) },
+                output: { schema: z.object({
+                    isValid: z.boolean().describe("True si el JWS está bien formado y contiene claims."),
+                    claims: z.any().optional().describe("Los claims decodificados del payload del JWS."),
+                    error: z.string().optional().describe("La razón del fallo, si existe.")
+                })},
+                prompt: `
+                    Eres un agente de verificación. Tu tarea es analizar el JWS proporcionado.
+                    JWS: {{{jws}}}
+                    1. Decodifica el payload del JWS. No te preocupes por la verificación de la firma, asume que está pre-verificada.
+                    2. Si el payload se decodifica con éxito y contiene claims, establece 'isValid' a true y devuelve los claims.
+                    3. Si el JWS está malformado o el payload está vacío, establece 'isValid' a false y proporciona un mensaje de error.
+                `,
+            });
+
+            const { output } = await verifyPrompt({ jws: vp_token });
+            
+            if (!output) {
+                throw new Error("El verificador de IA no devolvió una salida válida.");
+            }
+            
+            if (output.isValid && output.claims) {
                 await sessionDocRef.set({
                     status: 'success',
                     verifiedAt: new Date(),
-                    claims: verificationResult.claims,
+                    claims: output.claims,
                     message: "Presentación verificada con éxito."
                 }, { merge: true });
                 response.status(200).send({ redirect_uri: 'https://bravium.org' });
             } else {
-                const errorMessage = verificationResult.error || "La verificación falló por un JWS malformado.";
+                const errorMessage = output.error || "La verificación falló por un JWS malformado.";
                 await sessionDocRef.set({ status: 'error', error: errorMessage }, { merge: true });
                 response.status(400).json({ error: errorMessage });
             }
@@ -335,52 +365,6 @@ async function createJws(payload, kmsKeyPath) {
   const jws = `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 
   return jws;
-}
-
-/**
- * Función auxiliar para verificar un JWS usando Genkit.
- * @param {string} jws El JWS recibido desde la cartera.
- * @returns {Promise<{isValid: boolean, claims: object|null, error: string|null}>} El resultado de la verificación.
- */
-async function verifyJwsWithGenkit(jws) {
-    try {
-        const { genkit, googleAI } = await import('genkit-config'); // Importar dinámicamente
-        const { z } = await import('zod');
-
-        const ai = genkit({
-            plugins: [googleAI()],
-            logLevel: 'debug',
-            enableTracingAndMetrics: true,
-        });
-
-        const verifyPrompt = ai.definePrompt({
-            name: 'verifyPresentationPromptInFunction',
-            input: { schema: z.object({ jws: z.string() }) },
-            output: { schema: z.object({
-                isValid: z.boolean().describe("True si el JWS está bien formado y contiene claims."),
-                claims: z.any().optional().describe("Los claims decodificados del payload del JWS."),
-                error: z.string().optional().describe("La razón del fallo, si existe.")
-            })},
-            prompt: `
-                Eres un agente de verificación. Tu tarea es analizar el JWS proporcionado.
-                JWS: {{{jws}}}
-                1. Decodifica el payload del JWS. No te preocupes por la verificación de la firma, asume que está pre-verificada.
-                2. Si el payload se decodifica con éxito y contiene claims, establece 'isValid' a true y devuelve los claims.
-                3. Si el JWS está malformado o el payload está vacío, establece 'isValid' a false y proporciona un mensaje de error.
-            `,
-        });
-
-        const { output } = await verifyPrompt({ jws });
-
-        if (!output) {
-            throw new Error("El verificador de IA no devolvió una salida válida.");
-        }
-
-        return output;
-    } catch (error) {
-        console.error("Error dentro de verifyJwsWithGenkit:", error);
-        return { isValid: false, claims: null, error: error instanceof Error ? error.message : String(error) };
-    }
 }
 
     
