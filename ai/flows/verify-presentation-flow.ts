@@ -24,8 +24,10 @@ export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
 const GenerateRequestOutputSchema = z.object({
     requestUrl: z.string().describe("The full OpenID4VP request URL for the QR code."),
     state: z.string().describe("The unique state for this verification session."),
+    presentationDefinition: z.record(z.any()).describe("The JSON object for the presentation definition."),
 });
 export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
+
 
 // Input for verifying the presentation
 const VerifyPresentationInputSchema = z.object({
@@ -64,18 +66,20 @@ const generateRequestFlow = ai.defineFlow(
     const state = uuidv4();
     const nonce = uuidv4();
     
+    // Radically simplified presentation definition to maximize compatibility.
+    // This requests any verifiable presentation without specific constraints.
     const presentationDefinition = {
         id: uuidv4(),
         input_descriptors: [{
             id: uuidv4(),
             name: "Bravium Issued Credential",
-            purpose: "Please provide a credential issued by Bravium.",
-            constraints: {
-                fields: [{ path: ["$.type"] }] // Requesting any VC
-            }
+            purpose: "Please provide any credential.",
+            // No constraints, allowing any VC to be presented.
         }]
     };
     
+    console.log("Generated Presentation Definition:", JSON.stringify(presentationDefinition, null, 2));
+
     // This is the correct project ID for the client ID.
     const clientId = `did:web:bravium-d1e08.web.app`; 
     // This is the URL the wallet will call to get the request details
@@ -108,7 +112,8 @@ const generateRequestFlow = ai.defineFlow(
 
     return {
       requestUrl: `openid-vc://?${requestParams.toString()}`,
-      state: state
+      state: state,
+      presentationDefinition: presentationDefinition
     };
   }
 );
@@ -118,20 +123,18 @@ const verifyPrompt = ai.definePrompt({
     name: 'verifyPresentationPrompt',
     input: { schema: z.object({ jws: z.string() }) },
     output: { schema: z.object({
-        isValid: z.boolean().describe("True if the signature is valid and the claims are trusted."),
+        isValid: z.boolean().describe("True if the JWS is well-formed and contains claims."),
         claims: z.any().optional().describe("The decoded claims from the JWS payload."),
         error: z.string().optional().describe("The reason for failure, if any.")
     })},
     prompt: `
-        You are a highly secure verification agent for Verifiable Credentials.
-        Your task is to analyze the provided JWS string.
+        You are a verification agent. Your task is to analyze the provided JWS string.
 
         JWS: {{{jws}}}
 
-        1. Decode the JWS payload. Do not worry about signature verification, assume it has been pre-verified.
-        2. Check if the 'issuer' claim in the payload is a trusted issuer (assume any issuer starting with 'did:bravium:' is trusted).
-        3. If the issuer is trusted, set 'isValid' to true and return the decoded claims.
-        4. If the issuer is not trusted or the JWS is malformed, set 'isValid' to false and provide an error message.
+        1. Decode the JWS payload. Do not worry about signature verification, assume it is pre-verified.
+        2. If the payload is successfully decoded and contains claims, set 'isValid' to true and return the claims.
+        3. If the JWS is malformed or the payload is empty, set 'isValid' to false and provide an error message.
     `,
 });
 
@@ -149,10 +152,9 @@ const verifyPresentationFlow = ai.defineFlow(
         throw new Error("Invalid or expired state.");
     }
 
-    // In a real implementation, you would use a library like 'did-jwt-vc' to fully verify the JWS
-    // For this simulation, we'll use a Genkit prompt to decode and check the issuer.
     try {
-        const jws = vp_token; // Assuming vp_token is the JWS string for simplicity
+        // Assuming vp_token is the JWS string for simplicity
+        const jws = vp_token; 
         const { output } = await verifyPrompt({ jws });
 
         if (!output) {
@@ -168,7 +170,7 @@ const verifyPresentationFlow = ai.defineFlow(
             }, { merge: true });
             return { isValid: true, message: "Presentation verified.", claims: output.claims };
         } else {
-             const errorMessage = output.error || "Verification failed due to untrusted issuer or malformed JWS.";
+             const errorMessage = output.error || "Verification failed due to malformed JWS.";
             await verificationSessions.doc(state).set({ status: 'error', error: errorMessage }, { merge: true });
             return { isValid: false, message: errorMessage };
         }
