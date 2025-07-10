@@ -20,10 +20,12 @@ if (!adminDb) {
 const kmsClient = new KeyManagementServiceClient();
 const verificationSessions = adminDb.collection('verificationSessions');
 
+// For the public verification page, we use a single, pre-defined customer as the verifier.
+const VERIFIER_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+
 // Input for generating the request
 const GenerateRequestInputSchema = z.object({
     baseUrl: z.string().url().describe("The base URL of the application, provided by the client."),
-    customerId: z.string().min(1).describe("The ID of the customer acting as the verifier."),
 });
 export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
 
@@ -48,14 +50,14 @@ const generateRequestFlow = ai.defineFlow(
     inputSchema: GenerateRequestInputSchema,
     outputSchema: GenerateRequestOutputSchema,
   },
-  async ({ baseUrl, customerId }) => {
+  async ({ baseUrl }) => {
     const state = uuidv4();
     const nonce = uuidv4();
 
     // Fetch the verifier's KMS key path
-    const customerDoc = await adminDb.collection('customers').doc(customerId).get();
+    const customerDoc = await adminDb.collection('customers').doc(VERIFIER_CUSTOMER_ID).get();
     if (!customerDoc.exists || !customerDoc.data()?.kmsKeyPath) {
-        throw new Error(`Verifier customer with ID ${customerId} not found or KMS key path is missing.`);
+        throw new Error(`Verifier customer with ID ${VERIFIER_CUSTOMER_ID} not found or KMS key path is missing.`);
     }
     const kmsKeyPath = customerDoc.data()!.kmsKeyPath;
     
@@ -76,6 +78,7 @@ const generateRequestFlow = ai.defineFlow(
     const requestObject = {
       client_id: clientId,
       response_uri: responseUri,
+      redirect_uri: baseUrl,
       response_type: "vp_token",
       response_mode: "direct_post",
       presentation_definition: presentationDefinition,
@@ -135,5 +138,3 @@ async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
     const joseSignature = derToJose(signResponse.signature, 'ES256');
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
-
-    
