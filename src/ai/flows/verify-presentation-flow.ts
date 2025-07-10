@@ -2,11 +2,12 @@
 'use server';
 /**
  * @fileOverview An AI agent for verifying presentations based on OpenID4VP.
- * This flow now focuses exclusively on verifying the presentation, not generating it.
+ * This flow generates a presentation request and verifies the subsequent presentation.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 import { adminDb } from '@/lib/firebase/admin';
 
 if (!adminDb) {
@@ -14,6 +15,17 @@ if (!adminDb) {
 }
 
 const verificationSessions = adminDb.collection('verificationSessions');
+
+// Input for generating the request
+const GenerateRequestInputSchema = z.object({}); // Empty for now, could be parameterized later
+export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
+
+// Output for the generated request
+const GenerateRequestOutputSchema = z.object({
+    requestUrl: z.string().describe("The full OpenID4VP request URL."),
+    state: z.string().describe("The unique state for this verification session."),
+});
+export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
 
 // Input for verifying the presentation
 const VerifyPresentationInputSchema = z.object({
@@ -31,10 +43,71 @@ const VerifyPresentationOutputSchema = z.object({
 export type VerifyPresentationOutput = z.infer<typeof VerifyPresentationOutputSchema>;
 
 
+// The exported function to generate a request
+export async function generateRequest(input: GenerateRequestInput = {}): Promise<GenerateRequestOutput> {
+  return generateRequestFlow(input);
+}
+
 // The exported function to verify a presentation
 export async function verifyPresentation(input: VerifyPresentationInput): Promise<VerifyPresentationOutput> {
   return verifyPresentationFlow(input);
 }
+
+// Genkit flow to generate the request URL
+const generateRequestFlow = ai.defineFlow(
+  {
+    name: 'generateRequestFlow',
+    inputSchema: GenerateRequestInputSchema,
+    outputSchema: GenerateRequestOutputSchema,
+  },
+  async () => {
+    const state = uuidv4();
+    const nonce = uuidv4();
+    const presentationDefinition = {
+        id: uuidv4(),
+        input_descriptors: [{
+            id: uuidv4(),
+            name: "Bravium Issued Credential",
+            purpose: "Please provide a credential issued by Bravium.",
+            constraints: {
+                fields: [{ path: ["$.type"] }] // Requesting any VC
+            }
+        }]
+    };
+    
+    // Using a fixed, reliable DID for the client ID.
+    const clientId = "did:web:example.com"; 
+    const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
+
+    const requestObject = {
+      response_type: "vp_token",
+      client_id: clientId,
+      presentation_definition: presentationDefinition,
+      redirect_uri: responseUri,
+      response_mode: "direct_post",
+      state,
+      nonce,
+    };
+    
+    // Store the full session state in Firestore
+    await verificationSessions.doc(state).set({
+        status: 'pending',
+        createdAt: new Date(),
+        nonce,
+        requestObject
+    });
+    
+    // Build the full URL for the QR code
+    const requestParams = new URLSearchParams({
+        request: JSON.stringify(requestObject),
+    });
+
+    return {
+      requestUrl: `openid-vc://?${requestParams.toString()}`,
+      state: state
+    };
+  }
+);
 
 
 const verifyPrompt = ai.definePrompt({
@@ -91,7 +164,7 @@ const verifyPresentationFlow = ai.defineFlow(
                 claims: output.claims,
                 message: successMessage
             }, { merge: true });
-            return { isValid: true, message: successMessage, claims: output.claims };
+            return { isValid: true, message: "Presentation verified.", claims: output.claims };
         } else {
             const errorMessage = output.error || "Verification failed due to untrusted issuer or malformed JWS.";
             await verificationSessions.doc(state).set({ status: 'error', error: errorMessage }, { merge: true });
