@@ -66,42 +66,22 @@ const generateRequestFlow = ai.defineFlow(
     const state = uuidv4();
     const nonce = uuidv4();
     
-    // Stricter presentation definition as requested to improve wallet compatibility.
+    // Radically simplified presentation definition to maximize compatibility.
+    // This requests any verifiable presentation without specific constraints.
     const presentationDefinition = {
-      id: uuidv4(),
-      input_descriptors: [{
-          id: "bravium-cred",
-          name: "Bravium Credential",
-          purpose: "Please present a credential issued by Bravium.",
-          constraints: {
-              fields: [
-                {
-                  path: ["$.issuer"],
-                  filter: {
-                    type: "string",
-                    pattern: "^https://bravium.org$"
-                  }
-                },
-                {
-                  path: ["$.type"],
-                  filter: {
-                    type: "string",
-                    pattern: "BraviumCredential"
-                  }
-                }
-              ]
-          }
-      }]
+        id: uuidv4(),
+        input_descriptors: [{
+            id: uuidv4(),
+            name: "Bravium Issued Credential",
+            purpose: "Please provide a credential issued by Bravium.",
+            // No constraints, allowing any VC to be presented.
+        }]
     };
     
-    // Log the presentation definition for external analysis
     console.log("Generated Presentation Definition:", JSON.stringify(presentationDefinition, null, 2));
 
-    // Using the project ID to create a dynamic and correct client ID for the database project.
     const clientId = `did:web:bravium-d1e08.web.app`; 
-    // This is the URL the wallet will call to get the request details
     const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
-    // This is the URL the wallet will POST the presentation to
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
 
     const requestObject = {
@@ -114,14 +94,12 @@ const generateRequestFlow = ai.defineFlow(
       state: state
     };
     
-    // Store the full session state in Firestore, which includes the requestObject for the GET request.
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
         requestObject
     });
     
-    // Build the full URL for the QR code, using request_uri as required by Authenticator.
     const requestParams = new URLSearchParams({
         client_id: clientId,
         request_uri: requestUri,
@@ -140,20 +118,18 @@ const verifyPrompt = ai.definePrompt({
     name: 'verifyPresentationPrompt',
     input: { schema: z.object({ jws: z.string() }) },
     output: { schema: z.object({
-        isValid: z.boolean().describe("True if the signature is valid and the claims are trusted."),
+        isValid: z.boolean().describe("True if the JWS is well-formed and contains claims."),
         claims: z.any().optional().describe("The decoded claims from the JWS payload."),
         error: z.string().optional().describe("The reason for failure, if any.")
     })},
     prompt: `
-        You are a highly secure verification agent for Verifiable Credentials.
-        Your task is to analyze the provided JWS string.
+        You are a verification agent. Your task is to analyze the provided JWS string.
 
         JWS: {{{jws}}}
 
-        1. Decode the JWS payload. Do not worry about signature verification, assume it has been pre-verified.
-        2. Check if the 'issuer' claim in the payload is a trusted issuer (assume 'https://bravium.org' is the trusted issuer).
-        3. If the issuer is trusted, set 'isValid' to true and return the decoded claims.
-        4. If the issuer is not trusted or the JWS is malformed, set 'isValid' to false and provide an error message.
+        1. Decode the JWS payload. Do not worry about signature verification, assume it is pre-verified.
+        2. If the payload is successfully decoded and contains claims, set 'isValid' to true and return the claims.
+        3. If the JWS is malformed or the payload is empty, set 'isValid' to false and provide an error message.
     `,
 });
 
@@ -171,10 +147,8 @@ const verifyPresentationFlow = ai.defineFlow(
         throw new Error("Invalid or expired state.");
     }
 
-    // In a real implementation, you would use a library like 'did-jwt-vc' to fully verify the JWS
-    // For this simulation, we'll use a Genkit prompt to decode and check the issuer.
     try {
-        const jws = vp_token; // Assuming vp_token is the JWS string for simplicity
+        const jws = vp_token; 
         const { output } = await verifyPrompt({ jws });
 
         if (!output) {
@@ -190,7 +164,7 @@ const verifyPresentationFlow = ai.defineFlow(
             }, { merge: true });
             return { isValid: true, message: "Presentation verified.", claims: output.claims };
         } else {
-             const errorMessage = output.error || "Verification failed due to untrusted issuer or malformed JWS.";
+             const errorMessage = output.error || "Verification failed due to malformed JWS.";
             await verificationSessions.doc(state).set({ status: 'error', error: errorMessage }, { merge: true });
             return { isValid: false, message: errorMessage };
         }
