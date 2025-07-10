@@ -46,9 +46,10 @@ export default function VerifyPage() {
   }, []);
 
   useEffect(() => {
-    if (!sessionState || verificationResult) {
+    if (pageState !== 'ready' && pageState !== 'verifying') {
       return;
     }
+    if (!sessionState) return;
 
     setPageState("verifying");
 
@@ -82,7 +83,7 @@ export default function VerifyPage() {
         clearTimeout(timer);
     };
 
-  }, [sessionState, verificationResult, pageState]);
+  }, [sessionState, pageState]);
 
 
   const renderContent = () => {
@@ -137,7 +138,7 @@ export default function VerifyPage() {
                                 <CheckCircle className="h-16 w-16 text-green-600" />
                                 <h3 className="text-2xl font-bold">{t.verifyPage.result_success_title}</h3>
                                 <p className="text-muted-foreground">{verificationResult.message}</p>
-                                <Button onClick={() => setPageState("idle")}>{t.verifyPage.new_verification_button}</Button>
+                                <Button onClick={createVerificationRequest}>{t.verifyPage.new_verification_button}</Button>
                             </div>
                         );
                     case 'error':
@@ -146,7 +147,7 @@ export default function VerifyPage() {
                                 <XCircle className="h-16 w-16 text-destructive" />
                                 <h3 className="text-2xl font-bold">{t.verifyPage.result_error_title}</h3>
                                 <p className="text-muted-foreground">{verificationResult.message}</p>
-                                <Button onClick={() => setPageState("idle")}>{t.verifyPage.retry_button}</Button>
+                                <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
                             </div>
                         );
                     case 'expired':
@@ -155,7 +156,7 @@ export default function VerifyPage() {
                                 <XCircle className="h-16 w-16 text-destructive" />
                                 <h3 className="text-2xl font-bold">{t.verifyPage.result_expired_title}</h3>
                                 <p className="text-muted-foreground">{verificationResult.message}</p>
-                                <Button onClick={() => setPageState("idle")}>{t.verifyPage.new_verification_button}</Button>
+                                <Button onClick={createVerificationRequest}>{t.verifyPage.new_verification_button}</Button>
                             </div>
                         );
                 }
@@ -165,7 +166,7 @@ export default function VerifyPage() {
                         <XCircle className="h-12 w-12 text-destructive" />
                         <p className="text-destructive font-semibold">{t.toast_error_title}</p>
                         <p className="text-muted-foreground">{error}</p>
-                        <Button onClick={() => setPageState("idle")}>{t.verifyPage.retry_button}</Button>
+                        <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
                     </div>
                 )
             }
