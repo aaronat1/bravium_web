@@ -53,7 +53,7 @@ const db = admin.firestore();
 // 1. GET request with a 'state' query param: Serves the request object for the wallet (acts as request_uri).
 // 2. POST request with 'vp_token' and 'state': Handles the presentation response from the wallet.
 export const openid4vp_handler = onRequest(
-  {cors: true},
+  {cors: true, region: "us-central1"},
   async (request, response) => {
     
     // --- Case 1: Wallet is requesting the presentation details ---
