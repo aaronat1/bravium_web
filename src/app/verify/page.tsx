@@ -12,8 +12,8 @@ import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode } from "lucide-react
 import { useI18n } from "@/hooks/use-i18n";
 import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { generateRequest, type GenerateRequestOutput } from "@/ai/flows/verify-presentation-flow";
-import CodeBlock from "@/components/code-block";
+import { generateRequest } from "@/ai/flows/verify-presentation-flow";
+import { useAuth } from "@/hooks/use-auth";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
 type PageState = "idle" | "loading" | "verifying" | "result";
@@ -25,10 +25,14 @@ interface VerificationResult {
     verifiedAt?: Timestamp;
 }
 
+// We need a customer ID for the verifier. For this public page, we'll use the admin's UID.
+const VERIFIER_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+
+
 export default function VerifyPage() {
   const { t } = useI18n();
   const [pageState, setPageState] = useState<PageState>("idle");
-  const [requestData, setRequestData] = useState<GenerateRequestOutput | null>(null);
+  const [requestData, setRequestData] = useState<{ requestUrl: string; state: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
 
@@ -40,7 +44,7 @@ export default function VerifyPage() {
     
     try {
       const baseUrl = window.location.origin;
-      const response = await generateRequest({ baseUrl });
+      const response = await generateRequest({ baseUrl, customerId: VERIFIER_CUSTOMER_ID });
       setRequestData(response);
       setPageState("verifying");
     } catch (e: any) {
@@ -203,3 +207,5 @@ export default function VerifyPage() {
     </div>
   );
 }
+
+    

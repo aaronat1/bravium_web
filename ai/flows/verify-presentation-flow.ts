@@ -1,24 +1,29 @@
 
 'use server';
 /**
- * @fileOverview An AI agent for generating OpenID4VP presentation requests.
- * The verification logic is now handled by a separate Cloud Function.
+ * @fileOverview Flow for generating a verifiable presentation request.
+ * This flow is responsible for creating a session, defining the presentation requirements,
+ * signing the request object as a JWT, and storing it for later retrieval by the wallet.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { adminDb } from '@/lib/firebase/admin';
+import { KeyManagementServiceClient } from '@google-cloud/kms';
+import { createHash } from 'crypto';
 
 if (!adminDb) {
   throw new Error("Firebase Admin DB is not initialized. Verification flows will fail.");
 }
 
+const kmsClient = new KeyManagementServiceClient();
 const verificationSessions = adminDb.collection('verificationSessions');
 
 // Input for generating the request
 const GenerateRequestInputSchema = z.object({
     baseUrl: z.string().url().describe("The base URL of the application, provided by the client."),
+    customerId: z.string().min(1).describe("The ID of the customer acting as the verifier."),
 });
 export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
 
@@ -26,7 +31,6 @@ export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
 const GenerateRequestOutputSchema = z.object({
     requestUrl: z.string().describe("The full OpenID4VP request URL for the QR code."),
     state: z.string().describe("The unique state for this verification session."),
-    presentationDefinition: z.record(z.any()).describe("The JSON object for the presentation definition."),
 });
 export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
 
@@ -44,51 +48,92 @@ const generateRequestFlow = ai.defineFlow(
     inputSchema: GenerateRequestInputSchema,
     outputSchema: GenerateRequestOutputSchema,
   },
-  async ({ baseUrl }) => {
+  async ({ baseUrl, customerId }) => {
     const state = uuidv4();
     const nonce = uuidv4();
+
+    // Fetch the verifier's KMS key path
+    const customerDoc = await adminDb.collection('customers').doc(customerId).get();
+    if (!customerDoc.exists || !customerDoc.data()?.kmsKeyPath) {
+        throw new Error(`Verifier customer with ID ${customerId} not found or KMS key path is missing.`);
+    }
+    const kmsKeyPath = customerDoc.data()!.kmsKeyPath;
     
     const presentationDefinition = {
-        id: uuidv4(),
-        input_descriptors: [{
-            id: uuidv4(),
-            name: "Bravium Issued Credential",
-            purpose: "Please provide any credential.",
-        }]
+      id: uuidv4(),
+      input_descriptors: [{
+          id: uuidv4(),
+          name: "Bravium Issued Credential",
+          purpose: "Please provide any credential issued by Bravium.",
+          schema: [{ uri: "https://www.w3.org/2018/credentials#VerifiableCredential" }]
+      }]
     };
     
-    const clientId = `did:web:bravium-d1e08.web.app`;
-    
-    // This now points to the real Cloud Function URL
-    const functionUrl = 'https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp';
-    const requestUri = `${functionUrl}?state=${state}`;
+    const clientId = baseUrl;
+    const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
+    const responseUri = `${functionUrl}?state=${state}`;
 
     const requestObject = {
       client_id: clientId,
-      nonce: nonce,
-      presentation_definition: presentationDefinition,
-      response_mode: "direct_post",
+      response_uri: responseUri,
       response_type: "vp_token",
-      redirect_uri: functionUrl, 
+      response_mode: "direct_post",
+      presentation_definition: presentationDefinition,
+      nonce: nonce,
       state: state
     };
     
-    // Store the full session state in Firestore, which includes the requestObject for the GET request.
+    // Sign the requestObject to create a JWS
+    const requestObjectJwt = await createJws(requestObject, kmsKeyPath);
+    
+    // Store the session state in Firestore
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
-        requestObject
+        requestObject: requestObject, // For debugging and backend use
+        requestObjectJwt: requestObjectJwt // This is what the wallet will fetch
     });
     
     const requestParams = new URLSearchParams({
         client_id: clientId,
-        request_uri: requestUri,
+        request_uri: `${functionUrl}?state=${state}`,
     });
 
     return {
       requestUrl: `openid-vc://?${requestParams.toString()}`,
       state: state,
-      presentationDefinition: presentationDefinition
     };
   }
 );
+
+
+/**
+ * Creates a JWS signature for a given payload using a KMS key.
+ * @param {object} payload The JSON object to be included in the JWS.
+ * @param {string} kmsKeyPath The full resource path to the signing key in KMS.
+ * @returns {Promise<string>} The signed credential in compact JWS format.
+ */
+async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
+    const jose = await import('jose');
+    const { derToJose } = await import('ecdsa-sig-formatter');
+
+    const protectedHeader = { alg: 'ES256', typ: 'jwt' };
+    const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
+    const encodedPayload = jose.base64url.encode(JSON.stringify(payload));
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+    const digest = createHash('sha256').update(signingInput).digest();
+
+    const [signResponse] = await kmsClient.asymmetricSign({
+        name: `${kmsKeyPath}/cryptoKeyVersions/1`,
+        digest: { sha256: digest },
+    });
+
+    if (!signResponse.signature) {
+        throw new Error('KMS signing failed or did not return a signature.');
+    }
+
+    const joseSignature = derToJose(signResponse.signature, 'ES256');
+    return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
+}
+
+    

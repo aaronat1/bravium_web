@@ -92,24 +92,22 @@ exports.onCustomerDelete = functions.firestore
  * ----------------------------------------------------------------
  */
 exports.issueCredential = functions.https.onCall(async (data, context) => {
-  // 1. Autenticación: Verifica que quien llama es un cliente autenticado.
+  // 1. Autenticación y Validación de Datos
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'La función debe ser llamada por un usuario autenticado.');
   }
-  const customerId = context.auth.uid;
-
-  // 2. Validación de Datos: Asegura que los datos necesarios para la credencial están presentes.
-  if (!data.credentialSubject || typeof data.credentialSubject !== 'object' || !data.credentialType) {
-    throw new functions.https.HttpsError('invalid-argument', 'Faltan datos necesarios para la credencial (credentialSubject y credentialType).');
+  if (!data.credentialSubject || typeof data.credentialSubject !== 'object' || !data.credentialType || !data.customerId) {
+    throw new functions.https.HttpsError('invalid-argument', 'Faltan datos necesarios (credentialSubject, credentialType, customerId).');
   }
+  
+  const { credentialSubject, credentialType, customerId } = data;
 
   try {
-    // 3. Recuperar la Clave: Busca el documento del cliente para obtener su kmsKeyPath y su DID.
     const customerDocRef = db.collection('customers').doc(customerId);
     const customerDoc = await customerDocRef.get();
 
     if (!customerDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'No se encontró el documento del cliente.');
+      throw new functions.https.HttpsError('not-found', `No se encontró el documento del cliente con ID: ${customerId}`);
     }
 
     const customerData = customerDoc.data();
@@ -120,30 +118,27 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('failed-precondition', 'El onboarding del cliente no está completo. Faltan kmsKeyPath o did.');
     }
 
-    // 4. Construir la Credencial Verificable (el payload del JWT)
     const vcPayload = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
-        'https://www.w3.org/2018/credentials/examples/v1' // Puedes crear tu propio contexto
+        'https://www.w3.org/2018/credentials/examples/v1'
       ],
-      id: `urn:uuid:${randomUUID()}`, // ID único para la credencial
-      type: ['VerifiableCredential', data.credentialType],
-      issuer: issuerDid, // El DID del cliente que emite
+      id: `urn:uuid:${randomUUID()}`,
+      type: ['VerifiableCredential', credentialType],
+      issuer: issuerDid,
       issuanceDate: new Date().toISOString(),
-      credentialSubject: data.credentialSubject, // Los datos de la credencial (ej. nombre, curso, etc.)
+      credentialSubject: credentialSubject,
     };
 
-    // 5. Firmar con KMS y crear un JWS (JSON Web Signature)
     const jws = await createJws(vcPayload, kmsKeyPath);
     console.log(`Credencial emitida y firmada con éxito para el cliente ${customerId}.`);
 
-    // 6. Devolver la Credencial firmada al frontend.
     return { verifiableCredentialJws: jws };
 
   } catch (error) {
     console.error(`Error al emitir la credencial para el cliente ${customerId}:`, error);
     if (error instanceof functions.https.HttpsError) {
-      throw error; // Re-lanza errores HttpsError para que el cliente los reciba correctamente.
+      throw error;
     }
     throw new functions.https.HttpsError('internal', 'Ocurrió un error interno al emitir la credencial.');
   }
@@ -151,22 +146,21 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
 
 /**
  * ----------------------------------------------------------------
- * FUNCIÓN DE VERIFICACIÓN OpenID4VP (NUEVA)
+ * FUNCIÓN DE VERIFICACIÓN OpenID4VP
  * ----------------------------------------------------------------
- * Maneja las peticiones GET y POST del flujo de verificación.
+ * Maneja las peticiones GET (servir JWS de la petición) y POST (verificar presentación).
  */
 exports.openid4vp = functions.region("us-central1").https.onRequest(async (request, response) => {
-    // Habilitar CORS para que las carteras puedan llamar a la función.
     response.set("Access-Control-Allow-Origin", "*");
     response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response.set("Access-Control-Allow-Headers", "Content-Type");
+    response.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
     if (request.method === "OPTIONS") {
         response.status(204).send();
         return;
     }
 
-    // --- GET: La cartera pide el objeto de la solicitud ---
+    // --- GET: La cartera pide el JWS de la solicitud ---
     if (request.method === "GET") {
         const state = request.query.state;
         if (!state) {
@@ -183,12 +177,14 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
                 return;
             }
             const sessionData = sessionDoc.data();
-            if (!sessionData || !sessionData.requestObject) {
-                 console.error(`Request object no encontrado para el state: ${state}`);
-                response.status(500).send("Error interno: request object no encontrado.");
+            if (!sessionData || !sessionData.requestObjectJwt) {
+                 console.error(`requestObjectJwt no encontrado para el state: ${state}`);
+                response.status(500).send("Error interno: request object JWT no encontrado.");
                 return;
             }
-            response.status(200).json(sessionData.requestObject);
+            // Devolver el JWS como texto plano, como espera la especificación
+            response.set('Content-Type', 'application/oauth-authz-req+jwt');
+            response.status(200).send(sessionData.requestObjectJwt);
         } catch (error) {
             console.error(`Error en GET para el state ${state}:`, error);
             response.status(500).send("Error interno del servidor");
@@ -261,7 +257,6 @@ async function generateKmsKeyForCustomer(customerId) {
         algorithm: 'EC_SIGN_P256_SHA256',
         protectionLevel: 'SOFTWARE',
       },
-      // Añadir una etiqueta para identificar la clave fácilmente
       labels: {
           'customer-id': customerId.replace(/[^a-z0-9-]/gi, '_').toLowerCase()
       }
@@ -321,20 +316,12 @@ async function createJws(payload, kmsKeyPath) {
   const jose = await import('jose');
   const { derToJose } = require('ecdsa-sig-formatter');
 
-  // 1. Crear la cabecera protegida del JWS
-  const protectedHeader = { alg: 'ES256', typ: 'JWT' };
-
-  // 2. Codificar en Base64URL la cabecera y el payload
+  const protectedHeader = { alg: 'ES256', typ: 'jwt' };
   const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
   const encodedPayload = jose.base64url.encode(JSON.stringify(payload));
-
-  // 3. Crear el input que se va a firmar
   const signingInput = `${encodedHeader}.${encodedPayload}`;
-
-  // 4. Crear el digest (hash) del input
   const digest = createHash('sha256').update(signingInput).digest();
 
-  // 5. Firmar el digest con la clave de KMS
   const [signResponse] = await kmsClient.asymmetricSign({
       name: `${kmsKeyPath}/cryptoKeyVersions/1`,
       digest: { sha256: digest },
@@ -344,10 +331,7 @@ async function createJws(payload, kmsKeyPath) {
       throw new Error('La firma con KMS falló o no devolvió una firma.');
   }
 
-  // 6. Convertir la firma de formato DER (de KMS) a formato JOSE (requerido por JWS)
   const joseSignature = derToJose(signResponse.signature, 'ES256');
-
-  // 7. Ensamblar el JWS final
   const jws = `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 
   return jws;
@@ -398,3 +382,5 @@ async function verifyJwsWithGenkit(jws) {
         return { isValid: false, claims: null, error: error instanceof Error ? error.message : String(error) };
     }
 }
+
+    

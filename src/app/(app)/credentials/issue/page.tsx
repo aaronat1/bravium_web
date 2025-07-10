@@ -80,7 +80,6 @@ export default function IssueCredentialPage() {
         try {
             const credentialSubject: Record<string, any> = {};
 
-            // Handle file uploads first
             for (const fieldInfo of selectedTemplate.fields) {
                 const fieldName = fieldInfo.fieldName;
                 const value = data[fieldName];
@@ -106,7 +105,8 @@ export default function IssueCredentialPage() {
             const issueCredential = httpsCallable(functions, 'issueCredential');
             const result: any = await issueCredential({
                 credentialSubject,
-                credentialType: selectedTemplate.name
+                credentialType: selectedTemplate.name,
+                customerId: selectedTemplate.customerId,
             });
             
             const jws = result.data.verifiableCredentialJws;
@@ -195,7 +195,7 @@ export default function IssueCredentialPage() {
                                                             return (
                                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                                     <FormControl>
-                                                                        <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
+                                                                        <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectValue>
                                                                     </FormControl>
                                                                     <SelectContent>
                                                                         {(fieldInfo.options || []).map(option => (
@@ -263,3 +263,5 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
+
+    
