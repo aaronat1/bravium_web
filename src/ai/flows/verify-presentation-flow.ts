@@ -90,7 +90,6 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
-    // Using a fixed, reliable DID for the client ID.
     const clientId = "did:web:example.com"; 
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
 
@@ -104,7 +103,7 @@ const generateRequestFlow = ai.defineFlow(
       nonce,
     };
     
-    // Store the full session state in Firestore
+    // Store the session state in Firestore for later verification
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
@@ -112,15 +111,9 @@ const generateRequestFlow = ai.defineFlow(
         requestObject
     });
     
-    // Build the full URL for the QR code
+    // Build the full URL embedding the request object directly
     const requestParams = new URLSearchParams({
-        client_id: requestObject.client_id,
-        response_type: requestObject.response_type,
-        response_mode: requestObject.response_mode,
-        redirect_uri: requestObject.redirect_uri,
-        presentation_definition: JSON.stringify(requestObject.presentation_definition),
-        state: requestObject.state,
-        nonce: requestObject.nonce
+        request: JSON.stringify(requestObject)
     });
 
     return {
