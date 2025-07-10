@@ -66,26 +66,23 @@ const generateRequestFlow = ai.defineFlow(
     const state = uuidv4();
     const nonce = uuidv4();
     
-    // Radically simplified presentation definition to maximize compatibility.
-    // This requests any verifiable presentation without specific constraints.
     const presentationDefinition = {
         id: uuidv4(),
         input_descriptors: [{
             id: uuidv4(),
             name: "Bravium Issued Credential",
             purpose: "Please provide any credential.",
-            // No constraints, allowing any VC to be presented.
         }]
     };
     
-    console.log("Generated Presentation Definition:", JSON.stringify(presentationDefinition, null, 2));
-
-    // This is the correct project ID for the client ID.
-    const clientId = `did:web:bravium-d1e08.web.app`; 
-    // This is the URL the wallet will call to get the request details
-    const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
-    // This is the URL the wallet will POST the presentation to
-    const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
+    const clientId = `did:web:bravium-d1e08.web.app`;
+    // THIS IS THE CRITICAL CHANGE: Point to our own app's API route now.
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` 
+      : 'http://localhost:9002';
+      
+    const requestUri = `${baseUrl}/api/openid4vp?state=${state}`;
+    const responseUri = `${baseUrl}/api/openid4vp`;
 
     const requestObject = {
       client_id: clientId,
@@ -93,7 +90,7 @@ const generateRequestFlow = ai.defineFlow(
       presentation_definition: presentationDefinition,
       response_mode: "direct_post",
       response_type: "vp_token",
-      redirect_uri: responseUri,
+      redirect_uri: responseUri, // Kept for completeness, though direct_post uses it as the POST target.
       state: state
     };
     
@@ -104,7 +101,6 @@ const generateRequestFlow = ai.defineFlow(
         requestObject
     });
     
-    // Build the full URL for the QR code, using request_uri as required by Authenticator.
     const requestParams = new URLSearchParams({
         client_id: clientId,
         request_uri: requestUri,
@@ -129,9 +125,7 @@ const verifyPrompt = ai.definePrompt({
     })},
     prompt: `
         You are a verification agent. Your task is to analyze the provided JWS string.
-
         JWS: {{{jws}}}
-
         1. Decode the JWS payload. Do not worry about signature verification, assume it is pre-verified.
         2. If the payload is successfully decoded and contains claims, set 'isValid' to true and return the claims.
         3. If the JWS is malformed or the payload is empty, set 'isValid' to false and provide an error message.
@@ -146,14 +140,15 @@ const verifyPresentationFlow = ai.defineFlow(
     outputSchema: VerifyPresentationOutputSchema,
   },
   async ({ vp_token, state }) => {
-    const sessionDoc = await verificationSessions.doc(state).get();
+    const sessionDocRef = verificationSessions.doc(state);
+    const sessionDoc = await sessionDocRef.get();
+
     if (!sessionDoc.exists) {
-        await verificationSessions.doc(state).set({ status: 'error', error: 'Invalid or expired state.' }, { merge: true });
+        await sessionDocRef.set({ status: 'error', error: 'Invalid or expired state.' }, { merge: true });
         throw new Error("Invalid or expired state.");
     }
 
     try {
-        // Assuming vp_token is the JWS string for simplicity
         const jws = vp_token; 
         const { output } = await verifyPrompt({ jws });
 
@@ -161,8 +156,8 @@ const verifyPresentationFlow = ai.defineFlow(
             throw new Error("AI verifier did not return a valid output.");
         }
 
-        if (output.isValid) {
-            await verificationSessions.doc(state).set({ 
+        if (output.isValid && output.claims) {
+            await sessionDocRef.set({ 
                 status: 'success', 
                 verifiedAt: new Date(),
                 claims: output.claims,
@@ -171,12 +166,12 @@ const verifyPresentationFlow = ai.defineFlow(
             return { isValid: true, message: "Presentation verified.", claims: output.claims };
         } else {
              const errorMessage = output.error || "Verification failed due to malformed JWS.";
-            await verificationSessions.doc(state).set({ status: 'error', error: errorMessage }, { merge: true });
+            await sessionDocRef.set({ status: 'error', error: errorMessage }, { merge: true });
             return { isValid: false, message: errorMessage };
         }
 
     } catch (error: any) {
-        await verificationSessions.doc(state).set({ status: 'error', error: error.message }, { merge: true });
+        await sessionDocRef.set({ status: 'error', error: error.message }, { merge: true });
         throw error;
     }
   }

@@ -22,22 +22,19 @@ type PageState = "idle" | "loading" | "ready" | "verifying" | "result";
 export default function VerifyPage() {
   const { t } = useI18n();
   const [pageState, setPageState] = useState<PageState>("idle");
-  const [request, setRequest] = useState<GenerateRequestOutput | null>(null);
+  const [requestData, setRequestData] = useState<GenerateRequestOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<{ status: VerificationStatus, message?: string } | null>(null);
-  const [sessionState, setSessionState] = useState<string | null>(null);
 
   const createVerificationRequest = useCallback(async () => {
     setPageState("loading");
     setError(null);
     setVerificationResult(null);
-    setRequest(null);
-    setSessionState(null);
+    setRequestData(null);
     
     try {
       const response = await generateRequest();
-      setRequest(response);
-      setSessionState(response.state);
+      setRequestData(response);
       setPageState("ready");
     } catch (e: any) {
       setError(e.message);
@@ -49,11 +46,11 @@ export default function VerifyPage() {
     if (pageState !== 'ready' && pageState !== 'verifying') {
       return;
     }
-    if (!sessionState) return;
+    if (!requestData?.state) return;
 
     setPageState("verifying");
 
-    const sessionDocRef = doc(db, "verificationSessions", sessionState);
+    const sessionDocRef = doc(db, "verificationSessions", requestData.state);
 
     const unsubscribe = onSnapshot(sessionDocRef, (doc) => {
       if (doc.exists()) {
@@ -83,7 +80,7 @@ export default function VerifyPage() {
         clearTimeout(timer);
     };
 
-  }, [sessionState, pageState]);
+  }, [requestData, pageState]);
 
 
   const renderContent = () => {
@@ -106,11 +103,11 @@ export default function VerifyPage() {
             );
         case "ready":
         case "verifying":
-             if (request) {
+             if (requestData) {
                 return (
                     <div className="flex flex-col items-center gap-6">
                         <div className="p-4 bg-white rounded-lg border">
-                            <QRCode value={request.requestUrl} size={256} />
+                            <QRCode value={requestData.requestUrl} size={256} />
                         </div>
                         <div className="text-center">
                             <p className="text-muted-foreground">{t.verifyPage.scan_qr_description}</p>
@@ -119,10 +116,10 @@ export default function VerifyPage() {
                                 <span>{t.verifyPage.waiting_for_presentation}</span>
                             </div>
                         </div>
-                        {request.presentationDefinition && (
+                        {requestData.presentationDefinition && (
                             <div className="w-full mt-4">
                                 <h4 className="text-lg font-semibold mb-2 text-center">Presentation Definition (JSON)</h4>
-                                <CodeBlock code={JSON.stringify(request.presentationDefinition, null, 2)} />
+                                <CodeBlock code={JSON.stringify(requestData.presentationDefinition, null, 2)} />
                             </div>
                         )}
                     </div>
