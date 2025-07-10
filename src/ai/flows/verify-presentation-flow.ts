@@ -90,11 +90,11 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
-    const clientId = "did:web:example.com"; 
-    const responseUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp-handler`;
+    // IMPORTANT: These must match what the Cloud Function expects.
+    const clientId = `did:web:${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.web.app`; 
+    const responseUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp_handler`;
 
     // Store the session state in Firestore
-    // This now includes the full request details which the request-handler function will need.
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
@@ -104,9 +104,7 @@ const generateRequestFlow = ai.defineFlow(
         nonce,
     });
     
-    // The URL for the QR code now points to our new request-handler function,
-    // passing the session state as a query parameter.
-    const requestUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/request-handler?state=${state}`;
+    const requestUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/request_handler?state=${state}`;
 
     const requestParams = new URLSearchParams({
       client_id: clientId,
@@ -152,6 +150,7 @@ const verifyPresentationFlow = ai.defineFlow(
   async ({ vp_token, state }) => {
     const sessionDoc = await verificationSessions.doc(state).get();
     if (!sessionDoc.exists) {
+        // This update is crucial for the frontend to react.
         await verificationSessions.doc(state).set({ status: 'error', error: 'Invalid or expired state.' }, { merge: true });
         throw new Error("Invalid or expired state.");
     }
@@ -167,22 +166,24 @@ const verifyPresentationFlow = ai.defineFlow(
         }
 
         if (output.isValid) {
+            const successMessage = "Presentation verified successfully.";
             await verificationSessions.doc(state).set({ 
                 status: 'success', 
                 verifiedAt: new Date(),
-                claims: output.claims 
+                claims: output.claims,
+                message: successMessage
             }, { merge: true });
-            return { isValid: true, message: "Presentation verified.", claims: output.claims };
+            return { isValid: true, message: successMessage, claims: output.claims };
         } else {
-            await verificationSessions.doc(state).set({ status: 'error', error: output.error }, { merge: true });
-            return { isValid: false, message: output.error || "Verification failed." };
+            const errorMessage = output.error || "Verification failed due to untrusted issuer or malformed JWS.";
+            await verificationSessions.doc(state).set({ status: 'error', error: errorMessage }, { merge: true });
+            return { isValid: false, message: errorMessage };
         }
 
     } catch (error: any) {
         await verificationSessions.doc(state).set({ status: 'error', error: error.message }, { merge: true });
+        // Re-throw the error so the calling function (Cloud Function) knows about the failure.
         throw error;
     }
   }
 );
-
-    

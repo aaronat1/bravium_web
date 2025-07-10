@@ -51,19 +51,19 @@ export default function VerifyPage() {
   }, [createVerificationRequest]);
 
   useEffect(() => {
-    if (!request?.state) {
+    if (!request?.state || verificationResult) {
       return;
     }
 
-    const unsubscribe = onSnapshot(doc(db, "verificationSessions", request.state), (doc) => {
+    const sessionDocRef = doc(db, "verificationSessions", request.state);
+
+    const unsubscribe = onSnapshot(sessionDocRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
         if (data.status === "success") {
-          setVerificationResult({ status: "success", message: "Credential verified successfully!" });
-          unsubscribe();
+          setVerificationResult({ status: "success", message: data.message || "Credential verified successfully!" });
         } else if (data.status === "error") {
           setVerificationResult({ status: "error", message: data.error || "Verification failed." });
-          unsubscribe();
         }
       }
     });
@@ -71,7 +71,6 @@ export default function VerifyPage() {
     const timer = setTimeout(() => {
         if (!verificationResult) {
             setVerificationResult({ status: "expired", message: "The request has expired."});
-            unsubscribe();
         }
     }, 300000); // 5 minutes
 
@@ -80,7 +79,7 @@ export default function VerifyPage() {
         clearTimeout(timer);
     };
 
-  }, [request, verificationResult]);
+  }, [request?.state, verificationResult]);
 
 
   const renderContent = () => {
@@ -111,7 +110,7 @@ export default function VerifyPage() {
                     <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
                         <CheckCircle className="h-16 w-16 text-green-600" />
                         <h3 className="text-2xl font-bold">{t.verifyPage.result_success_title}</h3>
-                        <p className="text-muted-foreground">{t.verifyPage.result_success_message}</p>
+                        <p className="text-muted-foreground">{verificationResult.message}</p>
                         <Button onClick={createVerificationRequest}>{t.verifyPage.new_verification_button}</Button>
                     </div>
                 );

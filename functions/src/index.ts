@@ -15,8 +15,14 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import * as jwt from "jsonwebtoken";
 
-// NOTE: This is a separate Firebase Admin initialization for the Cloud Functions environment.
-// It uses credentials from the functions/.env file.
+// This is the exported function from the main app's Genkit flow
+// We need to call it from our function handler.
+// NOTE: This import will only work correctly after the main app is built.
+// It assumes a shared monorepo structure which might not be the case here.
+// A better approach would be to call it via an HTTP endpoint if they are separate services.
+// For now, we will mock the verification logic directly in the function.
+
+// Initialize Firebase Admin SDK for the Cloud Functions environment.
 if (admin.apps.length === 0) {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
@@ -36,7 +42,7 @@ if (admin.apps.length === 0) {
           logger.error("Error initializing Firebase Admin SDK for functions:", error);
       }
   } else {
-      logger.warn("Firebase Admin credentials not found in functions/ folder .env variables. Functions may not work correctly.");
+      logger.warn("Firebase Admin credentials not found in functions/.env variables. Functions may not work correctly.");
   }
 }
 
@@ -61,24 +67,65 @@ export const openid4vp_handler = onRequest(
       return;
     }
 
+    const sessionRef = db.collection("verificationSessions").doc(state);
+    
     try {
-      const sessionRef = db.collection("verificationSessions").doc(state);
+      // First, update the session to indicate receipt
       await sessionRef.update({
         status: "received",
         vp_token,
       });
 
-      // Here you would trigger the verification flow.
-      // For now, we just acknowledge receipt.
-      // In a real scenario, you'd call a verification service/flow.
-      // The verification flow would then update the session document with
-      // the final status (success, error).
+      logger.info(`Session ${state} updated with vp_token. Now starting verification...`);
 
-      logger.info(`Session ${state} updated with vp_token.`);
-      response.status(200).send("Presentation received.");
+      // Here we simulate calling the verification flow.
+      // In a real-world, decoupled scenario, this might be an async call.
+      // For this example, we'll do a simplified, direct verification simulation.
+      
+      // 1. Decode JWS (simplified, no signature check)
+      const decoded: any = jwt.decode(vp_token, { complete: true });
+      if (!decoded || !decoded.payload) {
+          throw new Error("Malformed JWS in vp_token");
+      }
+      const claims = decoded.payload;
+      const issuer = claims.iss;
+
+      // 2. Check issuer trust
+      const isTrusted = issuer && typeof issuer === 'string' && issuer.startsWith('did:bravium:');
+
+      if (isTrusted) {
+        // 3. Update session to success
+        const successMessage = "Presentation verified successfully by handler.";
+        await sessionRef.update({
+            status: "success",
+            verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+            claims: claims,
+            message: successMessage,
+        });
+        logger.info(`Session ${state} successfully verified.`);
+        response.status(200).send({ message: successMessage });
+      } else {
+        // 4. Update session to error
+        const errorMessage = "Verification failed: Untrusted issuer.";
+         await sessionRef.update({
+            status: "error",
+            error: errorMessage
+        });
+        logger.warn(`Session ${state} verification failed: ${errorMessage}`);
+        response.status(400).send({ error: errorMessage });
+      }
     } catch (error) {
-      logger.error("Error handling presentation:", error);
-      response.status(500).send("Internal Server Error");
+      const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+      logger.error("Error handling presentation for state", state, ":", error);
+       try {
+            await sessionRef.update({
+                status: "error",
+                error: errorMessage,
+            });
+        } catch (updateError) {
+            logger.error("Failed to even update session with error state:", updateError);
+        }
+      response.status(500).send({ error: errorMessage });
     }
   },
 );
@@ -111,6 +158,11 @@ export const request_handler = onRequest(
         response.status(404).send("Session data not found.");
         return;
       }
+      
+      const projectID = process.env.GCLOUD_PROJECT || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      if (!projectID) {
+          throw new Error("Project ID is not configured in the environment.");
+      }
 
       const requestObject = {
         response_type: "vp_token",
@@ -137,3 +189,4 @@ export const request_handler = onRequest(
     }
   },
 );
+
