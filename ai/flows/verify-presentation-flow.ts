@@ -17,7 +17,9 @@ if (!adminDb) {
 const verificationSessions = adminDb.collection('verificationSessions');
 
 // Input for generating the request
-const GenerateRequestInputSchema = z.object({}); // Empty for now, could be parameterized later
+const GenerateRequestInputSchema = z.object({
+    baseUrl: z.string().url().describe("The base URL of the application, provided by the client."),
+});
 export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
 
 // Output for the generated request
@@ -46,7 +48,7 @@ export type VerifyPresentationOutput = z.infer<typeof VerifyPresentationOutputSc
 
 
 // The exported function to generate a request
-export async function generateRequest(input: GenerateRequestInput = {}): Promise<GenerateRequestOutput> {
+export async function generateRequest(input: GenerateRequestInput): Promise<GenerateRequestOutput> {
   return generateRequestFlow(input);
 }
 
@@ -62,7 +64,7 @@ const generateRequestFlow = ai.defineFlow(
     inputSchema: GenerateRequestInputSchema,
     outputSchema: GenerateRequestOutputSchema,
   },
-  async () => {
+  async ({ baseUrl }) => {
     const state = uuidv4();
     const nonce = uuidv4();
     
@@ -76,12 +78,7 @@ const generateRequestFlow = ai.defineFlow(
     };
     
     const clientId = `did:web:bravium-d1e08.web.app`;
-
-    const productionHost = process.env.NEXT_PUBLIC_VERCEL_URL || 'studio--braviumcertboard.us-central1.hosted.app';
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${productionHost}`
-      : 'http://localhost:9002';
-      
+    
     const requestUri = `${baseUrl}/api/openid4vp?state=${state}`;
     const responseUri = `${baseUrl}/api/openid4vp`;
 

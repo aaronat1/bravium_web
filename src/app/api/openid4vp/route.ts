@@ -4,6 +4,9 @@ import { adminDb } from '@/lib/firebase/admin';
 import { verifyPresentation } from '@/ai/flows/verify-presentation-flow';
 import { z } from 'zod';
 
+// Force dynamic execution to prevent issues with cached responses or authentication.
+export const dynamic = 'force-dynamic';
+
 if (!adminDb) {
   throw new Error("Firebase Admin DB is not initialized. API routes will fail.");
 }
