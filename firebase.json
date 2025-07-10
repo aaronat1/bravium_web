@@ -4,7 +4,11 @@
     {
       "source": "functions",
       "codebase": "default",
-      "runtime": "nodejs18"
+      "runtime": "nodejs18",
+      "predeploy": [
+        "npm --prefix functions install",
+        "npm --prefix functions run build"
+      ]
     }
   ],
   "hosting": {
