@@ -22,7 +22,7 @@ export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
 
 // Output for the generated request
 const GenerateRequestOutputSchema = z.object({
-    requestUrl: z.string().describe("The full OpenID4VP request URL."),
+    requestUrl: z.string().describe("The full OpenID4VP request URL for the QR code."),
     state: z.string().describe("The unique state for this verification session."),
 });
 export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
@@ -78,25 +78,32 @@ const generateRequestFlow = ai.defineFlow(
     
     // Using a fixed, reliable DID for the client ID.
     const clientId = "did:web:example.com"; 
+    // This is the URL the wallet will call to get the request details
+    const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
+    // This is the URL the wallet will POST the presentation to
     const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
+
+    const requestObject = {
+      client_id: clientId,
+      nonce: nonce,
+      presentation_definition: presentationDefinition,
+      response_mode: "direct_post",
+      response_type: "vp_token",
+      redirect_uri: responseUri, // redirect_uri is used by Authenticator for the POST response.
+      state: state
+    };
     
-    // Store the full session state in Firestore
+    // Store the full session state in Firestore, which includes the requestObject for the GET request.
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
-        nonce,
-        presentation_definition: presentationDefinition
+        requestObject
     });
     
-    // Build the full URL for the QR code
+    // Build the full URL for the QR code, using request_uri as required by Authenticator.
     const requestParams = new URLSearchParams({
-        response_type: "vp_token",
         client_id: clientId,
-        presentation_definition: JSON.stringify(presentationDefinition), // CRUCIAL: Stringify the JSON object
-        redirect_uri: responseUri,
-        response_mode: "direct_post",
-        state,
-        nonce,
+        request_uri: requestUri,
     });
 
     return {

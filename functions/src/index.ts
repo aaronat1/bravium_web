@@ -93,7 +93,10 @@ export const openid4vp_handler = onRequest(
     if (request.method === "POST") {
         logger.info("Received presentation POST request:", {body: request.body});
 
-        const {vp_token, state} = request.body;
+        // The body might be URL-encoded, so we need to handle that.
+        const body = request.body;
+        const vp_token = body.vp_token;
+        const state = body.state;
     
         if (!vp_token || !state) {
           response.status(400).send("Missing vp_token or state");
@@ -115,7 +118,8 @@ export const openid4vp_handler = onRequest(
     
           if (verificationResult.isValid) {
               logger.info(`Session ${state} successfully verified by Genkit flow.`);
-              response.status(200).send({ message: verificationResult.message });
+              // According to OpenID4VP Direct Post, the response should be empty on success.
+              response.status(200).send();
           } else {
               logger.warn(`Session ${state} verification failed: ${verificationResult.message}`);
               response.status(400).send({ error: verificationResult.message });
