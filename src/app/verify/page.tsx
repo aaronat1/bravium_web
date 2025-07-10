@@ -25,9 +25,6 @@ interface VerificationResult {
     verifiedAt?: Timestamp;
 }
 
-// We need a customer ID for the verifier. For this public page, we'll use the admin's UID.
-const VERIFIER_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
-
 
 export default function VerifyPage() {
   const { t } = useI18n();
@@ -43,8 +40,9 @@ export default function VerifyPage() {
     setRequestData(null);
     
     try {
+      // The backend now knows which verifier to use, so we only need to provide the baseUrl.
       const baseUrl = window.location.origin;
-      const response = await generateRequest({ baseUrl, customerId: VERIFIER_CUSTOMER_ID });
+      const response = await generateRequest({ baseUrl });
       setRequestData(response);
       setPageState("verifying");
     } catch (e: any) {
@@ -207,5 +205,3 @@ export default function VerifyPage() {
     </div>
   );
 }
-
-    
