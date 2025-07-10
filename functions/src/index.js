@@ -152,7 +152,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
  * ----------------------------------------------------------------
  * FUNCIÓN DE VERIFICACIÓN OpenID4VP
  * ----------------------------------------------------------------
- * Maneja las peticiones GET (servir JWS de la petición) y POST (verificar presentación).
+ * Maneja las peticiones GET (servir el objeto de petición) y POST (verificar presentación).
  */
 exports.openid4vp = functions.region("us-central1").https.onRequest(async (request, response) => {
     response.set("Access-Control-Allow-Origin", "*");
@@ -164,7 +164,7 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
         return;
     }
 
-    // --- GET: La cartera pide el JWS de la solicitud ---
+    // --- GET: La cartera pide el objeto de la solicitud ---
     if (request.method === "GET") {
         const state = request.query.state;
         if (!state) {
@@ -181,14 +181,14 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
                 return;
             }
             const sessionData = sessionDoc.data();
-            if (!sessionData || !sessionData.requestObjectJwt) {
-                console.error(`requestObjectJwt no encontrado para el state: ${state}`);
-                response.status(500).send("Error interno: request object JWT no encontrado.");
+            // **CORRECCIÓN**: Buscar 'requestObject' (JSON) en lugar de 'requestObjectJwt'.
+            if (!sessionData || !sessionData.requestObject) {
+                console.error(`requestObject no encontrado para el state: ${state}`);
+                response.status(500).send("Error interno: request object no encontrado.");
                 return;
             }
-            // Devolver el JWS como texto plano, como espera la especificación
-            response.set('Content-Type', 'application/oauth-authz-req+jwt');
-            response.status(200).send(sessionData.requestObjectJwt);
+            // Devolver el objeto de la petición como JSON.
+            response.status(200).json(sessionData.requestObject);
         } catch (error) {
             console.error(`Error en GET para el state ${state}:`, error);
             response.status(500).send("Error interno del servidor");
@@ -206,18 +206,15 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
         }
 
         const sessionDocRef = db.collection('verificationSessions').doc(state);
-        // Importa 'jose' para la verificación criptográfica
         const jose = await import('jose');
 
         try {
-            // 1. Decodificar el JWS para obtener el 'issuer' (iss) sin verificar la firma aún.
             const decodedToken = jose.decodeJwt(vp_token);
             if (!decodedToken || typeof decodedToken.iss !== 'string') {
                 throw new Error("El vp_token está malformado o no contiene un 'issuer' (iss).");
             }
             const issuerDid = decodedToken.iss;
             
-            // 2. Obtener el documento DID del emisor desde Firestore para conseguir su clave pública.
             const didDocRef = db.collection('dids').doc(issuerDid);
             const didDoc = await didDocRef.get();
 
@@ -226,24 +223,18 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             }
 
             const didDocument = didDoc.data();
-            // Asumimos que la clave de verificación está en la primera entrada de verificationMethod.
             const verificationMethod = didDocument.verificationMethod?.[0];
             if (!verificationMethod || !verificationMethod.publicKeyJwk) {
                 throw new Error(`No se encontró una 'publicKeyJwk' válida en el documento DID para ${issuerDid}.`);
             }
 
-            // 3. Importar la clave pública.
             const publicKey = await jose.importJWK(verificationMethod.publicKeyJwk, 'ES256');
-
-            // 4. Verificar la firma del JWS (vp_token) usando la clave pública.
-            // jwtVerify se encarga de todo: verifica la firma, el formato y devuelve el payload.
             const { payload } = await jose.jwtVerify(vp_token, publicKey);
 
-            // 5. Si la verificación es exitosa, actualizar la sesión.
             await sessionDocRef.set({
                 status: 'success',
                 verifiedAt: new Date(),
-                claims: payload, // 'payload' contiene los claims verificados
+                claims: payload,
                 message: "Presentación verificada con éxito."
             }, { merge: true });
 
@@ -254,15 +245,12 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             console.error(`Error en la verificación criptográfica para el state ${state}:`, error);
             const errorMessage = error instanceof Error ? error.message : "La verificación de la presentación falló.";
             
-            // Actualiza el documento de sesión con el estado de error
             await sessionDocRef.set({ status: 'error', error: errorMessage }, { merge: true }).catch();
-            
             response.status(400).json({ error: "Verificación fallida", details: errorMessage });
         }
         return;
     }
 
-    // Manejar otros métodos no permitidos
     response.status(405).send("Method Not Allowed");
 });
 
