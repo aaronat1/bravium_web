@@ -1,8 +1,8 @@
 
 'use server';
 /**
- * @fileOverview An AI agent for verifying presentations based on OpenID4VP.
- * This flow generates a presentation request and verifies the subsequent presentation.
+ * @fileOverview An AI agent for generating OpenID4VP presentation requests.
+ * The verification logic is now handled by a separate Cloud Function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -31,31 +31,11 @@ const GenerateRequestOutputSchema = z.object({
 export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
 
 
-// Input for verifying the presentation
-const VerifyPresentationInputSchema = z.object({
-    vp_token: z.any().describe("The Verifiable Presentation token received from the wallet."),
-    state: z.string().describe("The state value from the initial request to prevent CSRF attacks."),
-});
-export type VerifyPresentationInput = z.infer<typeof VerifyPresentationInputSchema>;
-
-// Output for the verification
-const VerifyPresentationOutputSchema = z.object({
-    isValid: z.boolean().describe("Whether the presentation is valid."),
-    message: z.string().describe("A message describing the verification result."),
-    claims: z.record(z.any()).optional().describe("The claims extracted from the credential if valid."),
-});
-export type VerifyPresentationOutput = z.infer<typeof VerifyPresentationOutputSchema>;
-
-
 // The exported function to generate a request
 export async function generateRequest(input: GenerateRequestInput): Promise<GenerateRequestOutput> {
   return generateRequestFlow(input);
 }
 
-// The exported function to verify a presentation
-export async function verifyPresentation(input: VerifyPresentationInput): Promise<VerifyPresentationOutput> {
-  return verifyPresentationFlow(input);
-}
 
 // Genkit flow to generate the request URL
 const generateRequestFlow = ai.defineFlow(
@@ -79,8 +59,9 @@ const generateRequestFlow = ai.defineFlow(
     
     const clientId = `did:web:bravium-d1e08.web.app`;
     
-    const requestUri = `${baseUrl}/api/openid4vp?state=${state}`;
-    const responseUri = `${baseUrl}/api/openid4vp`;
+    // This now points to the real Cloud Function URL
+    const functionUrl = 'https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp';
+    const requestUri = `${functionUrl}?state=${state}`;
 
     const requestObject = {
       client_id: clientId,
@@ -88,7 +69,7 @@ const generateRequestFlow = ai.defineFlow(
       presentation_definition: presentationDefinition,
       response_mode: "direct_post",
       response_type: "vp_token",
-      redirect_uri: responseUri, // Kept for completeness, though direct_post uses it as the POST target.
+      redirect_uri: functionUrl, 
       state: state
     };
     
@@ -109,68 +90,5 @@ const generateRequestFlow = ai.defineFlow(
       state: state,
       presentationDefinition: presentationDefinition
     };
-  }
-);
-
-
-const verifyPrompt = ai.definePrompt({
-    name: 'verifyPresentationPrompt',
-    input: { schema: z.object({ jws: z.string() }) },
-    output: { schema: z.object({
-        isValid: z.boolean().describe("True if the JWS is well-formed and contains claims."),
-        claims: z.any().optional().describe("The decoded claims from the JWS payload."),
-        error: z.string().optional().describe("The reason for failure, if any.")
-    })},
-    prompt: `
-        You are a verification agent. Your task is to analyze the provided JWS string.
-        JWS: {{{jws}}}
-        1. Decode the JWS payload. Do not worry about signature verification, assume it is pre-verified.
-        2. If the payload is successfully decoded and contains claims, set 'isValid' to true and return the claims.
-        3. If the JWS is malformed or the payload is empty, set 'isValid' to false and provide an error message.
-    `,
-});
-
-// Genkit flow to verify the presentation
-const verifyPresentationFlow = ai.defineFlow(
-  {
-    name: 'verifyPresentationFlow',
-    inputSchema: VerifyPresentationInputSchema,
-    outputSchema: VerifyPresentationOutputSchema,
-  },
-  async ({ vp_token, state }) => {
-    const sessionDocRef = verificationSessions.doc(state);
-    const sessionDoc = await sessionDocRef.get();
-
-    if (!sessionDoc.exists) {
-        await sessionDocRef.set({ status: 'error', error: 'Invalid or expired state.' }, { merge: true });
-        throw new Error("Invalid or expired state.");
-    }
-
-    try {
-        const jws = vp_token; 
-        const { output } = await verifyPrompt({ jws });
-
-        if (!output) {
-            throw new Error("AI verifier did not return a valid output.");
-        }
-
-        if (output.isValid && output.claims) {
-            await sessionDocRef.set({ 
-                status: 'success', 
-                verifiedAt: new Date(),
-                claims: output.claims,
-                message: "Presentation verified successfully."
-            }, { merge: true });
-            return { isValid: true, message: "Presentation verified.", claims: output.claims };
-        } else {
-             const errorMessage = output.error || "Verification failed due to malformed JWS.";
-            await sessionDocRef.set({ status: 'error', error: errorMessage }, { merge: true });
-            return { isValid: false, message: errorMessage };
-        }
-
-    } catch (error: any) {
-        await sessionDocRef.set({ status: 'error', error: error.message }, { merge: true });
-        throw error;
-    }
   }
 );

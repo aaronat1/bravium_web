@@ -10,21 +10,27 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
-import { onSnapshot, doc } from "firebase/firestore";
+import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { generateRequest, type GenerateRequestOutput } from "@/ai/flows/verify-presentation-flow";
 import CodeBlock from "@/components/code-block";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
-type PageState = "idle" | "loading" | "ready" | "verifying" | "result";
+type PageState = "idle" | "loading" | "verifying" | "result";
 
+interface VerificationResult {
+    status: VerificationStatus;
+    message?: string;
+    claims?: Record<string, any>;
+    verifiedAt?: Timestamp;
+}
 
 export default function VerifyPage() {
   const { t } = useI18n();
   const [pageState, setPageState] = useState<PageState>("idle");
   const [requestData, setRequestData] = useState<GenerateRequestOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [verificationResult, setVerificationResult] = useState<{ status: VerificationStatus, message?: string } | null>(null);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
 
   const createVerificationRequest = useCallback(async () => {
     setPageState("loading");
@@ -33,32 +39,34 @@ export default function VerifyPage() {
     setRequestData(null);
     
     try {
-      // The frontend knows its own URL, so we pass it to the backend.
       const baseUrl = window.location.origin;
       const response = await generateRequest({ baseUrl });
       setRequestData(response);
-      setPageState("ready");
+      setPageState("verifying");
     } catch (e: any) {
-      setError(e.message);
+      console.error("Error creating request:", e);
+      setError(e.message || "An unexpected error occurred.");
       setPageState("result");
     }
   }, []);
 
   useEffect(() => {
-    if (pageState !== 'ready' && pageState !== 'verifying') {
+    if (pageState !== 'verifying' || !requestData?.state) {
       return;
     }
-    if (!requestData?.state) return;
-
-    setPageState("verifying");
 
     const sessionDocRef = doc(db, "verificationSessions", requestData.state);
 
-    const unsubscribe = onSnapshot(sessionDocRef, (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
+    const unsubscribe = onSnapshot(sessionDocRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
         if (data.status === "success") {
-          setVerificationResult({ status: "success", message: data.message || "Credential verified successfully!" });
+          setVerificationResult({ 
+              status: "success", 
+              message: data.message || "Credential verified successfully!",
+              claims: data.claims,
+              verifiedAt: data.verifiedAt,
+          });
           setPageState("result");
           unsubscribe();
         } else if (data.status === "error") {
@@ -89,21 +97,20 @@ export default function VerifyPage() {
     switch (pageState) {
         case "idle":
             return (
-                <div className="flex flex-col items-center justify-center h-64 gap-4">
+                <div className="flex flex-col items-center justify-center min-h-[256px] gap-4">
                     <Button onClick={createVerificationRequest} size="lg">
                         <QrCode className="mr-2 h-5 w-5" />
-                        Generar QR de Verificación
+                        {t.verifyPage.new_verification_button}
                     </Button>
                 </div>
             );
         case "loading":
             return (
-                <div className="flex flex-col items-center justify-center h-64 gap-4">
+                <div className="flex flex-col items-center justify-center min-h-[256px] gap-4">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
                     <p className="text-muted-foreground">{t.verifyPage.loading_request}</p>
                 </div>
             );
-        case "ready":
         case "verifying":
              if (requestData) {
                 return (
@@ -118,56 +125,54 @@ export default function VerifyPage() {
                                 <span>{t.verifyPage.waiting_for_presentation}</span>
                             </div>
                         </div>
-                        {requestData.presentationDefinition && (
-                            <div className="w-full mt-4">
-                                <h4 className="text-lg font-semibold mb-2 text-center">Presentation Definition (JSON)</h4>
-                                <CodeBlock code={JSON.stringify(requestData.presentationDefinition, null, 2)} />
-                            </div>
-                        )}
                     </div>
                 );
             }
             return null; // Should not happen
         case "result":
-            if (verificationResult) {
-                switch (verificationResult.status) {
-                    case 'success':
-                        return (
-                            <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-                                <CheckCircle className="h-16 w-16 text-green-600" />
-                                <h3 className="text-2xl font-bold">{t.verifyPage.result_success_title}</h3>
-                                <p className="text-muted-foreground">{verificationResult.message}</p>
-                                <Button onClick={createVerificationRequest}>{t.verifyPage.new_verification_button}</Button>
-                            </div>
-                        );
-                    case 'error':
-                        return (
-                            <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-                                <XCircle className="h-16 w-16 text-destructive" />
-                                <h3 className="text-2xl font-bold">{t.verifyPage.result_error_title}</h3>
-                                <p className="text-muted-foreground">{verificationResult.message}</p>
-                                <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
-                            </div>
-                        );
-                    case 'expired':
-                        return (
-                            <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-                                <XCircle className="h-16 w-16 text-destructive" />
-                                <h3 className="text-2xl font-bold">{t.verifyPage.result_expired_title}</h3>
-                                <p className="text-muted-foreground">{verificationResult.message}</p>
-                                <Button onClick={createVerificationRequest}>{t.verifyPage.new_verification_button}</Button>
-                            </div>
-                        );
-                }
-            } else if (error) {
+            if (error) {
                  return (
-                    <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-                        <XCircle className="h-12 w-12 text-destructive" />
-                        <p className="text-destructive font-semibold">{t.toast_error_title}</p>
+                    <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
+                        <XCircle className="h-16 w-16 text-destructive" />
+                         <h3 className="text-2xl font-bold">{t.toast_error_title}</h3>
                         <p className="text-muted-foreground">{error}</p>
                         <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
                     </div>
                 )
+            }
+            if (verificationResult) {
+                switch (verificationResult.status) {
+                    case 'success':
+                        return (
+                            <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
+                                <CheckCircle className="h-16 w-16 text-green-600" />
+                                <h3 className="text-2xl font-bold">{t.verifyPage.result_success_title}</h3>
+                                {verificationResult.claims && (
+                                     <div className="w-full mt-4 text-left">
+                                        <Card>
+                                            <CardContent className="pt-6">
+                                                <h4 className="font-semibold mb-2">Detalles Verificados:</h4>
+                                                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
+                                                    {JSON.stringify(verificationResult.claims, null, 2)}
+                                                </pre>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                )}
+                                <Button onClick={createVerificationRequest} className="mt-4">{t.verifyPage.new_verification_button}</Button>
+                            </div>
+                        );
+                    case 'error':
+                    case 'expired':
+                        return (
+                            <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
+                                <XCircle className="h-16 w-16 text-destructive" />
+                                <h3 className="text-2xl font-bold">{verificationResult.status === 'error' ? t.verifyPage.result_error_title : t.verifyPage.result_expired_title}</h3>
+                                <p className="text-muted-foreground">{verificationResult.message}</p>
+                                <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
+                            </div>
+                        );
+                }
             }
             return null;
         default:

@@ -170,7 +170,7 @@ export const es = {
     waiting_for_presentation: "Esperando presentación...",
     loading_request: "Generando solicitud de verificación...",
     retry_button: "Reintentar",
-    new_verification_button: "Nueva Verificación",
+    new_verification_button: "Iniciar Nueva Verificación",
     result_success_title: "¡Verificado!",
     result_success_message: "La credencial presentada es válida.",
     result_error_title: "Verificación Fallida",

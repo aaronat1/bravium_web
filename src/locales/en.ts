@@ -170,7 +170,7 @@ export const en = {
     waiting_for_presentation: "Waiting for presentation...",
     loading_request: "Generating verification request...",
     retry_button: "Try Again",
-    new_verification_button: "New Verification",
+    new_verification_button: "Start New Verification",
     result_success_title: "Verified!",
     result_success_message: "The presented credential is valid.",
     result_error_title: "Verification Failed",
