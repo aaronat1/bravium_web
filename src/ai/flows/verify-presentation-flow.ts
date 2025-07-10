@@ -66,18 +66,32 @@ const generateRequestFlow = ai.defineFlow(
     const state = uuidv4();
     const nonce = uuidv4();
     
-    // Simplified presentation definition to be more flexible, as suggested by user feedback.
+    // Stricter presentation definition as requested to improve wallet compatibility.
     const presentationDefinition = {
-        id: uuidv4(),
-        input_descriptors: [{
-            id: uuidv4(),
-            name: "Bravium Issued Credential",
-            purpose: "Please provide a credential issued by Bravium.",
-            // Requesting any VC to avoid constraint mismatch errors.
-            constraints: {
-                fields: [{ path: ["$.issuer"] }] 
-            }
-        }]
+      id: uuidv4(),
+      input_descriptors: [{
+          id: "bravium-cred",
+          name: "Bravium Credential",
+          purpose: "Please present a credential issued by Bravium.",
+          constraints: {
+              fields: [
+                {
+                  path: ["$.issuer"],
+                  filter: {
+                    type: "string",
+                    pattern: "^https://bravium.org$"
+                  }
+                },
+                {
+                  path: ["$.type"],
+                  filter: {
+                    type: "string",
+                    pattern: "BraviumCredential"
+                  }
+                }
+              ]
+          }
+      }]
     };
     
     // Log the presentation definition for external analysis
@@ -137,7 +151,7 @@ const verifyPrompt = ai.definePrompt({
         JWS: {{{jws}}}
 
         1. Decode the JWS payload. Do not worry about signature verification, assume it has been pre-verified.
-        2. Check if the 'issuer' claim in the payload is a trusted issuer (assume any issuer starting with 'did:bravium:' or 'did:web:bravium-d1e08.web.app' is trusted).
+        2. Check if the 'issuer' claim in the payload is a trusted issuer (assume 'https://bravium.org' is the trusted issuer).
         3. If the issuer is trusted, set 'isValid' to true and return the decoded claims.
         4. If the issuer is not trusted or the JWS is malformed, set 'isValid' to false and provide an error message.
     `,
