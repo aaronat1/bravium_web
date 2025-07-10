@@ -16,6 +16,21 @@ if (!adminDb) {
 
 const verificationSessions = adminDb.collection('verificationSessions');
 
+// Schema for the presentation definition
+const PresentationDefinitionSchema = z.object({
+  id: z.string().describe("A unique identifier for this presentation definition."),
+  input_descriptors: z.array(z.object({
+    id: z.string().describe("A unique identifier for this input descriptor."),
+    name: z.string().optional().describe("A human-readable name for the requested information."),
+    purpose: z.string().optional().describe("A human-readable purpose for the requested information."),
+    constraints: z.object({
+      fields: z.array(z.object({
+        path: z.array(z.string()).describe("A JSONPath string expression to select a field from the credential."),
+      })),
+    }),
+  })),
+});
+
 // Input for generating the request
 const GenerateRequestInputSchema = z.object({}); // Empty for now, could be parameterized later
 export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
@@ -94,18 +109,18 @@ const generateRequestFlow = ai.defineFlow(
         status: 'pending',
         createdAt: new Date(),
         nonce,
-        requestObject // Store the request for context during verification
+        requestObject
     });
     
-    // Build the full URL for the QR code by embedding the presentation_definition
+    // Build the full URL for the QR code
     const requestParams = new URLSearchParams({
         client_id: requestObject.client_id,
         response_type: requestObject.response_type,
         response_mode: requestObject.response_mode,
         redirect_uri: requestObject.redirect_uri,
+        presentation_definition: JSON.stringify(requestObject.presentation_definition),
         state: requestObject.state,
-        nonce: requestObject.nonce,
-        presentation_definition: JSON.stringify(requestObject.presentation_definition)
+        nonce: requestObject.nonce
     });
 
     return {
