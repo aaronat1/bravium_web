@@ -33,7 +33,9 @@ export default function VerifyPage() {
     setRequestData(null);
     
     try {
-      const response = await generateRequest();
+      // The frontend knows its own URL, so we pass it to the backend.
+      const baseUrl = window.location.origin;
+      const response = await generateRequest({ baseUrl });
       setRequestData(response);
       setPageState("ready");
     } catch (e: any) {
