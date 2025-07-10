@@ -14,18 +14,14 @@ import {onRequest} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import * as jwt from "jsonwebtoken";
+import { verifyPresentation } from '../../src/ai/flows/verify-presentation-flow';
 
-// This is the exported function from the main app's Genkit flow
-// We need to call it from our function handler.
-// NOTE: This import will only work correctly after the main app is built.
-// It assumes a shared monorepo structure which might not be the case here.
-// A better approach would be to call it via an HTTP endpoint if they are separate services.
-// For now, we will mock the verification logic directly in the function.
 
 // Initialize Firebase Admin SDK for the Cloud Functions environment.
 if (admin.apps.length === 0) {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  // Make sure to handle the newline characters correctly for the private key
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
   if (projectId && clientEmail && privateKey) {
@@ -42,7 +38,7 @@ if (admin.apps.length === 0) {
           logger.error("Error initializing Firebase Admin SDK for functions:", error);
       }
   } else {
-      logger.warn("Firebase Admin credentials not found in functions/.env variables. Functions may not work correctly.");
+      logger.warn("Firebase Admin credentials not found in functions/.env variables. Functions requiring admin rights may not work correctly.");
   }
 }
 
@@ -76,48 +72,26 @@ export const openid4vp_handler = onRequest(
         vp_token,
       });
 
-      logger.info(`Session ${state} updated with vp_token. Now starting verification...`);
-
-      // Here we simulate calling the verification flow.
-      // In a real-world, decoupled scenario, this might be an async call.
-      // For this example, we'll do a simplified, direct verification simulation.
+      logger.info(`Session ${state} updated with vp_token. Now invoking verification flow...`);
       
-      // 1. Decode JWS (simplified, no signature check)
-      const decoded: any = jwt.decode(vp_token, { complete: true });
-      if (!decoded || !decoded.payload) {
-          throw new Error("Malformed JWS in vp_token");
-      }
-      const claims = decoded.payload;
-      const issuer = claims.iss;
+      // Directly invoke the Genkit verification flow
+      const verificationResult = await verifyPresentation({ vp_token, state });
 
-      // 2. Check issuer trust
-      const isTrusted = issuer && typeof issuer === 'string' && issuer.startsWith('did:bravium:');
-
-      if (isTrusted) {
-        // 3. Update session to success
-        const successMessage = "Presentation verified successfully by handler.";
-        await sessionRef.update({
-            status: "success",
-            verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
-            claims: claims,
-            message: successMessage,
-        });
-        logger.info(`Session ${state} successfully verified.`);
-        response.status(200).send({ message: successMessage });
+      // The flow itself handles updating Firestore with success or error.
+      // We just need to respond to the wallet.
+      if (verificationResult.isValid) {
+          logger.info(`Session ${state} successfully verified by Genkit flow.`);
+          response.status(200).send({ message: verificationResult.message });
       } else {
-        // 4. Update session to error
-        const errorMessage = "Verification failed: Untrusted issuer.";
-         await sessionRef.update({
-            status: "error",
-            error: errorMessage
-        });
-        logger.warn(`Session ${state} verification failed: ${errorMessage}`);
-        response.status(400).send({ error: errorMessage });
+          logger.warn(`Session ${state} verification failed: ${verificationResult.message}`);
+          response.status(400).send({ error: verificationResult.message });
       }
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
       logger.error("Error handling presentation for state", state, ":", error);
        try {
+            // Ensure the session is marked as failed even if the flow throws an unhandled error
             await sessionRef.update({
                 status: "error",
                 error: errorMessage,
@@ -189,4 +163,3 @@ export const request_handler = onRequest(
     }
   },
 );
-

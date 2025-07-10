@@ -90,7 +90,8 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
-    // IMPORTANT: These must match what the Cloud Function expects.
+    // IMPORTANT: This must match what the Cloud Function expects and should be a valid DID format.
+    // Using the default Firebase Hosting domain is a robust way to ensure consistency.
     const clientId = `did:web:${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.web.app`; 
     const responseUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp_handler`;
 
