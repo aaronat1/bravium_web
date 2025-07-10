@@ -76,8 +76,8 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
-    // Using a fixed, reliable DID for the client ID.
-    const clientId = "did:web:example.com"; 
+    // This is the correct project ID for the client ID.
+    const clientId = `did:web:bravium-d1e08.web.app`; 
     // This is the URL the wallet will call to get the request details
     const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
     // This is the URL the wallet will POST the presentation to
@@ -93,14 +93,14 @@ const generateRequestFlow = ai.defineFlow(
       state: state
     };
     
-    // Store the full session state in Firestore
+    // Store the full session state in Firestore, which includes the requestObject for the GET request.
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
         requestObject
     });
     
-    // Build the full URL for the QR code
+    // Build the full URL for the QR code, using request_uri as required by Authenticator.
     const requestParams = new URLSearchParams({
         client_id: clientId,
         request_uri: requestUri,
