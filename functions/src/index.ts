@@ -7,13 +7,32 @@
  *
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
+import * as dotenv from "dotenv";
+dotenv.config();
 
 import {onRequest} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import * as jwt from "jsonwebtoken";
 
-admin.initializeApp();
+const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+// Initialize Firebase Admin SDK only if it hasn't been initialized yet
+if (admin.apps.length === 0) {
+    if (projectId && clientEmail && privateKey) {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId,
+            clientEmail,
+            privateKey,
+          }),
+        });
+    } else {
+        logger.warn("Firebase Admin credentials not found in environment variables.");
+    }
+}
 const db = admin.firestore();
 
 // This Cloud Function acts as a "direct_post" endpoint for the wallet.
@@ -75,6 +94,7 @@ export const request_handler = onRequest(
       const sessionDoc = await db.collection("verificationSessions").doc(state)
         .get();
       if (!sessionDoc.exists) {
+        logger.error(`Verification session not found for state: ${state}`);
         response.status(404).send("Verification session not found.");
         return;
       }
@@ -110,5 +130,3 @@ export const request_handler = onRequest(
     }
   },
 );
-
-    
