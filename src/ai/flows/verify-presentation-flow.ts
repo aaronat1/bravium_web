@@ -78,12 +78,15 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
+    // Log the presentation definition for external analysis
+    console.log("Generated Presentation Definition:", JSON.stringify(presentationDefinition, null, 2));
+
     // Using the project ID to create a dynamic and correct client ID for the database project.
-    const clientId = `did:web:bravium-d1e08.web.app`; 
+    const clientId = `did:web:${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.web.app`; 
     // This is the URL the wallet will call to get the request details
-    const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
+    const requestUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp_handler?state=${state}`;
     // This is the URL the wallet will POST the presentation to
-    const responseUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler`;
+    const responseUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp_handler`;
 
     const requestObject = {
       client_id: clientId,
@@ -131,7 +134,7 @@ const verifyPrompt = ai.definePrompt({
         JWS: {{{jws}}}
 
         1. Decode the JWS payload. Do not worry about signature verification, assume it has been pre-verified.
-        2. Check if the 'issuer' claim in the payload is a trusted issuer (assume any issuer starting with 'did:bravium:' or 'did:web:bravium-d1e08.web.app' is trusted).
+        2. Check if the 'issuer' claim in the payload is a trusted issuer (assume any issuer starting with 'did:bravium:' or 'did:web:${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.web.app' is trusted).
         3. If the issuer is trusted, set 'isValid' to true and return the decoded claims.
         4. If the issuer is not trusted or the JWS is malformed, set 'isValid' to false and provide an error message.
     `,
