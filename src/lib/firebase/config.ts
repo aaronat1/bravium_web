@@ -21,17 +21,13 @@ let db: Firestore;
 let functions: Functions;
 let storage: Storage;
 
-if (!firebaseConfig.apiKey) {
-    console.error("Firebase API Key is missing. Please add it to your .env file.");
-    // We can't initialize the app without the config
-} else {
-    // Initialize Firebase
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-    functions = getFunctions(app);
-    storage = getStorage(app);
-}
+// Initialize Firebase
+app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+auth = getAuth(app);
+db = getFirestore(app);
+functions = getFunctions(app);
+storage = getStorage(app);
+
 
 // @ts-ignore
 export { app, auth, db, functions, storage };
