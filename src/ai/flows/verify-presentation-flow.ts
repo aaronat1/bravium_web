@@ -76,8 +76,8 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
-    // Using a fixed, reliable DID for the client ID.
-    const clientId = "did:web:example.com"; 
+    // Using the project ID to create a dynamic and correct client ID.
+    const clientId = `did:web:${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.web.app`; 
     // This is the URL the wallet will call to get the request details
     const requestUri = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp_handler?state=${state}`;
     // This is the URL the wallet will POST the presentation to
@@ -89,7 +89,7 @@ const generateRequestFlow = ai.defineFlow(
       presentation_definition: presentationDefinition,
       response_mode: "direct_post",
       response_type: "vp_token",
-      redirect_uri: responseUri, // redirect_uri is used by Authenticator for the POST response.
+      redirect_uri: responseUri,
       state: state
     };
     
@@ -179,3 +179,5 @@ const verifyPresentationFlow = ai.defineFlow(
     }
   }
 );
+
+    
