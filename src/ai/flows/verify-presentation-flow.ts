@@ -77,6 +77,7 @@ const generateRequestFlow = ai.defineFlow(
   },
   async () => {
     const state = uuidv4();
+    const nonce = uuidv4();
     const presentationDefinition = {
         id: uuidv4(),
         input_descriptors: [{
@@ -89,27 +90,29 @@ const generateRequestFlow = ai.defineFlow(
         }]
     };
     
-    // In a real scenario, this would be your verifier's DID
     const clientId = "did:web:example.com"; 
     const responseUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/openid4vp-handler`;
 
-    const requestParams = new URLSearchParams({
-      response_type: 'vp_token',
-      client_id: clientId,
-      presentation_definition: JSON.stringify(presentationDefinition),
-      redirect_uri: responseUri,
-      response_mode: 'direct_post',
-      state: state,
-      nonce: uuidv4(),
-    });
-
     // Store the session state in Firestore
+    // This now includes the full request details which the request-handler function will need.
     await verificationSessions.doc(state).set({
         status: 'pending',
         createdAt: new Date(),
         presentationDefinition,
+        clientId,
+        responseUri,
+        nonce,
     });
     
+    // The URL for the QR code now points to our new request-handler function,
+    // passing the session state as a query parameter.
+    const requestUri = `https://us-central1-${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.cloudfunctions.net/request-handler?state=${state}`;
+
+    const requestParams = new URLSearchParams({
+      client_id: clientId,
+      request_uri: requestUri
+    });
+
     return {
       requestUrl: `openid-vc://?${requestParams.toString()}`,
       state: state
@@ -181,3 +184,5 @@ const verifyPresentationFlow = ai.defineFlow(
     }
   }
 );
+
+    
