@@ -1,163 +1,205 @@
+"use client";
 
-'use server';
-/**
- * @fileOverview A Genkit tool to ensure a customer has a KMS key.
- * This tool checks if a customer document in Firestore has a `kmsKeyPath`.
- * If the customer document doesn't exist, it creates one.
- * If the kmsKeyPath is missing, it generates a new KMS key and a corresponding DID,
- * then updates the customer document. This is crucial for bootstrapping customers.
- */
+import { useState, useEffect, useCallback, useTransition } from "react";
+import QRCode from "qrcode.react";
 
-import { ai } from '@/ai/genkit';
-import { adminDb } from '@/lib/firebase/admin';
-import { KeyManagementServiceClient } from '@google-cloud/kms';
-import { z } from 'zod';
+import LandingHeader from "@/components/landing-header";
+import LandingFooter from "@/components/landing-footer";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
+import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
+import { generateRequest } from "@/ai/flows/verify-presentation-flow";
 
-if (!adminDb) {
-  throw new Error("Firebase Admin DB is not initialized. Tools will fail.");
+type VerificationStatus = "pending" | "success" | "error" | "expired";
+type PageState = "idle" | "loading" | "verifying" | "result";
+
+interface VerificationResult {
+    status: VerificationStatus;
+    message?: string;
+    claims?: Record<string, any>;
+    verifiedAt?: Timestamp;
 }
 
-const kmsClient = new KeyManagementServiceClient();
-const GCP_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const KMS_LOCATION_ID = 'global';
-const KMS_KEYRING_ID = 'bravium-keys';
+export default function VerifyPage() {
+  const { t } = useI18n();
+  const [pageState, setPageState] = useState<PageState>("idle");
+  const [requestData, setRequestData] = useState<{ requestUrl: string; state: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [isRequesting, startRequestTransition] = useTransition();
 
-const PERMISSION_ERROR_MESSAGE = `
-  KMS permission error. Please ensure the following:
-  1. The Cloud Key Management Service (KMS) API is enabled in your Google Cloud project.
-  2. The service account running this code (likely your App Hosting or Cloud Functions service account) has the 'Cloud KMS Admin' IAM role.
-  3. The Key Ring 'bravium-keys' exists in location 'global'.
-`;
-
-async function generateKmsKeyForCustomer(customerId: string) {
-    if (!GCP_PROJECT_ID) {
-        throw new Error("GCLOUD_PROJECT environment variable is not set.");
-    }
-    const keyRingPath = kmsClient.keyRingPath(GCP_PROJECT_ID, KMS_LOCATION_ID, KMS_KEYRING_ID);
-    const cryptoKeyId = `customer-${customerId}-key`;
-    const fullKeyPath = `${keyRingPath}/cryptoKeys/${cryptoKeyId}`;
-
-    try {
-        const [existingKey] = await kmsClient.getCryptoKey({ name: fullKeyPath }).catch(() => [null]);
-        if (existingKey) {
-            console.log(`KMS key for ${customerId} already exists.`);
-            return existingKey.name;
+  const handleCreateRequest = useCallback(() => {
+    startRequestTransition(async () => {
+      setPageState("loading");
+      setError(null);
+      setVerificationResult(null);
+      setRequestData(null);
+      
+      try {
+        const baseUrl = window.location.origin;
+        // This function is now a simple server action that does not use Genkit
+        const response = await generateRequest({ baseUrl });
+        
+        if (!response || !response.requestUrl) {
+            throw new Error("Failed to generate verification request.");
         }
 
-        const [key] = await kmsClient.createCryptoKey({
-            parent: keyRingPath,
-            cryptoKeyId: cryptoKeyId,
-            cryptoKey: {
-                purpose: 'ASYMMETRIC_SIGN',
-                versionTemplate: {
-                    algorithm: 'EC_SIGN_P256_SHA256',
-                    protectionLevel: 'SOFTWARE',
-                },
-                labels: {
-                    'customer-id': customerId.replace(/[^a-z0-9-]/gi, '_').toLowerCase()
-                }
-            },
-        });
+        setRequestData(response);
+        setPageState("verifying");
+      } catch (e: any) {
+        console.error("Error creating request:", e);
+        const errorMessage = e.message || "An unexpected error occurred.";
+        setError(errorMessage);
+        setVerificationResult({ status: "error", message: errorMessage });
+        setPageState("result");
+      }
+    });
+  }, []);
 
-        if (!key.name) {
-            throw new Error('KMS key creation did not return a resource name.');
-        }
-        return key.name;
-    } catch (error: any) {
-        // Intercept gRPC permission denied errors (code 7)
-        if (error.code === 7) {
-            console.error("Caught KMS permission error:", error.details);
-            throw new Error(PERMISSION_ERROR_MESSAGE);
-        }
-        // Re-throw other errors
-        throw error;
-    }
-}
-
-async function generateDidForCustomer(customerId: string, kmsKeyPath: string) {
-    const jose = await import('jose');
-    const [publicKey] = await kmsClient.getPublicKey({ name: `${kmsKeyPath}/cryptoKeyVersions/1` });
-
-    if (!publicKey.pem) {
-        throw new Error(`Could not retrieve public key in PEM format from KMS for key: ${kmsKeyPath}`);
+  useEffect(() => {
+    if (pageState !== 'verifying' || !requestData?.state) {
+      return;
     }
 
-    const key = await jose.importSPKI(publicKey.pem, 'ES256');
-    const exportedJwk = await jose.exportJWK(key);
+    const sessionDocRef = doc(db, "verificationSessions", requestData.state);
 
-    const did = `did:bravium:${customerId}`;
-    const verificationMethodId = `${did}#keys-1`;
+    const unsubscribe = onSnapshot(sessionDocRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        if (data.status === "success") {
+          setVerificationResult({ 
+              status: "success", 
+              message: data.message || "Credential verified successfully!",
+              claims: data.claims,
+              verifiedAt: data.verifiedAt,
+          });
+          setPageState("result");
+          unsubscribe();
+        } else if (data.status === "error") {
+          setVerificationResult({ status: "error", message: data.error || "Verification failed." });
+          setPageState("result");
+          unsubscribe();
+        }
+      }
+    });
+    
+    const timer = setTimeout(() => {
+        if (pageState === 'verifying') {
+            unsubscribe();
+            setVerificationResult({ status: "expired", message: "The request has expired."});
+            setPageState("result");
+        }
+    }, 180000); // 3 minutes
 
-    const didDocument = {
-        '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
-        id: did,
-        controller: did,
-        verificationMethod: [{
-            id: verificationMethodId,
-            type: 'JsonWebKey2020',
-            controller: did,
-            publicKeyJwk: exportedJwk,
-        }],
-        authentication: [verificationMethodId],
-        assertionMethod: [verificationMethodId],
+    return () => {
+        unsubscribe();
+        clearTimeout(timer);
     };
 
-    return { did, didDocument };
+  }, [requestData, pageState]);
+
+
+  const renderContent = () => {
+    switch (pageState) {
+        case "idle":
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[256px] gap-4">
+                    <Button onClick={handleCreateRequest} size="lg" disabled={isRequesting}>
+                        <QrCode className="mr-2 h-5 w-5" />
+                        {t.verifyPage.new_verification_button}
+                    </Button>
+                </div>
+            );
+        case "loading":
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[256px] gap-4">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-muted-foreground">{t.verifyPage.loading_request}</p>
+                </div>
+            );
+        case "verifying":
+             if (requestData) {
+                return (
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="p-4 bg-white rounded-lg border">
+                            <QRCode value={requestData.requestUrl} size={256} />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-muted-foreground">{t.verifyPage.scan_qr_description}</p>
+                            <div className="mt-4 flex items-center justify-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span>{t.verifyPage.waiting_for_presentation}</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+            return null;
+        case "result":
+            const currentResult = verificationResult || { status: 'error', message: error };
+            if (currentResult) {
+                switch (currentResult.status) {
+                    case 'success':
+                        return (
+                            <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
+                                <CheckCircle className="h-16 w-16 text-green-600" />
+                                <h3 className="text-2xl font-bold">{t.verifyPage.result_success_title}</h3>
+                                {currentResult.claims && (
+                                     <div className="w-full mt-4 text-left">
+                                        <Card>
+                                            <CardContent className="pt-6">
+                                                <h4 className="font-semibold mb-2">Detalles Verificados:</h4>
+                                                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
+                                                    {JSON.stringify(currentResult.claims, null, 2)}
+                                                </pre>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                )}
+                                <Button onClick={handleCreateRequest} className="mt-4" disabled={isRequesting}>{t.verifyPage.new_verification_button}</Button>
+                            </div>
+                        );
+                    case 'error':
+                    case 'expired':
+                        return (
+                            <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
+                                <XCircle className="h-16 w-16 text-destructive" />
+                                <h3 className="text-2xl font-bold">{currentResult.status === 'error' ? t.verifyPage.result_error_title : t.verifyPage.result_expired_title}</h3>
+                                <p className="text-muted-foreground">{currentResult.message}</p>
+                                <Button onClick={handleCreateRequest} disabled={isRequesting}>{t.verifyPage.retry_button}</Button>
+                            </div>
+                        );
+                }
+            }
+            return null;
+        default:
+            return null;
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <LandingHeader />
+      <main className="flex-grow container py-12 md:py-20">
+        <div className="max-w-3xl mx-auto">
+          <Card className="shadow-lg">
+            <CardHeader className="text-center">
+              <div className="mx-auto bg-primary text-primary-foreground rounded-full p-3 w-fit mb-4">
+                <ShieldCheck className="h-8 w-8" />
+              </div>
+              <CardTitle className="text-3xl">{t.verifyPage.title}</CardTitle>
+              <CardDescription>{t.verifyPage.subtitle}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 py-8">
+              {renderContent()}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <LandingFooter />
+    </div>
+  );
 }
-
-export const ensureKmsKey = ai.defineTool(
-  {
-    name: 'ensureKmsKey',
-    description: 'Checks if a customer has a KMS key and creates one if not. Returns the KMS key path.',
-    inputSchema: z.object({
-      customerId: z.string().describe('The ID of the customer to check.'),
-    }),
-    outputSchema: z.string().describe('The KMS key path for the customer.'),
-  },
-  async ({ customerId }) => {
-    if (!adminDb) {
-        throw new Error("Firestore Admin SDK is not available.");
-    }
-    const customerRef = adminDb.collection('customers').doc(customerId);
-    let customerDoc = await customerRef.get();
-
-    if (!customerDoc.exists) {
-      console.log(`Customer document for ${customerId} not found. Creating it...`);
-      const newCustomerData = {
-          id: customerId,
-          name: 'Bravium Verifier',
-          email: 'verifier@bravium.org',
-          subscriptionPlan: 'pro',
-          subscriptionStatus: 'active',
-          did: "",
-          kmsKeyPath: "",
-          onboardingStatus: 'pending',
-      };
-      await customerRef.set(newCustomerData);
-      customerDoc = await customerRef.get(); // Re-fetch the document after creation
-    }
-
-    const customerData = customerDoc.data();
-    if (customerData?.kmsKeyPath) {
-      console.log(`KMS key already exists for customer ${customerId}.`);
-      return customerData.kmsKeyPath;
-    }
-
-    console.log(`KMS key not found for customer ${customerId}. Generating a new one...`);
-    
-    // Key is missing, generate it now.
-    const kmsKeyPath = await generateKmsKeyForCustomer(customerId);
-    const { did, didDocument } = await generateDidForCustomer(customerId, kmsKeyPath);
-
-    await adminDb.collection('dids').doc(did).set(didDocument);
-    
-    await customerRef.update({
-      did: did,
-      kmsKeyPath: kmsKeyPath,
-      onboardingStatus: 'completed',
-    });
-
-    console.log(`Successfully generated and stored KMS key and DID for customer ${customerId}.`);
-    return kmsKeyPath;
-  }
-);

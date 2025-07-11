@@ -41,6 +41,7 @@ export default function VerifyPage() {
       
       try {
         const baseUrl = window.location.origin;
+        // This function is now a simple server action that does not use Genkit
         const response = await generateRequest({ baseUrl });
         
         if (!response || !response.requestUrl) {

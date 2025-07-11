@@ -20,6 +20,10 @@ const GCP_PROJECT_ID = process.env.GCLOUD_PROJECT;
 const KMS_LOCATION_ID = 'global';
 const KMS_KEYRING_ID = 'bravium-keys';
 
+// For the public verification page, we use a single, pre-defined customer as the verifier.
+const VERIFIER_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+
+
 /**
  * ----------------------------------------------------------------
  * FUNCIÓN DE ONBOARDING: Se dispara al crear un cliente.
@@ -183,14 +187,26 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             }
             const sessionData = sessionDoc.data();
             
-            if (!sessionData || !sessionData.requestObjectJwt) {
-                console.error(`requestObjectJwt no encontrado para el state: ${state}`);
-                response.status(500).send("Error interno: request object JWT no encontrado.");
+            if (!sessionData || !sessionData.requestObject) {
+                console.error(`requestObject no encontrado para el state: ${state}`);
+                response.status(500).send("Error interno: request object no encontrado.");
                 return;
             }
+
+            // The verifier is a pre-defined customer for this public page.
+            // Fetch its KMS key to sign the request object on the fly.
+            const verifierDoc = await db.collection('customers').doc(VERIFIER_CUSTOMER_ID).get();
+            if (!verifierDoc.exists || !verifierDoc.data().kmsKeyPath) {
+                console.error(`Verifier customer ${VERIFIER_CUSTOMER_ID} or its KMS key not found.`);
+                throw new Error("Verifier configuration error.");
+            }
+            const kmsKeyPath = verifierDoc.data().kmsKeyPath;
+
+            // Sign the request object to create a JWS (JWT)
+            const requestObjectJwt = await createJws(sessionData.requestObject, kmsKeyPath);
             
             response.set('Content-Type', 'application/oauth-authz-req+jwt');
-            response.status(200).send(sessionData.requestObjectJwt);
+            response.status(200).send(requestObjectJwt);
 
         } catch (error) {
             console.error(`Error en GET para el state ${state}:`, error);
