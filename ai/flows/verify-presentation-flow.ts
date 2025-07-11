@@ -135,6 +135,6 @@ async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
         throw new Error('KMS signing failed or did not return a signature.');
     }
 
-    const joseSignature = derToJose(signResponse.signature, 'ES256');
+    const joseSignature = derToJose(Buffer.from(signResponse.signature), 'ES256');
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }

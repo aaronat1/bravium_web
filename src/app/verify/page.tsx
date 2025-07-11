@@ -13,7 +13,6 @@ import { useI18n } from "@/hooks/use-i18n";
 import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { generateRequest } from "@/ai/flows/verify-presentation-flow";
-import { useAuth } from "@/hooks/use-auth";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
 type PageState = "idle" | "loading" | "verifying" | "result";
@@ -40,14 +39,15 @@ export default function VerifyPage() {
     setRequestData(null);
     
     try {
-      // The backend now knows which verifier to use, so we only need to provide the baseUrl.
       const baseUrl = window.location.origin;
       const response = await generateRequest({ baseUrl });
       setRequestData(response);
       setPageState("verifying");
     } catch (e: any) {
       console.error("Error creating request:", e);
-      setError(e.message || "An unexpected error occurred.");
+      const errorMessage = e.message || "An unexpected error occurred.";
+      setError(errorMessage);
+      setVerificationResult({ status: "error", message: errorMessage });
       setPageState("result");
     }
   }, []);
@@ -132,30 +132,21 @@ export default function VerifyPage() {
             }
             return null; // Should not happen
         case "result":
-            if (error) {
-                 return (
-                    <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
-                        <XCircle className="h-16 w-16 text-destructive" />
-                         <h3 className="text-2xl font-bold">{t.toast_error_title}</h3>
-                        <p className="text-muted-foreground">{error}</p>
-                        <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
-                    </div>
-                )
-            }
-            if (verificationResult) {
-                switch (verificationResult.status) {
+            const currentResult = verificationResult || { status: 'error', message: error };
+            if (currentResult) {
+                switch (currentResult.status) {
                     case 'success':
                         return (
                             <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
                                 <CheckCircle className="h-16 w-16 text-green-600" />
                                 <h3 className="text-2xl font-bold">{t.verifyPage.result_success_title}</h3>
-                                {verificationResult.claims && (
+                                {currentResult.claims && (
                                      <div className="w-full mt-4 text-left">
                                         <Card>
                                             <CardContent className="pt-6">
                                                 <h4 className="font-semibold mb-2">Detalles Verificados:</h4>
                                                 <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-                                                    {JSON.stringify(verificationResult.claims, null, 2)}
+                                                    {JSON.stringify(currentResult.claims, null, 2)}
                                                 </pre>
                                             </CardContent>
                                         </Card>
@@ -169,8 +160,8 @@ export default function VerifyPage() {
                         return (
                             <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
                                 <XCircle className="h-16 w-16 text-destructive" />
-                                <h3 className="text-2xl font-bold">{verificationResult.status === 'error' ? t.verifyPage.result_error_title : t.verifyPage.result_expired_title}</h3>
-                                <p className="text-muted-foreground">{verificationResult.message}</p>
+                                <h3 className="text-2xl font-bold">{currentResult.status === 'error' ? t.verifyPage.result_error_title : t.verifyPage.result_expired_title}</h3>
+                                <p className="text-muted-foreground">{currentResult.message}</p>
                                 <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
                             </div>
                         );
