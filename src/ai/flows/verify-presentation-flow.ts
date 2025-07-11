@@ -78,6 +78,7 @@ const generateRequestFlow = ai.defineFlow(
       redirect_uri: baseUrl,
       response_type: "vp_token",
       response_mode: "direct_post",
+      scope: "openid",
       presentation_definition: presentationDefinition,
       nonce: nonce,
       state: state
@@ -109,7 +110,6 @@ const generateRequestFlow = ai.defineFlow(
 
 /**
  * Creates a JWS signature for a given payload using a KMS key.
- * This is a corrected and complete implementation.
  * @param {object} payload The JSON object to be included in the JWS.
  * @param {string} kmsKeyPath The full resource path to the signing key in KMS.
  * @returns {Promise<string>} The signed credential in compact JWS format.

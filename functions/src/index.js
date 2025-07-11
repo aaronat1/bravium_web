@@ -13,7 +13,6 @@ const db = admin.firestore();
 
 // Importar dinámicamente solo cuando se necesite.
 const {KeyManagementServiceClient} = require('@google-cloud/kms');
-const { createHash, randomUUID } = require('crypto');
 const kmsClient = new KeyManagementServiceClient();
 
 // --- Constantes de Configuración ---
@@ -122,6 +121,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('failed-precondition', 'El onboarding del cliente no está completo. Faltan kmsKeyPath o did.');
     }
 
+    const { randomUUID } = require('crypto');
     const vcPayload = {
       '@context': [
         'https://www.w3.org/2018/credentials/v1',
@@ -134,27 +134,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
       credentialSubject: credentialSubject,
     };
     
-    const { createHash } = require('crypto');
-    const jose = await import('jose');
-    const { derToJose } = require('ecdsa-sig-formatter');
-
-    const protectedHeader = { alg: 'ES256', typ: 'jwt' };
-    const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
-    const encodedPayload = jose.base64url.encode(JSON.stringify(vcPayload));
-    const signingInput = `${encodedHeader}.${encodedPayload}`;
-    const digest = createHash('sha256').update(signingInput).digest();
-
-    const [signResponse] = await kmsClient.asymmetricSign({
-        name: `${kmsKeyPath}/cryptoKeyVersions/1`,
-        digest: { sha256: digest },
-    });
-
-    if (!signResponse.signature) {
-        throw new Error('La firma con KMS falló o no devolvió una firma.');
-    }
-
-    const joseSignature = derToJose(Buffer.from(signResponse.signature), 'ES256');
-    const jws = `${signingInput}.${jose.base64url.encode(joseSignature)}`;
+    const jws = await createJws(vcPayload, kmsKeyPath);
 
     console.log(`Credencial emitida y firmada con éxito para el cliente ${customerId}.`);
 
@@ -203,7 +183,6 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             }
             const sessionData = sessionDoc.data();
             
-            // CORRECTED: Look for requestObjectJwt and serve it with the correct content type.
             if (!sessionData || !sessionData.requestObjectJwt) {
                 console.error(`requestObjectJwt no encontrado para el state: ${state}`);
                 response.status(500).send("Error interno: request object JWT no encontrado.");
@@ -351,4 +330,28 @@ async function generateDidForCustomer(customerId, kmsKeyPath) {
   };
 
   return { did, didDocument };
+}
+
+async function createJws(payload, kmsKeyPath) {
+    const { createHash } = require('crypto');
+    const jose = await import('jose');
+    const { derToJose } = require('ecdsa-sig-formatter');
+
+    const protectedHeader = { alg: 'ES256', typ: 'jwt' };
+    const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
+    const encodedPayload = jose.base64url.encode(JSON.stringify(payload));
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+    const digest = createHash('sha256').update(signingInput).digest();
+
+    const [signResponse] = await kmsClient.asymmetricSign({
+        name: `${kmsKeyPath}/cryptoKeyVersions/1`,
+        digest: { sha256: digest },
+    });
+
+    if (!signResponse.signature) {
+        throw new Error('La firma con KMS falló o no devolvió una firma.');
+    }
+
+    const joseSignature = derToJose(Buffer.from(signResponse.signature), 'ES256');
+    return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }

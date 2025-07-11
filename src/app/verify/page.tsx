@@ -12,7 +12,7 @@ import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode } from "lucide-react
 import { useI18n } from "@/hooks/use-i18n";
 import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { createVerificationRequest } from "./page.server";
+import { generateRequest } from "@/ai/flows/verify-presentation-flow";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
 type PageState = "idle" | "loading" | "verifying" | "result";
@@ -41,10 +41,10 @@ export default function VerifyPage() {
       
       try {
         const baseUrl = window.location.origin;
-        const response = await createVerificationRequest({ baseUrl });
+        const response = await generateRequest({ baseUrl });
         
-        if (response.error) {
-            throw new Error(response.error);
+        if (!response || !response.requestUrl) {
+            throw new Error("Failed to generate verification request.");
         }
 
         setRequestData(response);
