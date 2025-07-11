@@ -202,13 +202,13 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
                 return;
             }
             const sessionData = sessionDoc.data();
-            // **FIX**: Look for 'requestObject' (JSON) instead of 'requestObjectJwt'.
             if (!sessionData || !sessionData.requestObject) {
                 console.error(`requestObject no encontrado para el state: ${state}`);
                 response.status(500).send("Internal Error: request object not found.");
                 return;
             }
-            // Return the request object as JSON.
+            
+            response.set('Content-Type', 'application/json');
             response.status(200).json(sessionData.requestObject);
         } catch (error) {
             console.error(`Error in GET for state ${state}:`, error);
