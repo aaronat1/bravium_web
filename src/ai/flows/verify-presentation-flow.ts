@@ -72,7 +72,6 @@ const generateRequestFlow = ai.defineFlow(
     };
     
     const clientId = baseUrl;
-    // The Cloud Function URL that will serve the signed JWT or handle the POST request.
     const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
     const responseUri = `${functionUrl}?state=${state}`;
 
@@ -100,7 +99,6 @@ const generateRequestFlow = ai.defineFlow(
     
     const requestParams = new URLSearchParams({
         client_id: clientId,
-        // The request_uri points to the Cloud Function which will serve the signed JWT
         request_uri: `${functionUrl}?state=${state}`,
     });
 
@@ -114,13 +112,11 @@ const generateRequestFlow = ai.defineFlow(
 
 /**
  * Creates a JWS signature for a given payload using a KMS key.
- * This is a self-contained, correct implementation for creating the signed request object.
  * @param {object} payload The JSON object to be included in the JWS.
  * @param {string} kmsKeyPath The full resource path to the signing key in KMS.
- * @returns {Promise<string>} The signed request object in compact JWS format.
+ * @returns {Promise<string>} The signed credential in compact JWS format.
  */
 async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
-    // Dynamically import 'jose' and 'ecdsa-sig-formatter' to ensure they are available
     const jose = await import('jose');
     const { derToJose } = await import('ecdsa-sig-formatter');
 
@@ -139,11 +135,6 @@ async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
         throw new Error('KMS signing failed or did not return a signature.');
     }
 
-    // Convert the DER signature from KMS to the JOSE format required for JWS
     const joseSignature = derToJose(signResponse.signature, 'ES256');
-    
-    // Assemble the final JWS
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
-
-    
