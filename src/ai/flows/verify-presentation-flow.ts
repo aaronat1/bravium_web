@@ -37,7 +37,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     const nonce = uuidv4();
     
     // Use a stable, public URL for client_id and redirect_uri as required by OID4VP.
-    const publicUrl = "https://bravium.es";
+    const publicUrl = "https://studio--braviumcertboard.us-central1.hosted.app/";
     
     const presentationDefinition = {
       id: uuidv4(),
