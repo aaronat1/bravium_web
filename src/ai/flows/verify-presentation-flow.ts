@@ -61,7 +61,11 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
       scope: "openid",
       nonce: nonce,
       state: state,
-      presentation_definition: presentationDefinition,
+      claims: {
+        vp_token: {
+          presentation_definition: presentationDefinition
+        }
+      }
     };
     
     // Store the unsigned request object in Firestore. The Cloud Function will sign it.
