@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from "react"; // Added to ensure JSX is parsed correctly during build
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -30,8 +31,8 @@ import { Label } from "@/components/ui/label";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
-// Define a base schema for form fields
-const getBaseSchema = (fields: CredentialTemplate['fields']) => {
+// This function lives outside the component to avoid being recreated on every render.
+const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     if (!fields) return z.object({});
     
     const shape: Record<string, z.ZodType<any, any>> = {};
@@ -40,12 +41,15 @@ const getBaseSchema = (fields: CredentialTemplate['fields']) => {
         
         switch(field.type) {
             case 'file':
-                // For file inputs, we expect a FileList
-                const fileSchema = z.custom<FileList>().refine(files => files?.length > 0, 'File is required.');
-                fieldSchema = field.required ? fileSchema : fileSchema.optional();
+                // For file inputs, we expect a FileList. Zod validation for files is tricky on the client.
+                // We'll use a simple check for now. For production, more robust validation is needed.
+                const fileSchema = z.any().refine((files) => files instanceof FileList && files.length > 0, 'File is required.');
+                fieldSchema = field.required ? fileSchema : z.any().optional();
                 break;
             default:
-                const stringSchema = z.string().min(1, 'This field is required');
+                const stringSchema = z.string({
+                    required_error: "This field is required.",
+                }).min(1, {message: "This field is required"});
                 fieldSchema = field.required ? stringSchema : stringSchema.optional();
         }
         shape[field.fieldName] = fieldSchema;
@@ -67,7 +71,7 @@ export default function IssueCredentialPage() {
 
     const isAdmin = user?.uid === ADMIN_UID;
 
-    const formSchema = getBaseSchema(selectedTemplate?.fields || []);
+    const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
     type FormData = z.infer<typeof formSchema>;
 
     const form = useForm<FormData>({
@@ -80,8 +84,8 @@ export default function IssueCredentialPage() {
     useEffect(() => {
         if (!user) return;
         setLoadingTemplates(true);
-        const templatesCollection = collection(db, "credentialSchemas");
-        const q = isAdmin ? templatesCollection : query(templatesCollection, where("customerId", "==", user.uid));
+        const templatesCollectionRef = collection(db, "credentialSchemas");
+        const q = isAdmin ? templatesCollectionRef : query(templatesCollectionRef, where("customerId", "==", user.uid));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
@@ -134,13 +138,13 @@ export default function IssueCredentialPage() {
                     await uploadBytes(fileRef, file);
                     const downloadURL = await getDownloadURL(fileRef);
                     credentialSubject[fieldName] = downloadURL;
-                } else {
+                } else if (value) {
                     credentialSubject[fieldName] = value;
                 }
             }
             
-            const issueCredential = httpsCallable(functions, 'issueCredential');
-            const result: any = await issueCredential({
+            const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
+            const result: any = await issueCredentialFunc({
                 credentialSubject,
                 credentialType: selectedTemplate.name,
                 customerId: selectedTemplate.customerId,
@@ -223,38 +227,38 @@ export default function IssueCredentialPage() {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
-                                                {(() => {
-                                                    switch(fieldInfo.type) {
-                                                        case 'date':
-                                                            return <FormControl><Input type="date" {...field} /></FormControl>;
-                                                        case 'select':
-                                                            return (
-                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                    <FormControl>
-                                                                        <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectValue>
-                                                                    </FormControl>
-                                                                    <SelectContent>
-                                                                        {(fieldInfo.options || []).map(option => (
-                                                                            <SelectItem key={option} value={option}>{option}</SelectItem>
-                                                                        ))}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            );
-                                                        case 'file':
-                                                             return (
-                                                                <FormControl>
+                                                <FormControl>
+                                                    {(() => {
+                                                        switch(fieldInfo.type) {
+                                                            case 'date':
+                                                                return <Input type="date" {...field} />;
+                                                            case 'select':
+                                                                return (
+                                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                        <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {(fieldInfo.options || []).map(option => (
+                                                                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                );
+                                                            case 'file':
+                                                                const { ref: fieldRef, ...rest } = register(fieldInfo.fieldName as any);
+                                                                return (
                                                                     <Input 
                                                                         type="file" 
                                                                         accept=".pdf,.png,.jpeg,.jpg"
-                                                                        {...register(fieldInfo.fieldName as any)}
+                                                                        {...rest}
+                                                                        ref={fieldRef}
                                                                     />
-                                                                </FormControl>
-                                                             );
-                                                        case 'text':
-                                                        default:
-                                                            return <FormControl><Input type="text" {...field} /></FormControl>;
-                                                    }
-                                                })()}
+                                                                );
+                                                            case 'text':
+                                                            default:
+                                                                return <Input type="text" {...field} />;
+                                                        }
+                                                    })()}
+                                                </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
