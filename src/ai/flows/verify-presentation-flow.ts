@@ -145,3 +145,5 @@ async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
     // Assemble the final JWS
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
+
+    
