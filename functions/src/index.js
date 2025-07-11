@@ -13,7 +13,7 @@ const db = admin.firestore();
 
 // Importar dinámicamente solo cuando se necesite.
 const {KeyManagementServiceClient} = require('@google-cloud/kms');
-const { randomUUID } = require('crypto');
+const { createHash, randomUUID } = require('crypto');
 const kmsClient = new KeyManagementServiceClient();
 
 // --- Constantes de Configuración ---
@@ -185,34 +185,34 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
         return;
     }
 
-    // --- GET: La cartera pide el JWS de la solicitud ---
+    // --- GET: The wallet requests the request object ---
     if (request.method === "GET") {
         const state = request.query.state;
         if (!state) {
-            console.error("GET request sin state.");
-            response.status(400).send("Bad Request: Falta el parámetro state.");
+            console.error("GET request missing state.");
+            response.status(400).send("Bad Request: Missing state parameter.");
             return;
         }
 
         try {
             const sessionDoc = await db.collection('verificationSessions').doc(state).get();
             if (!sessionDoc.exists) {
-                console.error(`Sesión no encontrada para el state: ${state}`);
-                response.status(404).send("Not Found: State inválido o expirado.");
+                console.error(`Session not found for state: ${state}`);
+                response.status(404).send("Not Found: Invalid or expired state.");
                 return;
             }
             const sessionData = sessionDoc.data();
-            if (!sessionData || !sessionData.requestObjectJwt) {
-                console.error(`requestObjectJwt no encontrado para el state: ${state}`);
-                response.status(500).send("Error interno: request object JWT no encontrado.");
+            // **FIX**: Look for 'requestObject' (JSON) instead of 'requestObjectJwt'.
+            if (!sessionData || !sessionData.requestObject) {
+                console.error(`requestObject not found for state: ${state}`);
+                response.status(500).send("Internal Error: request object not found.");
                 return;
             }
-            // Devolver el JWS como texto plano, como espera la especificación
-            response.set('Content-Type', 'application/oauth-authz-req+jwt');
-            response.status(200).send(sessionData.requestObjectJwt);
+            // Return the request object as JSON.
+            response.status(200).json(sessionData.requestObject);
         } catch (error) {
-            console.error(`Error en GET para el state ${state}:`, error);
-            response.status(500).send("Error interno del servidor");
+            console.error(`Error in GET for state ${state}:`, error);
+            response.status(500).send("Internal Server Error");
         }
         return;
     }
