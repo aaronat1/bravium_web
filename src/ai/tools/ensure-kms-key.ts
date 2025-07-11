@@ -3,9 +3,9 @@
 /**
  * @fileOverview A Genkit tool to ensure a customer has a KMS key.
  * This tool checks if a customer document in Firestore has a `kmsKeyPath`.
- * If not, it generates a new KMS key and a corresponding DID, then updates
- * the customer document. This is crucial for bootstrapping customers or
- * fixing existing ones that missed the onCustomerCreate trigger.
+ * If the customer document doesn't exist, it creates one.
+ * If the kmsKeyPath is missing, it generates a new KMS key and a corresponding DID,
+ * then updates the customer document. This is crucial for bootstrapping customers.
  */
 
 import { ai } from '@/ai/genkit';
@@ -106,10 +106,22 @@ export const ensureKmsKey = ai.defineTool(
         throw new Error("Firestore Admin SDK is not available.");
     }
     const customerRef = adminDb.collection('customers').doc(customerId);
-    const customerDoc = await customerRef.get();
+    let customerDoc = await customerRef.get();
 
     if (!customerDoc.exists) {
-      throw new Error(`Customer with ID ${customerId} does not exist.`);
+      console.log(`Customer document for ${customerId} not found. Creating it...`);
+      const newCustomerData = {
+          id: customerId,
+          name: 'Bravium Verifier',
+          email: 'verifier@bravium.org',
+          subscriptionPlan: 'pro',
+          subscriptionStatus: 'active',
+          did: "",
+          kmsKeyPath: "",
+          onboardingStatus: 'pending',
+      };
+      await customerRef.set(newCustomerData);
+      customerDoc = await customerRef.get(); // Re-fetch the document after creation
     }
 
     const customerData = customerDoc.data();
