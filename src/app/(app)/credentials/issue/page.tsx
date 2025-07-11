@@ -3,7 +3,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from 'zod';
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import QRCode from "qrcode.react";
 import { httpsCallable } from 'firebase/functions';
@@ -28,6 +30,29 @@ import { Label } from "@/components/ui/label";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
+// Define a base schema for form fields
+const getBaseSchema = (fields: CredentialTemplate['fields']) => {
+    const shape: Record<string, z.ZodType<any, any>> = {};
+    fields.forEach(field => {
+        let fieldSchema: z.ZodType<any, any>;
+        
+        switch(field.type) {
+            case 'file':
+                // For file inputs, we expect a FileList
+                fieldSchema = z.custom<FileList>().refine(files => files?.length > 0, 'File is required.');
+                break;
+            default:
+                fieldSchema = z.string().min(1, 'This field is required');
+        }
+
+        if (!field.required) {
+            fieldSchema = fieldSchema.optional();
+        }
+        shape[field.fieldName] = fieldSchema;
+    });
+    return z.object(shape);
+};
+
 export default function IssueCredentialPage() {
     const { t } = useI18n();
     const router = useRouter();
@@ -42,14 +67,21 @@ export default function IssueCredentialPage() {
 
     const isAdmin = user?.uid === ADMIN_UID;
 
-    const form = useForm();
-    const { handleSubmit, reset, control } = form;
+    const formSchema = selectedTemplate ? getBaseSchema(selectedTemplate.fields) : z.object({});
+    type FormData = z.infer<typeof formSchema>;
+
+    const form = useForm<FormData>({
+        resolver: zodResolver(formSchema),
+    });
+    
+    const { handleSubmit, reset, control, register } = form;
 
     useEffect(() => {
         if (!user) return;
         setLoadingTemplates(true);
         const templatesCollection = collection(db, "credentialSchemas");
         const q = isAdmin ? templatesCollection : query(templatesCollection, where("customerId", "==", user.uid));
+        
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
             setTemplates(fetchedTemplates);
@@ -59,20 +91,25 @@ export default function IssueCredentialPage() {
             toast({ variant: "destructive", title: t.toast_error_title, description: "Failed to load templates." });
             setLoadingTemplates(false);
         });
+        
         return () => unsubscribe();
-    }, [user, isAdmin, toast, t]);
+    }, [user, isAdmin, t, toast]);
 
     const handleTemplateChange = (templateId: string) => {
         const template = templates.find(t => t.id === templateId) || null;
         setSelectedTemplate(template);
-        const defaultValues = template?.fields.reduce((acc, field) => {
-            acc[field.fieldName] = field.defaultValue || '';
-            return acc;
-        }, {} as Record<string, any>) || {};
-        reset(defaultValues);
+        if (template) {
+            const defaultValues = template.fields.reduce((acc, field) => {
+                acc[field.fieldName] = field.defaultValue || '';
+                return acc;
+            }, {} as Record<string, any>);
+            reset(defaultValues);
+        } else {
+            reset({});
+        }
     };
 
-    const onSubmit = async (data: any) => {
+    const onSubmit: SubmitHandler<FormData> = async (data) => {
         if (!selectedTemplate || !user) return;
 
         setIsIssuing(true);
@@ -82,7 +119,7 @@ export default function IssueCredentialPage() {
 
             for (const fieldInfo of selectedTemplate.fields) {
                 const fieldName = fieldInfo.fieldName;
-                const value = data[fieldName];
+                const value = data[fieldName as keyof FormData];
 
                 if (fieldInfo.type === 'file' && value instanceof FileList && value.length > 0) {
                     const file: File = value[0];
@@ -127,7 +164,8 @@ export default function IssueCredentialPage() {
 
         } catch (error: any) {
             console.error("Error issuing credential:", error);
-            toast({ variant: "destructive", title: t.toast_error_title, description: error.message });
+            const errorMessage = error.message || "An unexpected error occurred.";
+            toast({ variant: "destructive", title: t.toast_error_title, description: errorMessage });
         } finally {
             setIsIssuing(false);
         }
@@ -182,8 +220,7 @@ export default function IssueCredentialPage() {
                                     <FormField
                                         key={fieldInfo.fieldName}
                                         control={control}
-                                        name={fieldInfo.fieldName}
-                                        rules={{ required: fieldInfo.required ? t.issueCredentialPage.required_field_error : false }}
+                                        name={fieldInfo.fieldName as any}
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
@@ -205,12 +242,14 @@ export default function IssueCredentialPage() {
                                                                 </Select>
                                                             );
                                                         case 'file':
+                                                             const { ref, ...rest } = register(fieldInfo.fieldName as any);
                                                              return (
                                                                 <FormControl>
                                                                     <Input 
                                                                         type="file" 
-                                                                        accept=".pdf,.png,.jpeg,.jpg" 
-                                                                        onChange={(e) => field.onChange(e.target.files)}
+                                                                        accept=".pdf,.png,.jpeg,.jpg"
+                                                                        {...rest}
+                                                                        ref={ref}
                                                                     />
                                                                 </FormControl>
                                                              );
