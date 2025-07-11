@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
 import QRCode from "qrcode.react";
 
 import LandingHeader from "@/components/landing-header";
@@ -12,7 +12,7 @@ import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode } from "lucide-react
 import { useI18n } from "@/hooks/use-i18n";
 import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { generateRequest } from "@/ai/flows/verify-presentation-flow";
+import { createVerificationRequest } from "./page.server";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
 type PageState = "idle" | "loading" | "verifying" | "result";
@@ -24,32 +24,39 @@ interface VerificationResult {
     verifiedAt?: Timestamp;
 }
 
-
 export default function VerifyPage() {
   const { t } = useI18n();
   const [pageState, setPageState] = useState<PageState>("idle");
   const [requestData, setRequestData] = useState<{ requestUrl: string; state: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [isRequesting, startRequestTransition] = useTransition();
 
-  const createVerificationRequest = useCallback(async () => {
-    setPageState("loading");
-    setError(null);
-    setVerificationResult(null);
-    setRequestData(null);
-    
-    try {
-      const baseUrl = window.location.origin;
-      const response = await generateRequest({ baseUrl });
-      setRequestData(response);
-      setPageState("verifying");
-    } catch (e: any) {
-      console.error("Error creating request:", e);
-      const errorMessage = e.message || "An unexpected error occurred.";
-      setError(errorMessage);
-      setVerificationResult({ status: "error", message: errorMessage });
-      setPageState("result");
-    }
+  const handleCreateRequest = useCallback(() => {
+    startRequestTransition(async () => {
+      setPageState("loading");
+      setError(null);
+      setVerificationResult(null);
+      setRequestData(null);
+      
+      try {
+        const baseUrl = window.location.origin;
+        const response = await createVerificationRequest({ baseUrl });
+        
+        if (response.error) {
+            throw new Error(response.error);
+        }
+
+        setRequestData(response);
+        setPageState("verifying");
+      } catch (e: any) {
+        console.error("Error creating request:", e);
+        const errorMessage = e.message || "An unexpected error occurred.";
+        setError(errorMessage);
+        setVerificationResult({ status: "error", message: errorMessage });
+        setPageState("result");
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -81,9 +88,9 @@ export default function VerifyPage() {
     
     const timer = setTimeout(() => {
         if (pageState === 'verifying') {
+            unsubscribe();
             setVerificationResult({ status: "expired", message: "The request has expired."});
             setPageState("result");
-            unsubscribe();
         }
     }, 180000); // 3 minutes
 
@@ -100,7 +107,7 @@ export default function VerifyPage() {
         case "idle":
             return (
                 <div className="flex flex-col items-center justify-center min-h-[256px] gap-4">
-                    <Button onClick={createVerificationRequest} size="lg">
+                    <Button onClick={handleCreateRequest} size="lg" disabled={isRequesting}>
                         <QrCode className="mr-2 h-5 w-5" />
                         {t.verifyPage.new_verification_button}
                     </Button>
@@ -130,7 +137,7 @@ export default function VerifyPage() {
                     </div>
                 );
             }
-            return null; // Should not happen
+            return null;
         case "result":
             const currentResult = verificationResult || { status: 'error', message: error };
             if (currentResult) {
@@ -152,7 +159,7 @@ export default function VerifyPage() {
                                         </Card>
                                     </div>
                                 )}
-                                <Button onClick={createVerificationRequest} className="mt-4">{t.verifyPage.new_verification_button}</Button>
+                                <Button onClick={handleCreateRequest} className="mt-4" disabled={isRequesting}>{t.verifyPage.new_verification_button}</Button>
                             </div>
                         );
                     case 'error':
@@ -162,7 +169,7 @@ export default function VerifyPage() {
                                 <XCircle className="h-16 w-16 text-destructive" />
                                 <h3 className="text-2xl font-bold">{currentResult.status === 'error' ? t.verifyPage.result_error_title : t.verifyPage.result_expired_title}</h3>
                                 <p className="text-muted-foreground">{currentResult.message}</p>
-                                <Button onClick={createVerificationRequest}>{t.verifyPage.retry_button}</Button>
+                                <Button onClick={handleCreateRequest} disabled={isRequesting}>{t.verifyPage.retry_button}</Button>
                             </div>
                         );
                 }
