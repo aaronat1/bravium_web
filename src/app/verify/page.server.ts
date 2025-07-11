@@ -42,6 +42,7 @@ export async function createVerificationRequest(input: GenerateRequestInput) {
         };
         
         const clientId = baseUrl;
+        // This URL must match your deployed Cloud Function endpoint for openid4vp
         const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
         const responseUri = `${functionUrl}?state=${state}`;
 
@@ -57,9 +58,8 @@ export async function createVerificationRequest(input: GenerateRequestInput) {
             state: state
         };
 
-        // Create an unsigned JWT
+        // Create an unsigned JWT with alg: 'none'
         const requestObjectJwt = await new UnsecuredJWT(requestObject)
-            .setProtectedHeader({ alg: 'none' })
             .encode();
         
         await verificationSessions.doc(state).set({
