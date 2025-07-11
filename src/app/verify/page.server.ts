@@ -50,6 +50,7 @@ export async function createVerificationRequest(input: GenerateRequestInput) {
             redirect_uri: baseUrl,
             response_type: "vp_token",
             response_mode: "direct_post",
+            scope: "openid",
             presentation_definition: presentationDefinition,
             nonce: nonce,
             state: state
