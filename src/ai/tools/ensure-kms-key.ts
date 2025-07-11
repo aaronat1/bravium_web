@@ -22,6 +22,13 @@ const GCP_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const KMS_LOCATION_ID = 'global';
 const KMS_KEYRING_ID = 'bravium-keys';
 
+const PERMISSION_ERROR_MESSAGE = `
+  KMS permission error. Please ensure the following:
+  1. The Cloud Key Management Service (KMS) API is enabled in your Google Cloud project.
+  2. The service account running this code (likely your App Hosting or Cloud Functions service account) has the 'Cloud KMS Admin' IAM role.
+  3. The Key Ring 'bravium-keys' exists in location 'global'.
+`;
+
 async function generateKmsKeyForCustomer(customerId: string) {
     if (!GCP_PROJECT_ID) {
         throw new Error("GCLOUD_PROJECT environment variable is not set.");
@@ -36,29 +43,35 @@ async function generateKmsKeyForCustomer(customerId: string) {
             console.log(`KMS key for ${customerId} already exists.`);
             return existingKey.name;
         }
-    } catch (e) {
-        // Ignore error if key doesn't exist, which is the expected case for creation.
-    }
 
-    const [key] = await kmsClient.createCryptoKey({
-        parent: keyRingPath,
-        cryptoKeyId: cryptoKeyId,
-        cryptoKey: {
-            purpose: 'ASYMMETRIC_SIGN',
-            versionTemplate: {
-                algorithm: 'EC_SIGN_P256_SHA256',
-                protectionLevel: 'SOFTWARE',
+        const [key] = await kmsClient.createCryptoKey({
+            parent: keyRingPath,
+            cryptoKeyId: cryptoKeyId,
+            cryptoKey: {
+                purpose: 'ASYMMETRIC_SIGN',
+                versionTemplate: {
+                    algorithm: 'EC_SIGN_P256_SHA256',
+                    protectionLevel: 'SOFTWARE',
+                },
+                labels: {
+                    'customer-id': customerId.replace(/[^a-z0-9-]/gi, '_').toLowerCase()
+                }
             },
-            labels: {
-                'customer-id': customerId.replace(/[^a-z0-9-]/gi, '_').toLowerCase()
-            }
-        },
-    });
+        });
 
-    if (!key.name) {
-        throw new Error('KMS key creation did not return a resource name.');
+        if (!key.name) {
+            throw new Error('KMS key creation did not return a resource name.');
+        }
+        return key.name;
+    } catch (error: any) {
+        // Intercept gRPC permission denied errors (code 7)
+        if (error.code === 7) {
+            console.error("Caught KMS permission error:", error.details);
+            throw new Error(PERMISSION_ERROR_MESSAGE);
+        }
+        // Re-throw other errors
+        throw error;
     }
-    return key.name;
 }
 
 async function generateDidForCustomer(customerId: string, kmsKeyPath: string) {
