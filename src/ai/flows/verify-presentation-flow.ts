@@ -33,9 +33,11 @@ export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
 // The exported function to generate a request.
 // Note: This does not use Genkit to avoid permission issues in the app server environment.
 export async function generateRequest(input: GenerateRequestInput): Promise<GenerateRequestOutput> {
-    const { baseUrl } = input;
     const state = uuidv4();
     const nonce = uuidv4();
+    
+    // Use a stable, public URL for client_id and redirect_uri as required by OID4VP.
+    const publicUrl = "https://bravium.org";
     
     const presentationDefinition = {
       id: uuidv4(),
@@ -53,9 +55,9 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     const responseUri = `${functionUrl}?state=${state}`;
 
     const requestObject = {
-      client_id: baseUrl,
+      client_id: publicUrl,
       response_uri: responseUri,
-      redirect_uri: baseUrl,
+      redirect_uri: publicUrl,
       response_type: "vp_token",
       response_mode: "direct_post",
       scope: "openid",
@@ -76,7 +78,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     });
     
     const requestParams = new URLSearchParams({
-        client_id: baseUrl,
+        client_id: publicUrl,
         request_uri: `${functionUrl}?state=${state}`,
     });
 
