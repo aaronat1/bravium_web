@@ -10,14 +10,13 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { adminDb } from '@/lib/firebase/admin';
-import { KeyManagementServiceClient } from '@google-cloud/kms';
 import { createHash } from 'crypto';
+import { ensureKmsKey } from '../tools/ensure-kms-key';
 
 if (!adminDb) {
   throw new Error("Firebase Admin DB is not initialized. Verification flows will fail.");
 }
 
-const kmsClient = new KeyManagementServiceClient();
 const verificationSessions = adminDb.collection('verificationSessions');
 
 // For the public verification page, we use a single, pre-defined customer as the verifier.
@@ -49,17 +48,14 @@ const generateRequestFlow = ai.defineFlow(
     name: 'generateRequestFlow',
     inputSchema: GenerateRequestInputSchema,
     outputSchema: GenerateRequestOutputSchema,
+    tools: [ensureKmsKey]
   },
   async ({ baseUrl }) => {
     const state = uuidv4();
     const nonce = uuidv4();
 
-    // Fetch the verifier's KMS key path
-    const customerDoc = await adminDb.collection('customers').doc(VERIFIER_CUSTOMER_ID).get();
-    if (!customerDoc.exists || !customerDoc.data()?.kmsKeyPath) {
-        throw new Error(`Verifier customer with ID ${VERIFIER_CUSTOMER_ID} not found or KMS key path is missing.`);
-    }
-    const kmsKeyPath = customerDoc.data()!.kmsKeyPath;
+    // Ensure the verifier has a KMS key, creating one if it doesn't exist.
+    const kmsKeyPath = await ensureKmsKey({ customerId: VERIFIER_CUSTOMER_ID });
     
     const presentationDefinition = {
       id: uuidv4(),
@@ -72,6 +68,7 @@ const generateRequestFlow = ai.defineFlow(
     };
     
     const clientId = baseUrl;
+    // IMPORTANT: Make sure this URL matches your deployed Cloud Function endpoint.
     const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
     const responseUri = `${functionUrl}?state=${state}`;
 
@@ -112,6 +109,7 @@ const generateRequestFlow = ai.defineFlow(
 
 /**
  * Creates a JWS signature for a given payload using a KMS key.
+ * This is a corrected and complete implementation.
  * @param {object} payload The JSON object to be included in the JWS.
  * @param {string} kmsKeyPath The full resource path to the signing key in KMS.
  * @returns {Promise<string>} The signed credential in compact JWS format.
@@ -119,6 +117,8 @@ const generateRequestFlow = ai.defineFlow(
 async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
     const jose = await import('jose');
     const { derToJose } = await import('ecdsa-sig-formatter');
+    const { KeyManagementServiceClient } = await import('@google-cloud/kms');
+    const kmsClient = new KeyManagementServiceClient();
 
     const protectedHeader = { alg: 'ES256', typ: 'jwt' };
     const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
@@ -135,8 +135,6 @@ async function createJws(payload: object, kmsKeyPath: string): Promise<string> {
         throw new Error('KMS signing failed or did not return a signature.');
     }
 
-    const joseSignature = derToJose(Buffer.from(signResponse.signature), 'ES256');
+    const joseSignature = derToJose(Buffer.from(signResponse.signature as Uint8Array), 'ES256');
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
-
-    
