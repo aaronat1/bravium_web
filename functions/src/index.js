@@ -203,14 +203,15 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             }
             const sessionData = sessionDoc.data();
             
-            if (!sessionData || !sessionData.requestObject) {
-                console.error(`requestObject no encontrado para el state: ${state}`);
-                response.status(500).send("Error interno: request object no encontrado.");
+            // CORRECTED: Look for requestObjectJwt and serve it with the correct content type.
+            if (!sessionData || !sessionData.requestObjectJwt) {
+                console.error(`requestObjectJwt no encontrado para el state: ${state}`);
+                response.status(500).send("Error interno: request object JWT no encontrado.");
                 return;
             }
             
-            response.set('Content-Type', 'application/json');
-            response.status(200).json(sessionData.requestObject);
+            response.set('Content-Type', 'application/oauth-authz-req+jwt');
+            response.status(200).send(sessionData.requestObjectJwt);
 
         } catch (error) {
             console.error(`Error en GET para el state ${state}:`, error);

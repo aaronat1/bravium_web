@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { adminDb } from '@/lib/firebase/admin';
+import { UnsecuredJWT } from 'jose';
 
 if (!adminDb) {
   throw new Error("Firebase Admin DB is not initialized. Verification flows will fail.");
@@ -55,11 +56,17 @@ export async function createVerificationRequest(input: GenerateRequestInput) {
             nonce: nonce,
             state: state
         };
+
+        // Create an unsigned JWT
+        const requestObjectJwt = await new UnsecuredJWT(requestObject)
+            .setProtectedHeader({ alg: 'none' })
+            .encode();
         
         await verificationSessions.doc(state).set({
             status: 'pending',
             createdAt: new Date(),
-            requestObject: requestObject,
+            requestObject: requestObject, // For debugging
+            requestObjectJwt: requestObjectJwt, // The JWT the wallet will fetch
         });
         
         const requestParams = new URLSearchParams({
