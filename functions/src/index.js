@@ -202,12 +202,14 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
                 return;
             }
             const sessionData = sessionDoc.data();
+            // CORRECTED: Look for requestObject instead of requestObjectJwt
             if (!sessionData || !sessionData.requestObject) {
                 console.error(`requestObject no encontrado para el state: ${state}`);
                 response.status(500).send("Internal Error: request object not found.");
                 return;
             }
             
+            // CORRECTED: Return as JSON
             response.set('Content-Type', 'application/json');
             response.status(200).json(sessionData.requestObject);
         } catch (error) {
@@ -349,3 +351,5 @@ async function generateDidForCustomer(customerId, kmsKeyPath) {
 
   return { did, didDocument };
 }
+
+    
