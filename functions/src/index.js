@@ -204,7 +204,7 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             const sessionData = sessionDoc.data();
             // **FIX**: Look for 'requestObject' (JSON) instead of 'requestObjectJwt'.
             if (!sessionData || !sessionData.requestObject) {
-                console.error(`requestObject not found for state: ${state}`);
+                console.error(`requestObject no encontrado para el state: ${state}`);
                 response.status(500).send("Internal Error: request object not found.");
                 return;
             }
