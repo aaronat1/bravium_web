@@ -13,7 +13,7 @@ const db = admin.firestore();
 
 // Importar dinámicamente solo cuando se necesite.
 const {KeyManagementServiceClient} = require('@google-cloud/kms');
-const { createHash, randomUUID } = require('crypto');
+const { randomUUID } = require('crypto');
 const kmsClient = new KeyManagementServiceClient();
 
 // --- Constantes de Configuración ---
@@ -133,8 +133,29 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
       issuanceDate: new Date().toISOString(),
       credentialSubject: credentialSubject,
     };
+    
+    const { createHash } = require('crypto');
+    const jose = await import('jose');
+    const { derToJose } = require('ecdsa-sig-formatter');
 
-    const jws = await createJws(vcPayload, kmsKeyPath);
+    const protectedHeader = { alg: 'ES256', typ: 'jwt' };
+    const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
+    const encodedPayload = jose.base64url.encode(JSON.stringify(vcPayload));
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+    const digest = createHash('sha256').update(signingInput).digest();
+
+    const [signResponse] = await kmsClient.asymmetricSign({
+        name: `${kmsKeyPath}/cryptoKeyVersions/1`,
+        digest: { sha256: digest },
+    });
+
+    if (!signResponse.signature) {
+        throw new Error('La firma con KMS falló o no devolvió una firma.');
+    }
+
+    const joseSignature = derToJose(Buffer.from(signResponse.signature), 'ES256');
+    const jws = `${signingInput}.${jose.base64url.encode(joseSignature)}`;
+
     console.log(`Credencial emitida y firmada con éxito para el cliente ${customerId}.`);
 
     return { verifiableCredentialJws: jws };
@@ -328,36 +349,3 @@ async function generateDidForCustomer(customerId, kmsKeyPath) {
 
   return { did, didDocument };
 }
-
-/**
- * Crea una firma JWS para un payload dado, utilizando una clave de KMS.
- * @param {object} payload El objeto JSON que se incluirá en la credencial.
- * @param {string} kmsKeyPath La ruta completa a la clave de firma en KMS.
- * @returns {Promise<string>} La credencial firmada en formato JWS compacto.
- */
-async function createJws(payload, kmsKeyPath) {
-  const jose = await import('jose');
-  const { derToJose } = require('ecdsa-sig-formatter');
-
-  const protectedHeader = { alg: 'ES256', typ: 'jwt' };
-  const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
-  const encodedPayload = jose.base64url.encode(JSON.stringify(payload));
-  const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const digest = createHash('sha256').update(signingInput).digest();
-
-  const [signResponse] = await kmsClient.asymmetricSign({
-      name: `${kmsKeyPath}/cryptoKeyVersions/1`,
-      digest: { sha256: digest },
-  });
-
-  if (!signResponse.signature) {
-      throw new Error('La firma con KMS falló o no devolvió una firma.');
-  }
-
-  const joseSignature = derToJose(signResponse.signature, 'ES256');
-  const jws = `${signingInput}.${jose.base64url.encode(joseSignature)}`;
-
-  return jws;
-}
-
-    
