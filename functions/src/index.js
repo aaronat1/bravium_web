@@ -152,7 +152,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
  * ----------------------------------------------------------------
  * FUNCIÓN DE VERIFICACIÓN OpenID4VP
  * ----------------------------------------------------------------
- * Maneja las peticiones GET (servir el objeto de petición) y POST (verificar presentación).
+ * Maneja las peticiones GET (servir el JWS de la petición) y POST (verificar presentación).
  */
 exports.openid4vp = functions.region("us-central1").https.onRequest(async (request, response) => {
     response.set("Access-Control-Allow-Origin", "*");
@@ -164,7 +164,7 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
         return;
     }
 
-    // --- GET: La cartera pide el objeto de la solicitud ---
+    // --- GET: La cartera pide el JWS de la solicitud ---
     if (request.method === "GET") {
         const state = request.query.state;
         if (!state) {
@@ -181,14 +181,15 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
                 return;
             }
             const sessionData = sessionDoc.data();
-            // **CORRECCIÓN**: Buscar 'requestObject' (JSON) en lugar de 'requestObjectJwt'.
-            if (!sessionData || !sessionData.requestObject) {
-                console.error(`requestObject no encontrado para el state: ${state}`);
-                response.status(500).send("Error interno: request object no encontrado.");
+            // **CORRECCIÓN**: Buscar 'requestObjectJwt' que ahora sí se está generando.
+            if (!sessionData || !sessionData.requestObjectJwt) {
+                console.error(`requestObjectJwt no encontrado para el state: ${state}`);
+                response.status(500).send("Error interno: request object JWT no encontrado.");
                 return;
             }
-            // Devolver el objeto de la petición como JSON.
-            response.status(200).json(sessionData.requestObject);
+            // Devolver el JWS como texto plano, como espera la especificación
+            response.set('Content-Type', 'application/oauth-authz-req+jwt');
+            response.status(200).send(sessionData.requestObjectJwt);
         } catch (error) {
             console.error(`Error en GET para el state ${state}:`, error);
             response.status(500).send("Error interno del servidor");
