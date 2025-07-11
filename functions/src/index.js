@@ -173,7 +173,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
  * ----------------------------------------------------------------
  * FUNCIÓN DE VERIFICACIÓN OpenID4VP
  * ----------------------------------------------------------------
- * Maneja las peticiones GET (servir JWS de la petición) y POST (verificar presentación).
+ * Maneja las peticiones GET (servir petición) y POST (verificar presentación).
  */
 exports.openid4vp = functions.region("us-central1").https.onRequest(async (request, response) => {
     response.set("Access-Control-Allow-Origin", "*");
@@ -185,35 +185,37 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
         return;
     }
 
-    // --- GET: The wallet requests the request object ---
+    // --- GET: La cartera solicita el objeto de la petición ---
     if (request.method === "GET") {
         const state = request.query.state;
         if (!state) {
-            console.error("GET request missing state.");
-            response.status(400).send("Bad Request: Missing state parameter.");
+            console.error("Petición GET sin 'state'.");
+            response.status(400).send("Bad Request: Falta el parámetro 'state'.");
             return;
         }
 
         try {
             const sessionDoc = await db.collection('verificationSessions').doc(state).get();
             if (!sessionDoc.exists) {
-                console.error(`Session not found for state: ${state}`);
-                response.status(404).send("Not Found: Invalid or expired state.");
+                console.error(`Sesión no encontrada para el state: ${state}`);
+                response.status(404).send("Not Found: 'state' inválido o expirado.");
                 return;
             }
             const sessionData = sessionDoc.data();
-            // CORRECTED: Look for requestObject instead of requestObjectJwt
+            
+            // CORRECCIÓN: Buscar el campo 'requestObject' en lugar de 'requestObjectJwt'
             if (!sessionData || !sessionData.requestObject) {
                 console.error(`requestObject no encontrado para el state: ${state}`);
-                response.status(500).send("Internal Error: request object not found.");
+                response.status(500).send("Error interno: request object no encontrado.");
                 return;
             }
             
-            // CORRECTED: Return as JSON
+            // CORRECCIÓN: Devolver el objeto como JSON
             response.set('Content-Type', 'application/json');
             response.status(200).json(sessionData.requestObject);
+
         } catch (error) {
-            console.error(`Error in GET for state ${state}:`, error);
+            console.error(`Error en GET para el state ${state}:`, error);
             response.status(500).send("Internal Server Error");
         }
         return;
@@ -223,7 +225,7 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
     if (request.method === "POST") {
         const { vp_token, state } = request.body;
         if (!vp_token || !state) {
-            console.error("POST request sin vp_token o state", { body: request.body });
+            console.error("Petición POST sin vp_token o state", { body: request.body });
             response.status(400).send("Bad Request: Faltan vp_token o state.");
             return;
         }
@@ -351,5 +353,3 @@ async function generateDidForCustomer(customerId, kmsKeyPath) {
 
   return { did, didDocument };
 }
-
-    
