@@ -36,8 +36,8 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     const state = uuidv4();
     const nonce = uuidv4();
     
-    // Use a stable, public URL for client_id and redirect_uri as required by OID4VP.
-    const publicUrl = "https://studio--braviumcertboard.us-central1.hosted.app/";
+    // This must match the deployed Cloud Function region and project ID.
+    const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
     
     const presentationDefinition = {
       id: uuidv4(),
@@ -49,15 +49,12 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
       }]
     };
     
-    // This must match the deployed Cloud Function region and project ID.
-    // TODO: Consider moving to environment variables for flexibility.
-    const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
     const responseUri = `${functionUrl}?state=${state}`;
 
     const requestObject = {
-      client_id: publicUrl,
+      client_id: functionUrl,
+      redirect_uri: `${functionUrl}?state=${state}`,
       response_uri: responseUri,
-      redirect_uri: publicUrl,
       response_type: "vp_token",
       response_mode: "direct_post",
       scope: "openid",
@@ -78,7 +75,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     });
     
     const requestParams = new URLSearchParams({
-        client_id: publicUrl,
+        client_id: functionUrl,
         request_uri: `${functionUrl}?state=${state}`,
     });
 
