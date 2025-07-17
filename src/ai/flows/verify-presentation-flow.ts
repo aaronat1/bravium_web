@@ -37,7 +37,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     
     // This must match the deployed Cloud Function region and project ID.
     const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
-    const verifierClientId = `https://bravium.es`;
+    const verifierClientId = "https://bravium.es";
     
     const presentationDefinition = {
       id: uuidv4(),
