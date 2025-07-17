@@ -37,9 +37,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     
     // This must match the deployed Cloud Function region and project ID.
     const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
-    
-    // The verifier is identified by a standard did:web identifier
-    const verifierDid = "did:web:bravium.es";
+    const verifierClientId = `https://us-central1-bravium-d1e08.cloudfunctions.net`;
     
     const presentationDefinition = {
       id: uuidv4(),
@@ -55,10 +53,10 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     const responseUri = `${functionUrl}?state=${state}`;
 
     // The redirectUri is where the user is sent after successful verification
-    const redirectUri = `https://bravium.es/verify/callback`;
+    const redirectUri = `${verifierClientId}?state=${state}`;
 
     const requestObject = {
-      client_id: verifierDid,
+      client_id: verifierClientId,
       redirect_uri: redirectUri, 
       response_uri: responseUri, 
       response_type: "vp_token",
@@ -81,8 +79,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     });
     
     const requestParams = new URLSearchParams({
-        // The client_id in the request URL must be the verifier's DID
-        client_id: verifierDid,
+        client_id: verifierClientId,
         request_uri: `${functionUrl}?state=${state}`,
     });
 
