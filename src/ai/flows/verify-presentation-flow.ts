@@ -37,7 +37,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     
     // This must match the deployed Cloud Function region and project ID.
     const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
-    const verifierClientId = `https://us-central1-bravium-d1e08.cloudfunctions.net`;
+    const verifierClientId = `https://bravium.es`;
     
     const presentationDefinition = {
       id: uuidv4(),
@@ -53,7 +53,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     const responseUri = `${functionUrl}?state=${state}`;
 
     // The redirectUri is where the user is sent after successful verification
-    const redirectUri = `${verifierClientId}?state=${state}`;
+    const redirectUri = `${input.baseUrl}/verify/callback?state=${state}`;
 
     const requestObject = {
       client_id: verifierClientId,
@@ -64,11 +64,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
       scope: "openid",
       nonce: nonce,
       state: state,
-      claims: {
-        vp_token: {
-          presentation_definition: presentationDefinition
-        }
-      }
+      presentation_definition: presentationDefinition
     };
     
     // Store the unsigned request object in Firestore. The Cloud Function will sign it.
