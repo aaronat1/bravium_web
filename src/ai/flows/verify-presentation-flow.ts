@@ -49,12 +49,13 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
       }]
     };
     
+    // The responseUri is where the wallet POSTs the vp_token
     const responseUri = `${functionUrl}?state=${state}`;
 
     const requestObject = {
-      client_id: functionUrl,
-      redirect_uri: `${functionUrl}?state=${state}`,
-      response_uri: responseUri,
+      client_id: "https://bravium.es",
+      redirect_uri: `https://bravium.es/openid4vp`, // The final destination for the user
+      response_uri: responseUri, // The backend endpoint for the wallet to post to
       response_type: "vp_token",
       response_mode: "direct_post",
       scope: "openid",
@@ -75,6 +76,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     });
     
     const requestParams = new URLSearchParams({
+        // The client_id in the request URL must be the URL of the verifier's endpoint.
         client_id: functionUrl,
         request_uri: `${functionUrl}?state=${state}`,
     });
