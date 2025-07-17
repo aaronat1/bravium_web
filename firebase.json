@@ -1,15 +1,4 @@
 {
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "runtime": "nodejs18",
-      "predeploy": [
-        "npm --prefix functions install",
-        "npm --prefix functions run build"
-      ]
-    }
-  ],
   "hosting": {
     "public": "public",
     "ignore": [
@@ -20,15 +9,6 @@
     ],
     "headers": [
       {
-        "source": "/.well-known/openid-configuration",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ]
-      },
-      {
         "source": "/.well-known/did.json",
         "headers": [
           {
@@ -38,5 +18,16 @@
         ]
       }
     ]
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs18",
+      "predeploy": [
+        "npm --prefix functions install",
+        "npm --prefix functions run build"
+      ]
+    }
+  ]
 }
