@@ -45,6 +45,12 @@ exports.onCustomerCreate = functions.firestore
       await db.collection('dids').doc(did).set(didDocument);
       console.log(`Documento DID para ${did} almacenado correctamente.`);
 
+      // If this is the verifier customer, also create the public did.json
+      if (customerId === VERIFIER_CUSTOMER_ID) {
+          await db.collection('dids').doc('did.json').set(didDocument);
+          console.log('did.json para el verificador almacenado en Firestore.');
+      }
+
       await snapshot.ref.update({
         did: did,
         kmsKeyPath: kmsKeyPath,
@@ -84,6 +90,12 @@ exports.onCustomerDelete = functions.firestore
     try {
         await db.collection('dids').doc(did).delete();
         console.log(`DID ${did} eliminado con éxito.`);
+        
+        if (customerId === VERIFIER_CUSTOMER_ID) {
+            await db.collection('dids').doc('did.json').delete();
+            console.log('did.json del verificador eliminado de Firestore.');
+        }
+
         // Aquí también deberías añadir la lógica para deshabilitar o eliminar la clave en KMS.
         return { success: true, deletedDid: did };
     } catch (error) {
@@ -138,7 +150,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
       credentialSubject: credentialSubject,
     };
     
-    const jws = await createJws(vcPayload, kmsKeyPath);
+    const jws = await createJws(vcPayload, kmsKeyPath, issuerDid);
 
     console.log(`Credencial emitida y firmada con éxito para el cliente ${customerId}.`);
 
@@ -193,8 +205,7 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
                 return;
             }
 
-            // The verifier is a pre-defined customer for this public page.
-            // Fetch its KMS key to sign the request object on the fly.
+            const verifierDid = "did:web:bravium.es";
             const verifierDoc = await db.collection('customers').doc(VERIFIER_CUSTOMER_ID).get();
             if (!verifierDoc.exists || !verifierDoc.data().kmsKeyPath) {
                 console.error(`Verifier customer ${VERIFIER_CUSTOMER_ID} or its KMS key not found.`);
@@ -202,10 +213,9 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             }
             const kmsKeyPath = verifierDoc.data().kmsKeyPath;
 
-            // Sign the request object to create a JWS (JWT)
-            const requestObjectJwt = await createJws(sessionData.requestObject, kmsKeyPath);
+            const requestObjectJwt = await createJws(sessionData.requestObject, kmsKeyPath, verifierDid);
             
-            response.set('Content-Type', 'application/oauth-authz-req+jwt');
+            response.set('Content-Type', 'application/jwt');
             response.status(200).send(requestObjectJwt);
 
         } catch (error) {
@@ -258,7 +268,7 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
             }, { merge: true });
 
             console.log(`Verificación exitosa para el state: ${state}`);
-            response.status(200).send({ redirect_uri: 'https://bravium.org' });
+            response.status(200).send({ redirect_uri: 'https://bravium.es/verify/callback' });
 
         } catch (error) {
             console.error(`Error en la verificación criptográfica para el state ${state}:`, error);
@@ -322,8 +332,9 @@ async function generateDidForCustomer(customerId, kmsKeyPath) {
 
   const key = await jose.importSPKI(publicKey.pem, 'ES256');
   const exportedJwk = await jose.exportJWK(key);
+  delete exportedJwk.kid; // Remove default kid
 
-  const did = `did:bravium:${customerId}`;
+  const did = (customerId === VERIFIER_CUSTOMER_ID) ? `did:web:bravium.es` : `did:bravium:${customerId}`;
   const verificationMethodId = `${did}#keys-1`;
 
   const didDocument = {
@@ -348,12 +359,17 @@ async function generateDidForCustomer(customerId, kmsKeyPath) {
   return { did, didDocument };
 }
 
-async function createJws(payload, kmsKeyPath) {
+async function createJws(payload, kmsKeyPath, issuerDid) {
     const { createHash } = require('crypto');
     const jose = await import('jose');
     const { derToJose } = require('ecdsa-sig-formatter');
 
-    const protectedHeader = { alg: 'ES256', typ: 'jwt' };
+    const protectedHeader = { 
+        alg: 'ES256', 
+        typ: 'jwt',
+        kid: `${issuerDid}#keys-1`
+    };
+
     const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
     const encodedPayload = jose.base64url.encode(JSON.stringify(payload));
     const signingInput = `${encodedHeader}.${encodedPayload}`;

@@ -1,0 +1,27 @@
+
+{
+    "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+    ],
+    "id": "did:web:bravium.es",
+    "verificationMethod": [
+        {
+            "id": "did:web:bravium.es#keys-1",
+            "type": "JsonWebKey2020",
+            "controller": "did:web:bravium.es",
+            "publicKeyJwk": {
+                "kty": "EC",
+                "crv": "P-256",
+                "x": "TqgZ-FBKQRw0Mv9s3D-lc2w2sKJs1G42i7iVq7gUJv8",
+                "y": "gD3ss_i563Ilq_r_W1nZJ48sMvQe2VjV-7LaX9O-gG0"
+            }
+        }
+    ],
+    "authentication": [
+        "did:web:bravium.es#keys-1"
+    ],
+    "assertionMethod": [
+        "did:web:bravium.es#keys-1"
+    ]
+}

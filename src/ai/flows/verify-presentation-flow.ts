@@ -31,13 +31,15 @@ export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
 
 
 // The exported function to generate a request.
-// Note: This does not use Genkit to avoid permission issues in the app server environment.
 export async function generateRequest(input: GenerateRequestInput): Promise<GenerateRequestOutput> {
     const state = uuidv4();
     const nonce = uuidv4();
     
     // This must match the deployed Cloud Function region and project ID.
     const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
+    
+    // The verifier is identified by a standard did:web identifier
+    const verifierDid = "did:web:bravium.es";
     
     const presentationDefinition = {
       id: uuidv4(),
@@ -52,10 +54,13 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     // The responseUri is where the wallet POSTs the vp_token
     const responseUri = `${functionUrl}?state=${state}`;
 
+    // The redirectUri is where the user is sent after successful verification
+    const redirectUri = `https://bravium.es/verify/callback`;
+
     const requestObject = {
-      client_id: "https://bravium.es",
-      redirect_uri: `https://bravium.es/openid4vp`, // The final destination for the user
-      response_uri: responseUri, // The backend endpoint for the wallet to post to
+      client_id: verifierDid,
+      redirect_uri: redirectUri, 
+      response_uri: responseUri, 
       response_type: "vp_token",
       response_mode: "direct_post",
       scope: "openid",
@@ -76,8 +81,8 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     });
     
     const requestParams = new URLSearchParams({
-        // The client_id in the request URL must be the URL of the verifier's endpoint.
-        client_id: functionUrl,
+        // The client_id in the request URL must be the verifier's DID
+        client_id: verifierDid,
         request_uri: `${functionUrl}?state=${state}`,
     });
 

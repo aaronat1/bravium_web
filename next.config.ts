@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -31,6 +32,11 @@ const nextConfig: NextConfig = {
         destination: '/did-configuration.json',
         permanent: true,
       },
+      {
+        source: '/.well-known/did.json',
+        destination: '/did.json',
+        permanent: true,
+      }
     ]
   },
 };
