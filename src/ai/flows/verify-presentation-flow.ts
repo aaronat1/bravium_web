@@ -45,15 +45,27 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
           id: "vc-bravium-" + uuidv4(),
           name: "Bravium Issued Credential",
           purpose: "Please provide any credential issued by Bravium.",
-          schema: [{ uri: "https://www.w3.org/2018/credentials#VerifiableCredential" }]
+          constraints: {
+            "fields": [
+              {
+                "path": [
+                  "$.issuer"
+                ],
+                "filter": {
+                  "type": "string",
+                  "pattern": `^${verifierClientId}$`
+                }
+              }
+            ]
+          }
       }]
     };
     
     // The responseUri is where the wallet POSTs the vp_token to the cloud function
-    const responseUri = `${functionUrl}?state=${state}`;
+    const responseUri = `${functionUrl}`;
 
-    // The redirectUri is where the user is sent after successful verification
-    const redirectUri = `${input.baseUrl}/verify/callback?state=${state}`;
+    // The redirectUri is where the user is sent after successful verification. Must match a real page.
+    const redirectUri = `${input.baseUrl}/verify/callback`;
 
     const requestObject = {
       client_id: verifierClientId,
@@ -64,11 +76,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
       scope: "openid",
       nonce: nonce,
       state: state,
-      claims: {
-        vp_token: {
-          presentation_definition: presentationDefinition
-        }
-      }
+      presentation_definition: presentationDefinition
     };
     
     // Store the unsigned request object in Firestore. The Cloud Function will sign it.
