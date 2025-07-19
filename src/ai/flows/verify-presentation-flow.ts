@@ -69,14 +69,18 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
 
     const requestObject = {
       client_id: verifierClientId,
-      redirect_uri: redirectUri, 
-      response_uri: responseUri, 
+      redirect_uri: redirectUri,
+      response_uri: responseUri,
       response_type: "vp_token",
       response_mode: "direct_post",
       scope: "openid",
       nonce: nonce,
       state: state,
-      presentation_definition: presentationDefinition
+      claims: {
+        vp_token: {
+          presentation_definition: presentationDefinition
+        }
+      }
     };
     
     // Store the unsigned request object in Firestore. The Cloud Function will sign it.
