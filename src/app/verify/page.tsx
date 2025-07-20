@@ -13,6 +13,7 @@ import { useI18n } from "@/hooks/use-i18n";
 import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { generateRequest } from "@/ai/flows/verify-presentation-flow";
+import CodeBlock from "@/components/code-block";
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
 type PageState = "idle" | "loading" | "verifying" | "result";
@@ -127,6 +128,9 @@ export default function VerifyPage() {
                     <div className="flex flex-col items-center gap-6">
                         <div className="p-4 bg-white rounded-lg border">
                             <QRCode value={requestData.requestUrl} size={256} />
+                        </div>
+                        <div className="w-full">
+                           <CodeBlock code={requestData.requestUrl} />
                         </div>
                         <div className="text-center">
                             <p className="text-muted-foreground">{t.verifyPage.scan_qr_description}</p>
