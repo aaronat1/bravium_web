@@ -42,22 +42,25 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     const presentationDefinition = {
       id: "presentation-def-" + uuidv4(),
       input_descriptors: [{
-          id: "vc-bravium-" + uuidv4(),
-          name: "Bravium Issued Credential",
-          purpose: "Please provide any credential issued by Bravium.",
-          constraints: {
-            "fields": [
-              {
-                "path": [
-                  "$.issuer"
-                ],
-                "filter": {
-                  "type": "string",
-                  "pattern": `^${verifierClientId}$`
-                }
-              }
-            ]
+        id: "vc-bravium-" + uuidv4(),
+        name: "Bravium Issued Credential",
+        purpose: "Please provide any credential issued by Bravium.",
+        schema: [
+          {
+            uri: "https://www.w3.org/2018/credentials#VerifiableCredential"
           }
+        ],
+        constraints: {
+          fields: [
+            {
+              path: ["$.issuer"],
+              filter: {
+                type: "string",
+                pattern: `^${verifierClientId}$`
+              }
+            }
+          ]
+        }
       }]
     };
     
