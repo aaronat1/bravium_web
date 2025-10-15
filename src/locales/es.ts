@@ -197,7 +197,6 @@ export const es = {
     step2_desc: "",
     step2_point1: "Acceso Inmediato: Dentro del correo, encuentra un enlace único y un código QR. No necesita crear cuentas ni descargar aplicaciones.",
     step2_point2: "Su Certificado Digital: Al hacer click, accede a su certificado digital. Ahora puede guardarlo, compartirlo y es de su completa propiedad.",
-    step2_point3: "",
     step3_title: "Paso 3: La Verificación (La Perspectiva del Reclutador)",
     step3_subtitle: "DAVID, el recruiter, necesita verificar su título.",
     step3_desc: "El proceso es instantáneo y seguro.",
@@ -442,7 +441,3 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
-
-    
-
-    

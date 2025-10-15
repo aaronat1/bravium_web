@@ -181,29 +181,28 @@ export const en = {
     subtitle: "Discover step-by-step how an institution uses BRAVIUM to issue a secure digital certificate and how a third party can verify it instantly.",
     protagonists_title: "The Protagonists",
     protagonist_institution_name: "ACADEMIA FUTURO",
-    protagonist_institution_role: "An online university",
+    protagonist_institution_role: "An innovative online university",
     protagonist_recipient_name: "ELENA",
-    protagonist_recipient_role: "A student who just completed a course",
+    protagonist_recipient_role: "A recently graduated student",
     protagonist_verifier_name: "DAVID",
-    protagonist_verifier_role: "A recruiter from a tech company",
+    protagonist_verifier_role: "A recruiter looking for the best talent",
     step1_title: "Step 1: Issuance (The Academy's Perspective)",
-    step1_subtitle: "ACADEMIA FUTURO needs to issue 500 certificates.",
-    step1_desc: "Instead of creating them one by one, they use BRAVIUM to automate the process.",
-    step1_point1: "Template Design: From their BRAVIUM dashboard, they use our visual editor to create a template, defining fields like Student Name, Course Name, and Completion Date.",
-    step1_point2: "Data Upload: They export a list of their students to a CSV file and upload this single file to BRAVIUM.",
-    step1_point3: "One-Click Issuance: With a single click, BRAVIUM automatically generates the 500 unique, cryptographically sealed certificates.",
+    step1_subtitle: "ACADEMIA FUTURO needs to issue 500 certificates for its latest graduating class. The manual process is unthinkable.",
+    step1_desc: "",
+    step1_point1: "1. Design the Template: From their BRAVIUM dashboard, they use our visual editor to create the certificate template, defining fields like Student Name, Course Name, and Completion Date.",
+    step1_point2: "2. Upload Data at Scale: They export the list of their 500 students to a CSV file and upload it to the platform with a single click.",
+    step1_point3: "3. Issue and Seal on the Blockchain: With a single click on 'Issue Batch', BRAVIUM generates the 500 unique certificates and immutably seals the cryptographic proof of each one on the blockchain.",
     step2_title: "Step 2: Reception (The Student's Perspective)",
-    step2_subtitle: "ELENA instantly receives an email.",
-    step2_desc: "The email informs her that her official certificate is now available.",
-    step2_point1: "Instant Access: The email contains a unique link and a QR code. No need to create accounts or download apps.",
-    step2_point2: "Digital Certificate: By clicking the link, she accesses her digital certificate, which she can save or share.",
-    step2_point3: "User-Owned: This certificate is now her property.",
+    step2_subtitle: "ELENA instantly receives an email informing her that her official certificate is now available.",
+    step2_desc: "",
+    step2_point1: "Instant Access: Inside the email, she finds a unique link and a QR code. No need to create accounts or download apps.",
+    step2_point2: "Her Digital Certificate: By clicking the link, she accesses her digital certificate. She can now save it, share it, and it is her complete property.",
     step3_title: "Step 3: Verification (The Recruiter's Perspective)",
-    step3_subtitle: "DAVID, the recruiter, needs to verify Elena's degree.",
+    step3_subtitle: "DAVID, the recruiter, needs to verify her degree.",
     step3_desc: "The process is instantaneous and secure.",
-    step3_point1: "Share the Proof: Elena simply sends David the link to her certificate.",
-    step3_point2: "Instant Verification: David opens the link and immediately sees a public verification page confirming the certificate was issued by ACADEMIA FUTURO and that Elena's data has not been altered.",
-    step3_point3: "Trust in Seconds: David didn't have to call the university or wait for email confirmation. The verification was instant, free, and cryptographically secure."
+    step3_point1: "Elena sends David the link to her certificate.",
+    step3_point2: "David opens the link and sees the public verification page confirming that the certificate was issued by ACADEMIA FUTURO and that the data has not been altered.",
+    step3_point3: "David didn't have to call the university. The verification was instant, free, and cryptographically secure."
   },
   loginPage: {
     title: "Welcome to the Certificate Panel",
@@ -442,9 +441,3 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-    
-
-    
-
-
