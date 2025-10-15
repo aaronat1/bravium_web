@@ -17,6 +17,12 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/users/**/did.json",
+        "function": "didResolver"
+      }
     ]
   },
   "functions": [
