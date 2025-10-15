@@ -18,6 +18,10 @@ export type AddCustomerState = {
     subscriptionPlan?: string[];
   };
   success: boolean;
+  newUser?: {
+    uid: string;
+    email: string;
+  };
 };
 
 export async function addCustomer(prevState: AddCustomerState, formData: FormData): Promise<AddCustomerState> {
@@ -50,20 +54,17 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
         return { message: "Ya existe un usuario con este correo electrónico.", success: false };
     }
 
-    // A random password is required for creation, but will be updated.
-    const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
+    // The password will be the UID. This is not secure for production.
     const userRecord = await adminAuth.createUser({
       email,
       emailVerified: false,
-      password: tempPassword,
       displayName: name,
       disabled: false,
     });
     
     const { uid } = userRecord;
 
-    // As requested, update the password to be the UID.
-    // NOTE: This is not a recommended security practice.
+    // Set the password to be the UID.
     await adminAuth.updateUser(uid, {
       password: uid,
     });
@@ -80,7 +81,11 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
 
     await adminDb.collection('customers').doc(uid).set(customerData);
 
-    return { message: `Cliente "${name}" añadido correctamente.`, success: true };
+    return { 
+        message: `Cliente "${name}" añadido correctamente.`, 
+        success: true,
+        newUser: { uid, email },
+    };
   } catch (error: any) {
     return { message: `Error al crear el cliente: ${error.message}`, success: false };
   }

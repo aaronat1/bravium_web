@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { collection, onSnapshot } from "firebase/firestore";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Users, PlusCircle, Loader2, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Pencil, Trash2, FileDown } from "lucide-react";
+import { Users, PlusCircle, Loader2, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Pencil, Trash2, FileDown, Copy, Check, Info } from "lucide-react";
 
 import { db } from "@/lib/firebase/config";
 import { addCustomer, type AddCustomerState, deleteCustomer, updateCustomer, type UpdateCustomerState } from "@/actions/customerActions";
@@ -26,6 +26,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
@@ -44,6 +45,11 @@ type Customer = {
   subscriptionStatus: 'active' | 'inactive' | 'cancelled';
   kmsKeyPath?: string;
 };
+
+type NewUserInfo = {
+  uid: string;
+  email: string;
+}
 
 // --- DIALOGS AND FORMS ---
 
@@ -69,7 +75,7 @@ function EditCustomerSubmitButton() {
     );
 }
 
-function AddCustomerDialog({ isOpen, onOpenChange }: { isOpen: boolean, onOpenChange: (open: boolean) => void }) {
+function AddCustomerDialog({ isOpen, onOpenChange, onCustomerAdded }: { isOpen: boolean, onOpenChange: (open: boolean) => void, onCustomerAdded: (info: NewUserInfo) => void }) {
     const { t } = useI18n();
     const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
@@ -84,12 +90,13 @@ function AddCustomerDialog({ isOpen, onOpenChange }: { isOpen: boolean, onOpenCh
                 description: state.message,
                 variant: state.success ? "default" : "destructive",
             });
-            if (state.success) {
+            if (state.success && state.newUser) {
                 formRef.current?.reset();
                 onOpenChange(false);
+                onCustomerAdded(state.newUser);
             }
         }
-    }, [state, toast, onOpenChange, t]);
+    }, [state, toast, onOpenChange, t, onCustomerAdded]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -204,6 +211,57 @@ function EditCustomerDialog({ customer, isOpen, onOpenChange }: { customer: Cust
     );
 }
 
+function NewUserCredentialsDialog({ userInfo, isOpen, onOpenChange }: { userInfo: NewUserInfo | null, isOpen: boolean, onOpenChange: (open: boolean) => void }) {
+    const { t } = useI18n();
+    const [hasCopied, setHasCopied] = useState(false);
+
+    if (!userInfo) return null;
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(userInfo.uid);
+        setHasCopied(true);
+        setTimeout(() => setHasCopied(false), 2000);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t.customersPage.new_user_dialog_title}</DialogTitle>
+                    <DialogDescription>{t.customersPage.new_user_dialog_desc}</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 my-4">
+                    <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>{t.customersPage.new_user_alert_title}</AlertTitle>
+                        <AlertDescription>
+                            {t.customersPage.new_user_alert_desc}
+                        </AlertDescription>
+                    </Alert>
+                    <div>
+                        <Label htmlFor="newUserEmail">{t.customersPage.form_email_label}</Label>
+                        <Input id="newUserEmail" readOnly value={userInfo.email} />
+                    </div>
+                    <div>
+                        <Label htmlFor="newUserPassword">{t.loginPage.password_label}</Label>
+                        <div className="relative">
+                            <Input id="newUserPassword" readOnly value={userInfo.uid} className="pr-10 font-mono" />
+                            <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2" onClick={handleCopy}>
+                                {hasCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                <span className="sr-only">Copy password</span>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button onClick={() => onOpenChange(false)}>{t.customersPage.close_button}</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+
 // --- MAIN PAGE COMPONENT ---
 export default function CustomersPage() {
   const { user, loading: authLoading } = useAuth();
@@ -218,6 +276,7 @@ export default function CustomersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [newlyCreatedUser, setNewlyCreatedUser] = useState<NewUserInfo | null>(null);
   const [isDeleting, startDeleteTransition] = useTransition();
 
   useEffect(() => {
@@ -486,7 +545,11 @@ export default function CustomersPage() {
     </div>
     
     {/* --- DIALOGS --- */}
-    <AddCustomerDialog isOpen={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
+    <AddCustomerDialog 
+        isOpen={isAddDialogOpen} 
+        onOpenChange={setIsAddDialogOpen}
+        onCustomerAdded={(info) => setNewlyCreatedUser(info)}
+    />
 
     {customerToEdit && (
         <EditCustomerDialog 
@@ -495,6 +558,13 @@ export default function CustomersPage() {
             onOpenChange={(open) => !open && setCustomerToEdit(null)}
         />
     )}
+
+    <NewUserCredentialsDialog 
+        userInfo={newlyCreatedUser}
+        isOpen={!!newlyCreatedUser}
+        onOpenChange={(open) => !open && setNewlyCreatedUser(null)}
+    />
+    
     <AlertDialog open={!!customerToDelete} onOpenChange={(open) => !open && setCustomerToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>

@@ -91,12 +91,9 @@ export const es = {
     },
     pricing: {
       title: "Un Plan para Cada Etapa de tu Transformación Digital",
-      monthly: "Pago Mensual",
-      annual: "Pago Anual",
-      save: "Ahorra 20%",
       plan_starter_title: "Starter",
       plan_starter_target: "Para freelancers, pequeñas ONGs y startups.",
-      plan_starter_price: "49€",
+      plan_starter_price: "49€/mes",
       feature_emissions_starter: "Hasta 50 Emisiones/mes",
       feature_verifications_unlimited: "Verificaciones Ilimitadas",
       feature_certify_documents: "Certifica Documentos (PDF, JPG, etc.)",
@@ -104,7 +101,7 @@ export const es = {
       cta_choose_plan: "Elegir Plan",
       plan_pro_title: "Pro",
       plan_pro_target: "Para PYMEs en crecimiento, facultades y organizaciones establecidas.",
-      plan_pro_price: "149€",
+      plan_pro_price: "149€/mes",
       popular: "Más Popular",
       feature_emissions_pro: "Hasta 300 Emisiones/mes",
       feature_storage_pro: "10 GB de Almacenamiento Seguro",
@@ -270,6 +267,7 @@ export const es = {
     delete: "Eliminar",
     cancel: "Cancelar",
     confirm: "Confirmar",
+    close_button: "Cerrar",
     add_customer_dialog_title: "Crear Nuevo Cliente",
     add_customer_dialog_desc: "Rellena los datos para crear un nuevo cliente.",
     form_name_label: "Nombre del Cliente",
@@ -284,6 +282,10 @@ export const es = {
     save_changes: "Guardar Cambios",
     delete_customer_title: "¿Estás seguro?",
     delete_customer_desc: "Esta acción no se puede deshacer. Se eliminará permanentemente al cliente y todos sus datos asociados.",
+    new_user_dialog_title: "Credenciales del Nuevo Cliente",
+    new_user_dialog_desc: "El cliente ha sido creado. Comparte estas credenciales de forma segura.",
+    new_user_alert_title: "Contraseña Importante",
+    new_user_alert_desc: "La contraseña es el UID del usuario. Esta es la única vez que se mostrará. Cópiala y guárdala en un lugar seguro antes de cerrar esta ventana.",
   },
   templatesPage: {
     title: "Plantillas de Credenciales",
@@ -293,7 +295,7 @@ export const es = {
     col_name: "Nombre",
     col_desc: "Descripción",
     col_customer: "Cliente",
-    col_fields: "Campos",
+col_fields: "Campos",
     actions: "Acciones",
     no_templates: "No se encontraron plantillas. ¡Crea la primera!",
     no_templates_filter: "Ninguna plantilla coincide con tu filtro.",
@@ -441,5 +443,3 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
-
-    
