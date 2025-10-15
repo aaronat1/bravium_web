@@ -52,7 +52,7 @@ export default function HelpPage() {
             t.helpPage.step2_point2,
             t.helpPage.step2_point3,
         ],
-        image: "https://images.unsplash.com/photo-1488998527040-7da39a9c3d2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+        image: "https://images.unsplash.com/photo-1573164713988-8665fc963095?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMGxhcHRvcCUyMGVtYWlsfGVufDB8fHx8MTc1NTI2NzU0OHww&ixlib=rb-4.1.0&q=80&w=1080",
         alt: "Chica revisando su correo electrónico en un portátil",
         aiHint: "woman laptop email"
     },
