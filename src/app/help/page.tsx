@@ -53,7 +53,7 @@ export default function HelpPage() {
             t.helpPage.step2_point3,
         ],
         image: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-        alt: "Correo electrónico con certificado",
+        alt: "Usuario revisando su correo electrónico en un portátil",
         aiHint: "email inbox"
     },
     {
@@ -66,7 +66,7 @@ export default function HelpPage() {
             t.helpPage.step3_point3,
         ],
         image: "https://images.unsplash.com/photo-1528975941332-9a1b55c6227b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-        alt: "Página de verificación",
+        alt: "Página de verificación con un tick verde de éxito",
         aiHint: "verification success"
     }
   ]
