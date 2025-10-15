@@ -79,7 +79,7 @@ export const es = {
       tab2_benefit1: "Emite 'Certificados de Impacto' por cada donación.",
       tab2_benefit2: "Adjunta fotos o informes del proyecto financiado como prueba verificable.",
       tab2_benefit3: "Aumenta la recurrencia de las donaciones gracias a una transparencia radical.",
-      tab2_benefit4: "Simplifica las auditorías con un registro inmutable y trazable.",
+      tab2_benefit4: "Simplifica las auditorías con un registro inmutable y universalmente verificable.",
       tab2_alt: "Voluntarios de una ONG ayudando a la comunidad",
       tab3_content_title: "Certifica la Autenticidad y Formación de tu Equipo.",
       tab3_content_text: "Desde certificados de formación interna hasta pruebas de origen inmutables para tus productos, Bravium es tu sello de garantía digital.",
