@@ -52,7 +52,7 @@ export default function HelpPage() {
             t.helpPage.step2_point2,
             t.helpPage.step2_point3,
         ],
-        image: "https://images.unsplash.com/photo-1589362104272-9571b4a3a6b7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxjZXJ0aWZpY2F0ZSUyMGRpZ2l0YWx8ZW58MHx8fHwxNzUxMzI3OTQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        image: "https://picsum.photos/seed/cert/800/600",
         alt: "Certificado digital y email",
         aiHint: "digital certificate"
     },
@@ -65,7 +65,7 @@ export default function HelpPage() {
             t.helpPage.step3_point2,
             t.helpPage.step3_point3,
         ],
-        image: "https://images.unsplash.com/photo-1529603228-345483421115?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx2ZXJpZmljYXRpb24lMjBzdWNjZXNzfGVufDB8fHx8MTc1MTU2NTQzMnww&ixlib=rb-4.1.0&q=80&w=1080",
+        image: "https://picsum.photos/seed/verify/800/600",
         alt: "Página de verificación",
         aiHint: "verification success"
     }
