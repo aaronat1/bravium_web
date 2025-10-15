@@ -188,10 +188,10 @@ export const es = {
     protagonist_verifier_role: "Un reclutador que busca el mejor talento",
     step1_title: "Paso 1: La Emisión (La Perspectiva de la Academia)",
     step1_subtitle: "ACADEMIA FUTURO necesita emitir 500 certificados.",
-    step1_desc: "En lugar de crear los certificados uno por uno, exportan una lista de sus estudiantes a un archivo CSV y lo suben a BRAVIUM.",
-    step1_point1: "Diseño de Plantilla: Desde su panel de BRAVIUM, utilizan nuestro editor visual para crear una plantilla para el certificado, definiendo campos como Nombre del Estudiante, Nombre del Curso y Fecha de Finalización.",
-    step1_point2: "Carga de Datos: En lugar de crear los certificados uno por uno, exportan una lista de sus estudiantes a un archivo CSV. Suben este único archivo a BRAVIUM.",
-    step1_point3: "Emisión con un Click: Con un solo click en 'Emitir Lote', BRAVIUM genera automáticamente los 500 certificados únicos. Por cada uno, crea una prueba criptográfica y la sella de forma inmutable en la blockchain.",
+    step1_desc: "ACADEMIA FUTURO necesita emitir 500 certificados para su última promoción. El proceso manual es impensable.",
+    step1_point1: "1. Diseña la Plantilla: Desde su panel de BRAVIUM, utilizan nuestro editor visual para crear la plantilla del certificado, definiendo campos como Nombre del Estudiante, Nombre del Curso y Fecha de Finalización.",
+    step1_point2: "2. Carga los Datos a Escala: Exportan la lista de sus 500 estudiantes a un archivo CSV y lo suben a la plataforma con un solo click.",
+    step1_point3: "3. Emite y Sella en la Blockchain: Con un solo click en 'Emitir Lote', BRAVIUM genera los 500 certificados únicos y sella la prueba criptográfica de cada uno de forma inmutable en la blockchain.",
     step2_title: "Paso 2: La Recepción (La Perspectiva de la Estudiante)",
     step2_subtitle: "ELENA recibe instantáneamente un correo electrónico.",
     step2_desc: "El correo le informa que su certificado oficial ya está disponible.",
@@ -442,7 +442,5 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
-
-    
 
     
