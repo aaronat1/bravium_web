@@ -30,8 +30,8 @@ export const en = {
       subtitle: "BRAVIUM doesn't reinvent the wheel; it perfects it. We rely on the world's most robust and recognized technologies and standards to offer you an interoperable, secure, and future-ready solution.",
       item1_title: "Based on Principles of Decentralized Trust",
       item1_text: "Our platform uses the principles of public blockchain technology to create immutable proofs of authenticity. We are inspired by the emerging W3C standards to build a solution that guarantees maximum trust and verifiability in the digital environment.",
-      item2_title: "Compatible with the Open Ecosystem",
-      item2_text: "BRAVIUM credentials work with the digital wallets your users already have and trust, such as Apple Wallet, Google Wallet, and those promoted by the OpenWallet Foundation. No friction, no apps to download.",
+      item2_title: "Universal and Accessible Verification",
+      item2_text: "BRAVIUM credentials can be verified instantly from anywhere in the world. Each certificate includes a link or QR code that directs to a public verification page, ensuring full transparency without the need to install special applications. Future integration with leading digital wallets is on our roadmap.",
       item3_title: "Accessible Alternative to Complexity",
       item3_text: "We offer the trust and immutability of enterprise technologies like Hyperledger Fabric, but without their cost and complexity. BRAVIUM is designed to be a turnkey SaaS solution, not a months-long engineering project."
     },
@@ -84,9 +84,9 @@ export const en = {
       tab3_content_title: "Certify the Authenticity and Training of Your Team.",
       tab3_content_text: "From internal training certificates to immutable proofs of origin for your products, Bravium is your digital seal of guarantee.",
       tab3_benefit1: "Issue internal training certificates that your employees can add to their professional profile.",
-      tab3_benefit2: "Create certificates of origin or quality for your products, generating a 'digital passport' that guarantees their initial authenticity.",
+      tab3_benefit2: "Create an immutable certificate of origin for your products. Prove to your customers the origin and harvest date with a blockchain proof.",
       tab3_benefit3: "Manage access credentials for contractors or temporary staff.",
-      tab3_benefit4: "Integrate with your existing systems through our powerful API.",
+      tab3_benefit4: "Generate a 'digital passport' for your products at the time of their creation, guaranteeing their initial authenticity.",
       tab3_alt: "Business team collaborating on a project",
     },
     pricing: {

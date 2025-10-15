@@ -30,8 +30,8 @@ export const es = {
       subtitle: "BRAVIUM no reinventa la rueda; la perfecciona. Nos apoyamos en las tecnologías y estándares más robustos y reconocidos del mundo para ofrecerte una solución interoperable, segura y preparada para el futuro.",
       item1_title: "Basado en Principios de Confianza Descentralizada",
       item1_text: "Nuestra plataforma utiliza los principios de la tecnología blockchain pública para crear pruebas de autenticidad inmutables. Nos inspiramos en los estándares emergentes del W3C para construir una solución que garantice la máxima confianza y verificabilidad en el entorno digital.",
-      item2_title: "Compatible con el Ecosistema Abierto",
-      item2_text: "Las credenciales de BRAVIUM funcionan con las carteras digitales que tus usuarios ya tienen y en las que confían, como Apple Wallet, Google Wallet y las promovidas por la OpenWallet Foundation. No hay fricción, no hay apps que descargar.",
+      item2_title: "Verificación Universal y Accesible",
+      item2_text: "Las credenciales de BRAVIUM se pueden verificar al instante desde cualquier lugar del mundo. Cada certificado incluye un enlace o código QR que dirige a una página de verificación pública, garantizando una transparencia total sin necesidad de instalar aplicaciones especiales. La futura integración con carteras digitales líderes está en nuestro roadmap.",
       item3_title: "Alternativa Accesible a la Complejidad",
       item3_text: "Ofrecemos la confianza y la inmutabilidad de tecnologías empresariales como Hyperledger Fabric, pero sin su coste y complejidad. BRAVIUM está diseñado para ser una solución SaaS \"llave en mano\", no un proyecto de ingeniería de meses."
     },
@@ -84,9 +84,9 @@ export const es = {
       tab3_content_title: "Certifica la Autenticidad y Formación de tu Equipo.",
       tab3_content_text: "Desde certificados de formación interna hasta pruebas de origen inmutables para tus productos, Bravium es tu sello de garantía digital.",
       tab3_benefit1: "Emite certificados de formación interna que tus empleados pueden añadir a su perfil profesional.",
-      tab3_benefit2: "Crea certificados de origen o calidad para tus productos, generando un 'pasaporte digital' que garantiza su autenticidad inicial.",
+      tab3_benefit2: "Crea un certificado de origen inmutable para tus productos. Demuestra a tus clientes la procedencia y la fecha de cosecha con una prueba en blockchain.",
       tab3_benefit3: "Gestiona credenciales de acceso para contratistas o personal temporal.",
-      tab3_benefit4: "Integra con tus sistemas existentes a través de nuestra potente API.",
+      tab3_benefit4: "Genera un 'pasaporte digital' para tus productos en el momento de su creación, garantizando su autenticidad inicial.",
       tab3_alt: "Equipo de empresa colaborando en un proyecto",
     },
     pricing: {
@@ -426,7 +426,7 @@ export const es = {
   cookiesPolicyPage: {
     title: "Política de Cookies",
     lastUpdated: "Última actualización",
-    p1: "Esta Política de Cookies explica qué son las cookies y cómo las usamos. Debes leer esta política para entender qué son las cookies, cómo las usamos, los tipos de cookies que usamos, la información que recopilamos usando cookies y cómo se usa esa información, y cómo controlar las preferencias de cookies.",
+    p1: "Esta Política de Cookies explica qué son las cookies y cómo las usamos. Debes leer esta política para entender qué son las cookies, cómo las usamos, los tipos de cookies que usamos, la información que recopilamos usando cookies y cómo se usa esa información, y cómo controlar las preferences de cookies.",
     h2: "¿Qué son las cookies?",
     p2: "Las cookies son pequeños archivos de texto que se utilizan para almacenar pequeñas piezas de información. Se almacenan en tu dispositivo cuando el sitio web se carga en tu navegador. Estas cookies nos ayudan a hacer que el sitio web funcione correctamente, hacerlo más seguro, proporcionar una mejor experiencia de usuario y entender cómo funciona el sitio web y analizar qué funciona y dónde necesita mejorar.",
     h3: "¿Cómo usamos las cookies?",
