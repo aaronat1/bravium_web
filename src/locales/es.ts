@@ -60,7 +60,7 @@ export const es = {
       step1_text: "Usa nuestro asistente con IA para describir la credencial que necesitas o diseña tu plantilla en nuestro editor. Define campos, reglas y adjunta archivos si es necesario.",
       step2_text: "Rellena los datos de forma individual o sube un archivo CSV para emitir miles de credenciales a la vez. Nuestra API se encarga del resto.",
       step3_text: "Tus usuarios reciben un certificado digital con un enlace y un código QR únicos. Ya está listo para ser compartido y verificado de forma segura e instantánea por cualquiera, en cualquier lugar.",
-      cta: "Ver un Caso de Uso en Acción",
+      cta: "Ver un Caso de Uso en Acción"
     },
     useCases: {
       title: "Creado para las Instituciones que Lideran el Futuro",
@@ -199,11 +199,11 @@ export const es = {
     step2_point2: "Su Certificado Digital: Al hacer click, accede a su certificado digital. Ahora puede guardarlo, compartirlo y es de su completa propiedad.",
     step2_point3: "",
     step3_title: "Paso 3: La Verificación (La Perspectiva del Reclutador)",
-    step3_subtitle: "DAVID, el reclutador, necesita verificar la autenticidad de su título.",
+    step3_subtitle: "DAVID, el recruiter, necesita verificar su título.",
     step3_desc: "El proceso es instantáneo y seguro.",
-    step3_point1: "Compartir la Prueba: Elena simplemente le envía a David el enlace de su certificado.",
-    step3_point2: "Verificación Instantánea: David abre el enlace. Inmediatamente ve una página de verificación pública que le confirma que el certificado fue emitido por ACADEMIA FUTURO y que los datos de ELENA no han sido alterados.",
-    step3_point3: "Confianza en Segundos. David no tuvo que llamar a la universidad ni esperar una confirmación por correo. La verificación fue instantánea, gratuita y criptográficamente segura."
+    step3_point1: "Elena le envía a David el enlace a su certificado.",
+    step3_point2: "David abre el enlace y ve la página de verificación pública que confirma que el certificado fue emitido por ACADEMIA FUTURO y que los datos no han sido alterados.",
+    step3_point3: "David no tuvo que llamar a la universidad. La verificación fue instantánea, gratuita y criptográficamente segura."
   },
   loginPage: {
     title: "Bienvenido al Panel de Certificados",
