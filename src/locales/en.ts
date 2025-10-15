@@ -116,8 +116,6 @@ export const en = {
       feature_storage_enterprise: "Custom storage",
       cta_contact_sales: "Contact Us",
       add_ons_title: "Additional Costs",
-      add_on_1_title: "Initial Setup Fee",
-      add_on_1_desc: "€299 one-time payment: Covers onboarding, brand customization, and initial issuer setup.",
       add_on_2_title: "Overage Charges",
       add_on_2_desc: "€0.30 per extra credential.",
       add_on_3_title: "Additional Storage",

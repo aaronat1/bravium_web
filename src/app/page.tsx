@@ -351,14 +351,6 @@ export default function LandingPage() {
               <div className="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 lg:grid-cols-2 gap-8 text-left">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_1_title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_1_desc}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
                     <CardTitle className="text-lg">{t.landingPage.pricing.add_on_2_title}</CardTitle>
                   </CardHeader>
                   <CardContent>

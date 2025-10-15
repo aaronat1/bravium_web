@@ -116,8 +116,6 @@ export const es = {
       feature_storage_enterprise: "Almacenamiento personalizado",
       cta_contact_sales: "Contactar",
       add_ons_title: "Costes Adicionales",
-      add_on_1_title: "Tarifa de Configuración Inicial",
-      add_on_1_desc: "299 € pago único: Cubre el onboarding, la personalización de marca y la configuración inicial del emisor.",
       add_on_2_title: "Cargos por Uso Excedente",
       add_on_2_desc: "0.30 € por credencial extra.",
       add_on_3_title: "Almacenamiento Adicional",
