@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useActionState, useMemo, useTransition } from "react";
@@ -101,7 +102,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
     defaultValues: isEditMode && template ? {
       name: template.name,
       description: template.description || "",
-      fields: template.fields.map(f => ({ ...f, fieldName: f.fieldName.replace(/[^a-zA-Z0-9_]/g, '') })),
+      fields: template.fields.map(f => ({ ...f, fieldName: f.fieldName.replace(/[^a-zA-Z0-9_]/g, ''), defaultValue: f.defaultValue || '' })),
       customerId: template.customerId,
     } : {
       name: "",
@@ -138,12 +139,12 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
         reset(isEditMode && template ? {
           name: template.name,
           description: template.description || "",
-          fields: template.fields,
+          fields: template.fields.map(f => ({ ...f, defaultValue: f.defaultValue || '' })),
           customerId: template.customerId,
         } : {
           name: "",
           description: "",
-          fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true }],
+          fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true, defaultValue: "" }],
           customerId: defaultCustomerId,
         });
         setActiveTab("designer");
@@ -296,7 +297,7 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
                             )}
                         </Card>
                     ))}
-                    <Button type="button" variant="outline" onClick={() => append({ fieldName: `field_${fields.length + 1}`, label: "New Field", type: "text", required: false })}>
+                    <Button type="button" variant="outline" onClick={() => append({ fieldName: `field_${fields.length + 1}`, label: "New Field", type: "text", required: false, defaultValue: "" })}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         {t.templatesPage.add_field_button}
                     </Button>
@@ -697,3 +698,5 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
+    
