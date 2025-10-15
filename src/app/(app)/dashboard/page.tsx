@@ -28,7 +28,6 @@ export default function DashboardPage() {
     if (!user) return; 
 
     setLoading(true);
-    const customerQuery = collection(db, "customers");
     
     const templateCollection = collection(db, "credentialSchemas");
     const templateQuery = isAdmin ? templateCollection : query(templateCollection, where("customerId", "==", user.uid));
@@ -53,6 +52,7 @@ export default function DashboardPage() {
 
     let unsubCustomers: () => void = () => {};
     if (isAdmin) {
+      const customerQuery = collection(db, "customers");
       unsubCustomers = onSnapshot(customerQuery, (snap) => {
         setCustomerCount(snap.size);
       }, (error) => {
@@ -61,16 +61,18 @@ export default function DashboardPage() {
       });
     }
 
-    const promises = [
-        new Promise(resolve => onSnapshot(templateQuery, resolve)),
-        new Promise(resolve => onSnapshot(credentialQuery, resolve)),
+    // Determine when loading is finished
+    const loadingPromises = [
+      new Promise(resolve => onSnapshot(templateQuery, resolve, resolve)), // Resolve on error too
+      new Promise(resolve => onSnapshot(credentialQuery, resolve, resolve)),
     ];
 
     if (isAdmin) {
-        promises.push(new Promise(resolve => onSnapshot(customerQuery, resolve)));
+      const customerQuery = collection(db, "customers");
+      loadingPromises.push(new Promise(resolve => onSnapshot(customerQuery, resolve, resolve)));
     }
 
-    Promise.all(promises).then(() => {
+    Promise.all(loadingPromises).then(() => {
         setLoading(false);
     });
 
