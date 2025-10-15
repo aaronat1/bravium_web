@@ -5,9 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Check, FileClock, FileX2, KeyRound, Loader2, Rocket, ShieldCheck, Wallet, X, FilePlus2, Send, Globe, Layers } from 'lucide-react';
+import { Check, Loader2, Rocket, ShieldCheck, Wallet, FilePlus2, Send, Globe, Layers, X, FileSignature } from 'lucide-react';
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,19 +17,16 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { addContactMessage } from '@/lib/firebase/auth';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
 
 
 export default function LandingPage() {
   const { t, locale } = useI18n();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [isAnnual, setIsAnnual] = useState(false);
 
   const formSchema = z.object({
     name: z.string().min(1, { message: t.landingPage.contact.form_validation_name }),
@@ -102,17 +100,17 @@ export default function LandingPage() {
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="flex flex-col items-center text-center p-6">
-                <Globe className="h-12 w-12 text-accent mb-4"/>
+                <Globe className="h-12 w-12 text-primary mb-4"/>
                 <h3 className="text-xl font-semibold">{t.landingPage.standards.item1_title}</h3>
                 <p className="mt-2 text-muted-foreground">{t.landingPage.standards.item1_text}</p>
               </div>
               <div className="flex flex-col items-center text-center p-6">
-                <Wallet className="h-12 w-12 text-accent mb-4"/>
+                <Wallet className="h-12 w-12 text-primary mb-4"/>
                 <h3 className="text-xl font-semibold">{t.landingPage.standards.item2_title}</h3>
                 <p className="mt-2 text-muted-foreground">{t.landingPage.standards.item2_text}</p>
               </div>
               <div className="flex flex-col items-center text-center p-6">
-                <Layers className="h-12 w-12 text-accent mb-4"/>
+                <Layers className="h-12 w-12 text-primary mb-4"/>
                 <h3 className="text-xl font-semibold">{t.landingPage.standards.item3_title}</h3>
                 <p className="mt-2 text-muted-foreground">{t.landingPage.standards.item3_text}</p>
               </div>
@@ -128,21 +126,21 @@ export default function LandingPage() {
                 <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">{t.landingPage.problem.subtitle}</p>
                 </div>
                 <div className="grid md:grid-cols-3 gap-8">
-                <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg border">
-                    <FileX2 className="h-12 w-12 text-accent mb-4"/>
-                    <h3 className="text-xl font-semibold">{t.landingPage.problem.item1_title}</h3>
-                    <p className="mt-2 text-muted-foreground">{t.landingPage.problem.item1_text}</p>
-                </div>
-                <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg border">
-                    <FileClock className="h-12 w-12 text-accent mb-4"/>
-                    <h3 className="text-xl font-semibold">{t.landingPage.problem.item2_title}</h3>
-                    <p className="mt-2 text-muted-foreground">{t.landingPage.problem.item2_text}</p>
-                </div>
-                <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg border">
-                    <Wallet className="h-12 w-12 text-accent mb-4"/>
-                    <h3 className="text-xl font-semibold">{t.landingPage.problem.item3_title}</h3>
-                    <p className="mt-2 text-muted-foreground">{t.landingPage.problem.item3_text}</p>
-                </div>
+                  <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg border">
+                      <svg width="48" height="48" viewBox="0 0 24 24" className="text-primary mb-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                      <h3 className="text-xl font-semibold">{t.landingPage.problem.item1_title}</h3>
+                      <p className="mt-2 text-muted-foreground">{t.landingPage.problem.item1_text}</p>
+                  </div>
+                  <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg border">
+                      <svg width="48" height="48" viewBox="0 0 24 24" className="text-primary mb-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+                      <h3 className="text-xl font-semibold">{t.landingPage.problem.item2_title}</h3>
+                      <p className="mt-2 text-muted-foreground">{t.landingPage.problem.item2_text}</p>
+                  </div>
+                  <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg border">
+                      <Wallet className="h-12 w-12 text-primary mb-4"/>
+                      <h3 className="text-xl font-semibold">{t.landingPage.problem.item3_title}</h3>
+                      <p className="mt-2 text-muted-foreground">{t.landingPage.problem.item3_text}</p>
+                  </div>
                 </div>
             </div>
         </section>
@@ -156,17 +154,17 @@ export default function LandingPage() {
                 </div>
                 <div className="grid md:grid-cols-3 gap-8">
                 <div className="flex flex-col items-center text-center p-6">
-                    <ShieldCheck className="h-12 w-12 text-accent mb-4"/>
+                    <ShieldCheck className="h-12 w-12 text-primary mb-4"/>
                     <h3 className="text-xl font-semibold">{t.landingPage.solution.item1_title}</h3>
                     <p className="mt-2 text-muted-foreground">{t.landingPage.solution.item1_text}</p>
                 </div>
                 <div className="flex flex-col items-center text-center p-6">
-                    <Rocket className="h-12 w-12 text-accent mb-4"/>
+                    <Rocket className="h-12 w-12 text-primary mb-4"/>
                     <h3 className="text-xl font-semibold">{t.landingPage.solution.item2_title}</h3>
                     <p className="mt-2 text-muted-foreground">{t.landingPage.solution.item2_text}</p>
                 </div>
                 <div className="flex flex-col items-center text-center p-6">
-                    <KeyRound className="h-12 w-12 text-accent mb-4"/>
+                    <svg width="48" height="48" viewBox="0 0 24 24" className="text-primary mb-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M16 12H8m4-4-4 4 4 4"/></svg>
                     <h3 className="text-xl font-semibold">{t.landingPage.solution.item3_title}</h3>
                     <p className="mt-2 text-muted-foreground">{t.landingPage.solution.item3_text}</p>
                 </div>
@@ -182,15 +180,15 @@ export default function LandingPage() {
                 </div>
                 <div className="grid md:grid-cols-3 gap-8">
                     <div className="flex flex-col items-center text-center">
-                        <FilePlus2 className="h-12 w-12 text-accent mb-4"/>
+                        <FilePlus2 className="h-12 w-12 text-primary mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step1_text}</p>
                     </div>
                      <div className="flex flex-col items-center text-center">
-                        <Send className="h-12 w-12 text-accent mb-4"/>
+                        <Send className="h-12 w-12 text-primary mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step2_text}</p>
                     </div>
                      <div className="flex flex-col items-center text-center">
-                        <Wallet className="h-12 w-12 text-accent mb-4"/>
+                        <Wallet className="h-12 w-12 text-primary mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step3_text}</p>
                     </div>
                 </div>
@@ -220,10 +218,10 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab1_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab1_content_text}</p>
                     <ul className="space-y-3">
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit1}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit2}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit3}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit1}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit2}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit3}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
                     </ul>
                   </div>
                   <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
@@ -237,10 +235,10 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab2_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab2_content_text}</p>
                     <ul className="space-y-3">
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit1}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit2}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit3}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit4}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit1}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit2}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit3}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit4}</span></li>
                     </ul>
                   </div>
                    <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
@@ -254,10 +252,10 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab3_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab3_content_text}</p>
                     <ul className="space-y-3">
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit1}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit2}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit3}</span></li>
-                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-accent flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit4}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit1}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit2}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit3}</span></li>
+                        <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit4}</span></li>
                     </ul>
                   </div>
                    <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
@@ -274,27 +272,21 @@ export default function LandingPage() {
           <div className="container">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.pricing.title}</h2>
-              <div className="mt-4 flex items-center justify-center gap-4">
-                <Label htmlFor="pricing-toggle">{t.landingPage.pricing.monthly}</Label>
-                <Switch id="pricing-toggle" checked={isAnnual} onCheckedChange={setIsAnnual} />
-                <Label htmlFor="pricing-toggle">
-                  {t.landingPage.pricing.annual}
-                  <span className="ml-2 bg-accent/20 text-accent font-semibold px-2 py-1 rounded-full text-xs">{t.landingPage.pricing.save}</span>
-                </Label>
-              </div>
             </div>
             <div className="grid md:grid-cols-3 gap-8 items-stretch">
+              {/* Starter Plan */}
               <Card className="flex flex-col">
                 <CardHeader>
                   <CardTitle>{t.landingPage.pricing.plan_starter_title}</CardTitle>
                   <CardDescription>{t.landingPage.pricing.plan_starter_target}</CardDescription>
-                  <p className="text-4xl font-bold pt-4">{isAnnual ? '119€' : '149€'}<span className="text-lg font-normal text-muted-foreground">/{locale === 'es' ? 'mes' : 'month'}</span></p>
+                  <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.plan_starter_price}<span className="text-lg font-normal text-muted-foreground">/{locale === 'es' ? 'mes' : 'month'}</span></p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_starter}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_starter}</span></li>
-                    <li className="flex items-center gap-2"><X className="h-5 w-5 text-muted-foreground flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_no}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_starter}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_unlimited}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_certify_documents}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_starter}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -303,19 +295,22 @@ export default function LandingPage() {
                     </Button>
                 </CardFooter>
               </Card>
-              <Card className="border-accent border-2 flex flex-col relative">
-                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-semibold">{t.landingPage.pricing.popular}</div>
+
+              {/* Pro Plan */}
+              <Card className="border-primary border-2 flex flex-col relative">
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">{t.landingPage.pricing.popular}</div>
                 <CardHeader>
                   <CardTitle>{t.landingPage.pricing.plan_pro_title}</CardTitle>
                   <CardDescription>{t.landingPage.pricing.plan_pro_target}</CardDescription>
-                  <p className="text-4xl font-bold pt-4">{isAnnual ? '199€' : '249€'}<span className="text-lg font-normal text-muted-foreground">/{locale === 'es' ? 'mes' : 'month'}</span></p>
+                  <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.plan_pro_price}<span className="text-lg font-normal text-muted-foreground">/{locale === 'es' ? 'mes' : 'month'}</span></p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_pro}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_pro}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_pro}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_pro}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_unlimited}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_certify_documents}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_pro}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
@@ -324,6 +319,8 @@ export default function LandingPage() {
                     </Button>
                 </CardFooter>
               </Card>
+
+              {/* Enterprise Plan */}
               <Card className="flex flex-col">
                 <CardHeader>
                   <CardTitle>{t.landingPage.pricing.plan_enterprise_title}</CardTitle>
@@ -332,11 +329,11 @@ export default function LandingPage() {
                 </CardHeader>
                 <CardContent className="flex-grow">
                    <ul className="space-y-3">
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_volume}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_sla}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_schemas}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_attachments_yes}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-accent flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_enterprise}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_custom}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_unlimited}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_support_sla}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_advanced}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_custom}</span></li>
                   </ul>
                 </CardContent>
                  <CardFooter>
@@ -348,29 +345,15 @@ export default function LandingPage() {
             </div>
             <div className="mt-16 text-center">
               <h3 className="text-2xl font-bold text-foreground">{t.landingPage.pricing.add_ons_title}</h3>
-              <div className="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 lg:grid-cols-2 gap-8 text-left">
+              <div className="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-left">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_2_title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_2_desc}</p>
+                  <CardContent className="pt-6">
+                    <p className="text-muted-foreground text-center">{t.landingPage.pricing.add_on_extra_emission}</p>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_3_title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_3_desc}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{t.landingPage.pricing.add_on_4_title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{t.landingPage.pricing.add_on_4_desc}</p>
+                  <CardContent className="pt-6">
+                    <p className="text-muted-foreground text-center">{t.landingPage.pricing.add_on_extra_storage}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -387,27 +370,27 @@ export default function LandingPage() {
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="item-1">
                         <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q1_title}</AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q1_text}</AccordionContent>
+                        <AccordionContent className="text-muted-foreground whitespace-pre-line">{t.landingPage.faq.q1_text}</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-2">
                         <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q2_title}</AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q2_text}</AccordionContent>
+                        <AccordionContent className="text-muted-foreground whitespace-pre-line">{t.landingPage.faq.q2_text}</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-3">
                         <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q3_title}</AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q3_text}</AccordionContent>
+                        <AccordionContent className="text-muted-foreground whitespace-pre-line">{t.landingPage.faq.q3_text}</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-4">
                         <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q4_title}</AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q4_text}</AccordionContent>
+                        <AccordionContent className="text-muted-foreground whitespace-pre-line">{t.landingPage.faq.q4_text}</AccordionContent>
                     </AccordionItem>
                      <AccordionItem value="item-5">
                         <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q5_title}</AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q5_text}</AccordionContent>
+                        <AccordionContent className="text-muted-foreground whitespace-pre-line">{t.landingPage.faq.q5_text}</AccordionContent>
                     </AccordionItem>
                     <AccordionItem value="item-6">
                         <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q6_title}</AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q6_text}</AccordionContent>
+                        <AccordionContent className="text-muted-foreground whitespace-pre-line">{t.landingPage.faq.q6_text}</AccordionContent>
                     </AccordionItem>
                 </Accordion>
             </div>
