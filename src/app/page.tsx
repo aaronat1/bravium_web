@@ -409,6 +409,14 @@ export default function LandingPage() {
                         <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q4_title}</AccordionTrigger>
                         <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q4_text}</AccordionContent>
                     </AccordionItem>
+                     <AccordionItem value="item-5">
+                        <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q5_title}</AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q5_text}</AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-6">
+                        <AccordionTrigger className="text-lg text-left">{t.landingPage.faq.q6_title}</AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground">{t.landingPage.faq.q6_text}</AccordionContent>
+                    </AccordionItem>
                 </Accordion>
             </div>
         </section>
@@ -517,3 +525,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    

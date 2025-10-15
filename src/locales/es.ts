@@ -126,15 +126,19 @@ export const es = {
       add_on_4_desc: "Desde 250 €: Diseño de esquemas de credenciales complejos, integraciones a medida (CRM, ERP), y consultoría de confianza digital.",
     },
     faq: {
-      title: "Preguntas Frecuentes",
+      title: "Preguntas Frecuentes (FAQ)",
       q1_title: "¿En qué se diferencia esto de una firma digital en un PDF?",
-      q1_text: "Es una diferencia fundamental. Un PDF firmado es un documento estático. Una Credencial Verificable de Bravium es un objeto de datos dinámico, controlado por el usuario, verificable por máquina al instante y resistente a la manipulación. Aporta un nivel de confianza y automatización que un PDF no puede ofrecer.",
-      q2_title: "¿Necesitan mis usuarios descargar la app de Bravium?",
-      q2_text: "No, y esa es la belleza de nuestro sistema. Usamos estándares abiertos. Tus usuarios pueden usar carteras digitales que ya conocen y en las que confían, como Apple Wallet, Google Wallet o Microsoft Authenticator, para almacenar sus credenciales.",
-      q3_title: "¿Es complicado de implementar?",
-      q3_text: "En absoluto. Bravium es una solución SaaS. No necesitas conocimientos de blockchain ni de criptografía. Si sabes usar una plataforma web, puedes empezar a emitir credenciales en minutos. Para integraciones más profundas, nuestra API está completamente documentada.",
-      q4_title: "¿Qué tan seguro es?",
-      q4_text: "La seguridad es nuestra máxima prioridad. Utilizamos criptografía de clave pública y nos integramos con Google Cloud KMS para la gestión de claves, lo que significa que las claves de firma nunca están expuestas. Las credenciales son, por diseño, infalsificables."
+      q1_text: "Es una diferencia fundamental de dónde reside la confianza: Una firma digital en un PDF guarda la prueba de validez dentro del propio archivo. Si la empresa que emitió el certificado de la firma desaparece, la verificación puede volverse complicada. Un certificado de Bravium crea una prueba criptográfica fuera del archivo y la ancla de forma permanente en una blockchain pública. La prueba no depende de nosotros ni de nadie más; es un registro público, inmutable y verificable por cualquiera, para siempre. Es como tener un sello notarial en un libro de registro global, en lugar de solo una firma en el papel.",
+      q2_title: "¿Necesitan mis usuarios descargar una app o tener una cartera digital (wallet)?",
+      q2_text: "No, y esa es la principal ventaja de nuestro sistema. No hay fricción para el usuario final. Tus usuarios reciben un enlace único o un código QR. Al abrirlo en cualquier navegador (móvil o de escritorio), acceden a una página de verificación pública donde pueden ver la autenticidad del certificado al instante. Funciona en cualquier dispositivo sin necesidad de instalar nada.",
+      q3_title: "¿Qué es exactamente la \"blockchain\" y por qué la usan?",
+      q3_text: "Piensa en la blockchain como un libro de contabilidad o un registro notarial digital que es público y no puede ser borrado ni alterado. Lo usamos porque ofrece inmutabilidad. Cuando sellamos la prueba de un documento, queda grabada de forma permanente en miles de ordenadores de todo el mundo. Esto garantiza que la prueba de autenticidad de tu documento no pueda ser manipulada ni eliminada por nadie, ni siquiera por nosotros.",
+      q4_title: "¿Mis archivos originales se suben a la blockchain? ¿Son públicos?",
+      q4_text: "No, absolutamente no. Esta es una distinción crucial. Nunca subimos tu archivo original (el PDF, la imagen, etc.) a la blockchain. Lo que hacemos es crear una \"huella digital\" única de ese archivo (un hash). Solo esa pequeña huella, que no contiene ninguna información sensible, es la que se sella en la blockchain. Tu archivo original se almacena de forma segura en nuestra infraestructura encriptada (Firebase Storage), y tú tienes el control total sobre él.",
+      q5_title: "¿Es complicado de implementar en mi organización?",
+      q5_text: "En absoluto. Bravium está diseñado para la simplicidad. Para emitir certificados, puedes usar nuestro panel de control web. Si sabes usar una plataforma online, puedes empezar en minutos. Para emitir a escala, simplemente subes un archivo CSV con los datos de tus cientos o miles de destinatarios. Para desarrolladores, ofrecemos una API bien documentada para que puedas integrar la emisión de certificados directamente en tus propias aplicaciones y flujos de trabajo.",
+      q6_title: "¿Qué tan seguro es el sistema?",
+      q6_text: "La seguridad se divide en dos capas: La Plataforma: Bravium está construido sobre la infraestructura segura y escalable de Google Cloud, garantizando la protección de tus datos y los de tus usuarios. La Prueba: La seguridad del certificado en sí no depende de nosotros, sino de la red blockchain global. La prueba criptográfica es, por diseño, a prueba de manipulaciones y está asegurada por una red descentralizada masiva, ofreciendo el más alto nivel de confianza posible.",
     },
     finalCta: {
         title: "¿Listo para Liderar la Revolución de la Confianza Digital?",
@@ -441,3 +445,5 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
+
+    
