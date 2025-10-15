@@ -85,7 +85,7 @@ export const en = {
       tab3_content_text: "From internal training certificates to immutable proofs of origin for your products, Bravium is your digital seal of guarantee.",
       tab3_benefit1: "Issue internal training certificates that your employees can add to their professional profile.",
       tab3_benefit2: "Create an immutable certificate of origin for your products. Prove to your customers the origin and harvest date with a blockchain proof.",
-      tab3_benefit3: "Manage access credentials for contractors or temporary staff.",
+      tab3_benefit3: "Seal code versions, designs, or confidential documents to protect your intellectual property.",
       tab3_benefit4: "Generate a 'digital passport' for your products at the time of their creation, guaranteeing their initial authenticity.",
       tab3_alt: "Business team collaborating on a project",
     },

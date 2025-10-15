@@ -85,7 +85,7 @@ export const es = {
       tab3_content_text: "Desde certificados de formación interna hasta pruebas de origen inmutables para tus productos, Bravium es tu sello de garantía digital.",
       tab3_benefit1: "Emite certificados de formación interna que tus empleados pueden añadir a su perfil profesional.",
       tab3_benefit2: "Crea un certificado de origen inmutable para tus productos. Demuestra a tus clientes la procedencia y la fecha de cosecha con una prueba en blockchain.",
-      tab3_benefit3: "Gestiona credenciales de acceso para contratistas o personal temporal.",
+      tab3_benefit3: "Sella versiones de código, diseños o documentos confidenciales para proteger tu propiedad intelectual.",
       tab3_benefit4: "Genera un 'pasaporte digital' para tus productos en el momento de su creación, garantizando su autenticidad inicial.",
       tab3_alt: "Equipo de empresa colaborando en un proyecto",
     },
