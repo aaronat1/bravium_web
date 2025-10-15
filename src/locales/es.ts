@@ -71,7 +71,7 @@ export const es = {
       tab1_content_text: "Protege la reputación de tu institución y ofrece a tus graduados una credencial moderna y portátil.",
       tab1_benefit1: "Elimina el fraude de titulaciones.",
       tab1_benefit2: "Ahorra miles de horas en verificaciones manuales para RRHH.",
-      tab1_benefit3: "Compatible con las carteras digitales de Apple y Google, y wallets especializadas como Learner Credential Wallet.",
+      tab1_benefit3: "Ofrece un certificado digital con un enlace de verificación único y permanente.",
       tab1_benefit4: "Adjunta el PDF del título o el expediente académico de forma segura.",
       tab1_alt: "Estudiante sonriendo en su graduación",
       tab2_content_title: "Transparencia Total para tus Donantes.",
