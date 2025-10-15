@@ -65,7 +65,7 @@ export default function HelpPage() {
             t.helpPage.step3_point2,
             t.helpPage.step3_point3,
         ],
-        image: "https://images.unsplash.com/photo-1611095965942-880590059e9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMXx8dmVyaWZpY2F0aW9uJTIwc3VjY2Vzc3xlbnwwfHx8fDE3NTEzMjgwMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        image: "https://images.unsplash.com/photo-1529603228-345483421115?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx2ZXJpZmljYXRpb24lMjBzdWNjZXNzfGVufDB8fHx8MTc1MTU2NTQzMnww&ixlib=rb-4.1.0&q=80&w=1080",
         alt: "Página de verificación",
         aiHint: "verification success"
     }
@@ -133,5 +133,7 @@ export default function HelpPage() {
     </div>
   );
 }
+
+    
 
     
