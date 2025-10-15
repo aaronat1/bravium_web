@@ -52,8 +52,8 @@ export const en = {
       item1_text: "Each credential is sealed with a unique cryptographic signature. It is mathematically impossible to forge or alter without being instantly detected.",
       item2_title: "Instantly Verifiable",
       item2_text: "Anyone, anywhere in the world, can verify the authenticity of a credential in seconds by scanning a QR code, without needing to contact you.",
-      item3_title: "User-Controlled",
-      item3_text: "Credentials are stored in the user's digital wallet (like Apple Wallet or Google Wallet), giving them full control over who they share their information with.",
+      item3_title: "User-Owned",
+      item3_text: "Each digital certificate is portable and belongs to the end-user. We generate a unique verification proof that the user can manage and share securely, always maintaining control over their information.",
     },
     howItWorks: {
       title: "Start Issuing in Three Simple Steps",

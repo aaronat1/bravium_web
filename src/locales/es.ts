@@ -52,8 +52,8 @@ export const es = {
       item1_text: "Cada credencial está sellada con una firma criptográfica única. Es matemáticamente imposible de falsificar o alterar sin que se detecte al instante.",
       item2_title: "Verificables al Instante",
       item2_text: "Cualquier persona, en cualquier parte del mundo, puede verificar la autenticidad de una credencial en segundos escaneando un código QR, sin necesidad de contactarte.",
-      item3_title: "Controlados por el Usuario",
-      item3_text: "Las credenciales se almacenan en la cartera digital del usuario (como Apple Wallet o Google Wallet), dándole control total sobre con quién comparte su información.",
+      item3_title: "Propiedad del Usuario",
+      item3_text: "Cada certificado digital es portable y pertenece al usuario final. Generamos una prueba de verificación única que el usuario puede gestionar y compartir de forma segura, manteniendo siempre el control sobre su información.",
     },
     howItWorks: {
       title: "Empieza a Emitir en Tres Sencillos Pasos",
