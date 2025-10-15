@@ -187,23 +187,23 @@ export const es = {
     protagonist_verifier_name: "DAVID",
     protagonist_verifier_role: "Un reclutador que busca el mejor talento",
     step1_title: "Paso 1: La Emisión (La Perspectiva de la Academia)",
-    step1_subtitle: "ACADEMIA FUTURO necesita emitir 500 certificados.",
-    step1_desc: "ACADEMIA FUTURO necesita emitir 500 certificados para su última promoción. El proceso manual es impensable.",
+    step1_subtitle: "ACADEMIA FUTURO necesita emitir 500 certificados para su última promoción. El proceso manual es impensable.",
+    step1_desc: "",
     step1_point1: "1. Diseña la Plantilla: Desde su panel de BRAVIUM, utilizan nuestro editor visual para crear la plantilla del certificado, definiendo campos como Nombre del Estudiante, Nombre del Curso y Fecha de Finalización.",
     step1_point2: "2. Carga los Datos a Escala: Exportan la lista de sus 500 estudiantes a un archivo CSV y lo suben a la plataforma con un solo click.",
     step1_point3: "3. Emite y Sella en la Blockchain: Con un solo click en 'Emitir Lote', BRAVIUM genera los 500 certificados únicos y sella la prueba criptográfica de cada uno de forma inmutable en la blockchain.",
     step2_title: "Paso 2: La Recepción (La Perspectiva de la Estudiante)",
-    step2_subtitle: "ELENA recibe instantáneamente un correo electrónico.",
-    step2_desc: "El correo le informa que su certificado oficial ya está disponible.",
+    step2_subtitle: "ELENA recibe instantáneamente un correo electrónico informándole de que su certificado oficial ya está disponible.",
+    step2_desc: "",
     step2_point1: "Acceso Inmediato: Dentro del correo, encuentra un enlace único y un código QR. No necesita crear cuentas ni descargar aplicaciones.",
-    step2_point2: "Su Certificado Digital: Al hacer click en el enlace, accede a su certificado digital, que puede guardar o compartir.",
-    step2_point3: "Este certificado es ahora de su propiedad.",
+    step2_point2: "Su Certificado Digital: Al hacer click, accede a su certificado digital. Ahora puede guardarlo, compartirlo y es de su completa propiedad.",
+    step2_point3: "",
     step3_title: "Paso 3: La Verificación (La Perspectiva del Reclutador)",
     step3_subtitle: "DAVID, el reclutador, necesita verificar la autenticidad de su título.",
     step3_desc: "El proceso es instantáneo y seguro.",
     step3_point1: "Compartir la Prueba: Elena simplemente le envía a David el enlace de su certificado.",
     step3_point2: "Verificación Instantánea: David abre el enlace. Inmediatamente ve una página de verificación pública que le confirma que el certificado fue emitido por ACADEMIA FUTURO y que los datos de ELENA no han sido alterados.",
-    step3_point3: "Confianza en Segundos. David no tuvo que llamar a la universidad ni esperar una confirmación por correo. La verificación fue instantánea, gratuita y criptográficamente segura.",
+    step3_point3: "Confianza en Segundos. David no tuvo que llamar a la universidad ni esperar una confirmación por correo. La verificación fue instantánea, gratuita y criptográficamente segura."
   },
   loginPage: {
     title: "Bienvenido al Panel de Certificados",
@@ -442,5 +442,7 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
+
+    
 
     
