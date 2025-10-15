@@ -53,8 +53,8 @@ export default function HelpPage() {
             t.helpPage.step2_point3,
         ],
         image: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-        alt: "Usuario revisando su correo electrónico en un portátil",
-        aiHint: "email inbox"
+        alt: "Chica revisando su correo electrónico en un portátil",
+        aiHint: "woman laptop email"
     },
     {
         step: t.helpPage.step3_title,
@@ -65,7 +65,7 @@ export default function HelpPage() {
             t.helpPage.step3_point2,
             t.helpPage.step3_point3,
         ],
-        image: "https://images.unsplash.com/photo-1528975941332-9a1b55c6227b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+        image: "https://images.unsplash.com/photo-1611095965942-880590059e9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMXx8dmVyaWZpY2F0aW9uJTIwc3VjY2Vzc3xlbnwwfHx8fDE3NTEzMjgwMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
         alt: "Página de verificación con un tick verde de éxito",
         aiHint: "verification success"
     }
