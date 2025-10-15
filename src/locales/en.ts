@@ -47,7 +47,7 @@ export const en = {
     },
     solution: {
       title: "Bravium: Cryptographic Trust, Radical Simplicity.",
-      subtitle: "We built BRAVIUM on the global W3C standards for Verifiable Credentials. It's not just a digital signature; it's a trust ecosystem that allows you to issue digital documents that are:",
+      subtitle: "We've built BRAVIUM to be the simplest way to generate digital trust. It's not a simple electronic signature; it's a platform that creates cryptographic proofs anchored in the blockchain, allowing you to issue digital documents that are:",
       item1_title: "Cryptographically Secure",
       item1_text: "Each credential is sealed with a unique cryptographic signature. It is mathematically impossible to forge or alter without being instantly detected.",
       item2_title: "Instantly Verifiable",
@@ -436,5 +436,7 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
+
+    
 
     

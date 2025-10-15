@@ -47,7 +47,7 @@ export const es = {
     },
     solution: {
       title: "Bravium: Confianza Criptográfica, Simplicidad Radical.",
-      subtitle: "Hemos construido BRAVIUM sobre los estándares globales del W3C para Credenciales Verificables. No es una simple firma digital, es un ecosistema de confianza que te permite emitir documentos digitales que son:",
+      subtitle: "Hemos construido BRAVIUM para ser la forma más sencilla de generar confianza digital. No es una simple firma electrónica; es una plataforma que crea pruebas criptográficas ancladas en la blockchain, permitiéndote emitir documentos digitales que son:",
       item1_title: "Criptográficamente Seguros",
       item1_text: "Cada credencial está sellada con una firma criptográfica única. Es matemáticamente imposible de falsificar o alterar sin que se detecte al instante.",
       item2_title: "Verificables al Instante",
@@ -436,5 +436,7 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
+
+    
 
     
