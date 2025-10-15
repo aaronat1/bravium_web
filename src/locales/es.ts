@@ -28,8 +28,8 @@ export const es = {
     standards: {
       title: "Construido sobre Estándares Abiertos y Globales",
       subtitle: "BRAVIUM no reinventa la rueda; la perfecciona. Nos apoyamos en las tecnologías y estándares más robustos y reconocidos del mundo para ofrecerte una solución interoperable, segura y preparada para el futuro.",
-      item1_title: "Basado en el Estándar W3C",
-      item1_text: "Nuestra plataforma implementa las recomendaciones del World Wide Web Consortium (W3C) para Credenciales Verificables (VCs) e Identificadores Descentralizados (DIDs). Esto garantiza que las credenciales que emites son interoperables en todo el mundo.",
+      item1_title: "Basado en Principios de Confianza Descentralizada",
+      item1_text: "Nuestra plataforma utiliza los principios de la tecnología blockchain pública para crear pruebas de autenticidad inmutables. Nos inspiramos en los estándares emergentes del W3C para construir una solución que garantice la máxima confianza y verificabilidad en el entorno digital.",
       item2_title: "Compatible con el Ecosistema Abierto",
       item2_text: "Las credenciales de BRAVIUM funcionan con las carteras digitales que tus usuarios ya tienen y en las que confían, como Apple Wallet, Google Wallet y las promovidas por la OpenWallet Foundation. No hay fricción, no hay apps que descargar.",
       item3_title: "Alternativa Accesible a la Complejidad",
@@ -436,3 +436,5 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
+
+    
