@@ -73,19 +73,11 @@ export default function IssueCredentialPage() {
 
     const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
 
-    const defaultValues = React.useMemo(() => {
-        if (!selectedTemplate) return {};
-        return selectedTemplate.fields.reduce((acc, field) => {
-            acc[field.fieldName] = field.defaultValue || '';
-            return acc;
-        }, {} as Record<string, any>);
-    }, [selectedTemplate]);
-
     type FormData = z.infer<typeof formSchema>;
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
-        values: defaultValues, // Use `values` for dynamic default values
+        defaultValues: {}, // Initialize with empty defaults
     });
     
     const { handleSubmit, reset, control, register } = form;
@@ -109,10 +101,18 @@ export default function IssueCredentialPage() {
         return () => unsubscribe();
     }, [user, isAdmin, t, toast]);
 
+    // This is the correct pattern to reset the form with new default values
     useEffect(() => {
-        // Reset the form whenever the dynamic default values change
-        reset(defaultValues);
-    }, [defaultValues, reset]);
+        if (selectedTemplate) {
+            const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
+                acc[field.fieldName] = field.defaultValue || '';
+                return acc;
+            }, {} as Record<string, any>);
+            reset(defaultValues);
+        } else {
+            reset({}); // Clear form if no template is selected
+        }
+    }, [selectedTemplate, reset]);
 
 
     const handleTemplateChange = (templateId: string) => {
