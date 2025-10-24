@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from 'zod';
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import QRCode from "qrcode.react";
-import { httpsCallable } from 'firebase/functions';
+import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import { useAuth } from "@/hooks/use-auth";
@@ -49,6 +49,8 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
                 if (field.required) {
                     stringSchema = stringSchema.min(1, {message: "This field is required"});
                 } else {
+                    // Important: make non-required fields optional so Zod doesn't complain
+                    // if they are empty strings.
                     stringSchema = stringSchema.optional();
                 }
                 fieldSchema = stringSchema;
@@ -80,7 +82,7 @@ export default function IssueCredentialPage() {
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: {},
+        // defaultValues will be set by useEffect
     });
     
     const { handleSubmit, reset, control, register } = form;
@@ -104,15 +106,16 @@ export default function IssueCredentialPage() {
         return () => unsubscribe();
     }, [user, isAdmin, t, toast]);
 
+    // This is the correct way to handle dynamic defaultValues with react-hook-form
     useEffect(() => {
         if (selectedTemplate) {
             const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
-                acc[field.fieldName] = field.defaultValue || '';
+                acc[field.fieldName] = field.defaultValue || ''; // Ensure it's always a string
                 return acc;
             }, {} as Record<string, any>);
             reset(defaultValues);
         } else {
-            reset({});
+            reset({}); // Reset form if no template is selected
         }
     }, [selectedTemplate, reset]);
 
@@ -174,9 +177,10 @@ export default function IssueCredentialPage() {
 
         } catch (error: any) {
             console.error("Error issuing credential:", error);
-            const errorMessage = error.message || "An unexpected error occurred.";
-            setSubmissionError(errorMessage);
-            toast({ variant: "destructive", title: t.toast_error_title, description: errorMessage });
+            // This is the key change: we extract the detailed message from the HttpsError
+            const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
+            setSubmissionError(detailedError);
+            toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
         } finally {
             setIsIssuing(false);
         }
@@ -233,8 +237,8 @@ export default function IssueCredentialPage() {
                                         control={control}
                                         name={fieldInfo.fieldName as any}
                                         render={({ field }) => {
-                                           const { value, ...restOfField } = field;
-                                           const displayValue = value === null || value === undefined ? '' : value;
+                                           // This ensures the value is never null/undefined, preventing uncontrolled->controlled error
+                                           const displayValue = field.value ?? '';
                                            return (
                                             <FormItem>
                                                 <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
@@ -242,9 +246,11 @@ export default function IssueCredentialPage() {
                                                     {(() => {
                                                         switch(fieldInfo.type) {
                                                             case 'date':
-                                                                return <Input type="date" {...restOfField} value={displayValue} />;
+                                                                // Use value instead of field.value which could be undefined
+                                                                return <Input type="date" {...field} value={displayValue} />;
                                                             case 'select':
                                                                 return (
+                                                                    // Use value to ensure it's never undefined
                                                                     <Select onValueChange={field.onChange} value={displayValue}>
                                                                         <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
                                                                         <SelectContent>
@@ -266,7 +272,8 @@ export default function IssueCredentialPage() {
                                                                 );
                                                             case 'text':
                                                             default:
-                                                                return <Input type="text" {...restOfField} value={displayValue} />;
+                                                                // Use value to ensure it's never undefined
+                                                                return <Input type="text" {...field} value={displayValue} />;
                                                         }
                                                     })()}
                                                 </FormControl>
@@ -327,6 +334,3 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
-
-    
-    
