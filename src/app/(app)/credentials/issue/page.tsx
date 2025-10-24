@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,11 +72,20 @@ export default function IssueCredentialPage() {
     const isAdmin = user?.uid === ADMIN_UID;
 
     const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
+
+    const defaultValues = React.useMemo(() => {
+        if (!selectedTemplate) return {};
+        return selectedTemplate.fields.reduce((acc, field) => {
+            acc[field.fieldName] = field.defaultValue || '';
+            return acc;
+        }, {} as Record<string, any>);
+    }, [selectedTemplate]);
+
     type FormData = z.infer<typeof formSchema>;
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: {},
+        values: defaultValues, // Use `values` for dynamic default values
     });
     
     const { handleSubmit, reset, control, register } = form;
@@ -101,16 +110,10 @@ export default function IssueCredentialPage() {
     }, [user, isAdmin, t, toast]);
 
     useEffect(() => {
-        if (selectedTemplate) {
-            const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
-                acc[field.fieldName] = field.defaultValue || '';
-                return acc;
-            }, {} as Record<string, any>);
-            reset(defaultValues);
-        } else {
-            reset({});
-        }
-    }, [selectedTemplate, reset]);
+        // Reset the form whenever the dynamic default values change
+        reset(defaultValues);
+    }, [defaultValues, reset]);
+
 
     const handleTemplateChange = (templateId: string) => {
         const template = templates.find(t => t.id === templateId) || null;
