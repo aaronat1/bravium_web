@@ -387,3 +387,5 @@ async function createJws(payload, kmsKeyPath, issuerDid) {
     const joseSignature = derToJose(Buffer.from(signResponse.signature), 'ES256');
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
+
+    

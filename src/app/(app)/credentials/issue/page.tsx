@@ -49,8 +49,8 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
             default:
                 const stringSchema = z.string({
                     required_error: "This field is required.",
-                }).min(1, {message: "This field is required"});
-                fieldSchema = field.required ? stringSchema : stringSchema.optional();
+                }).min(field.required ? 1 : 0, {message: "This field is required"});
+                fieldSchema = stringSchema;
         }
         shape[field.fieldName] = fieldSchema;
     });
@@ -234,7 +234,7 @@ export default function IssueCredentialPage() {
                                                                 return <Input type="date" {...field} />;
                                                             case 'select':
                                                                 return (
-                                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                    <Select onValueChange={field.onChange} value={field.value || ""}>
                                                                         <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
                                                                         <SelectContent>
                                                                             {(fieldInfo.options || []).map(option => (
@@ -303,3 +303,5 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
+
+    
