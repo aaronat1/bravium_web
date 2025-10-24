@@ -23,15 +23,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileCheck, Copy, Check } from "lucide-react";
+import { Loader2, FileCheck, Copy, Check, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
-// This function lives outside the component to avoid being recreated on every render.
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     if (!fields) return z.object({});
     
@@ -45,15 +45,19 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
                 fieldSchema = field.required ? fileSchema : z.any().optional();
                 break;
             default:
-                const stringSchema = z.string({
-                    required_error: "This field is required.",
-                });
-                fieldSchema = field.required ? stringSchema.min(1, {message: "This field is required"}) : stringSchema.optional();
+                let stringSchema = z.string({ required_error: "This field is required." });
+                if (field.required) {
+                    stringSchema = stringSchema.min(1, {message: "This field is required"});
+                } else {
+                    stringSchema = stringSchema.optional();
+                }
+                fieldSchema = stringSchema;
         }
         shape[field.fieldName] = fieldSchema;
     });
     return z.object(shape);
 };
+
 
 export default function IssueCredentialPage() {
     const { t } = useI18n();
@@ -66,6 +70,7 @@ export default function IssueCredentialPage() {
     const [isIssuing, setIsIssuing] = useState(false);
     const [issuedCredential, setIssuedCredential] = useState<string | null>(null);
     const [hasCopied, setHasCopied] = useState(false);
+    const [submissionError, setSubmissionError] = useState<string | null>(null);
 
     const isAdmin = user?.uid === ADMIN_UID;
 
@@ -75,7 +80,7 @@ export default function IssueCredentialPage() {
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: {}, // Initialize with empty defaults
+        defaultValues: {},
     });
     
     const { handleSubmit, reset, control, register } = form;
@@ -99,7 +104,6 @@ export default function IssueCredentialPage() {
         return () => unsubscribe();
     }, [user, isAdmin, t, toast]);
 
-    // This is the correct pattern to reset the form with new default values
     useEffect(() => {
         if (selectedTemplate) {
             const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
@@ -108,7 +112,7 @@ export default function IssueCredentialPage() {
             }, {} as Record<string, any>);
             reset(defaultValues);
         } else {
-            reset({}); // Clear form if no template is selected
+            reset({});
         }
     }, [selectedTemplate, reset]);
 
@@ -116,11 +120,13 @@ export default function IssueCredentialPage() {
     const handleTemplateChange = (templateId: string) => {
         const template = templates.find(t => t.id === templateId) || null;
         setSelectedTemplate(template);
+        setSubmissionError(null); // Clear error when template changes
     };
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
         if (!selectedTemplate || !user) return;
         setIsIssuing(true);
+        setSubmissionError(null);
         try {
             const credentialSubject: Record<string, any> = {};
 
@@ -139,7 +145,7 @@ export default function IssueCredentialPage() {
                     await uploadBytes(fileRef, file);
                     const downloadURL = await getDownloadURL(fileRef);
                     credentialSubject[fieldName] = downloadURL;
-                } else if (value) {
+                } else if (value !== undefined && value !== null && value !== '') {
                     credentialSubject[fieldName] = value;
                 }
             }
@@ -169,6 +175,7 @@ export default function IssueCredentialPage() {
         } catch (error: any) {
             console.error("Error issuing credential:", error);
             const errorMessage = error.message || "An unexpected error occurred.";
+            setSubmissionError(errorMessage);
             toast({ variant: "destructive", title: t.toast_error_title, description: errorMessage });
         } finally {
             setIsIssuing(false);
@@ -225,18 +232,20 @@ export default function IssueCredentialPage() {
                                         key={fieldInfo.fieldName}
                                         control={control}
                                         name={fieldInfo.fieldName as any}
-                                        render={({ field }) => (
+                                        render={({ field }) => {
+                                           const { value, ...restOfField } = field;
+                                           const displayValue = value === null || value === undefined ? '' : value;
+                                           return (
                                             <FormItem>
                                                 <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
                                                 <FormControl>
                                                     {(() => {
-                                                        const fieldWithValue = {...field, value: field.value || ''};
                                                         switch(fieldInfo.type) {
                                                             case 'date':
-                                                                return <Input type="date" {...fieldWithValue} />;
+                                                                return <Input type="date" {...restOfField} value={displayValue} />;
                                                             case 'select':
                                                                 return (
-                                                                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                                                                    <Select onValueChange={field.onChange} value={displayValue}>
                                                                         <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
                                                                         <SelectContent>
                                                                             {(fieldInfo.options || []).map(option => (
@@ -257,13 +266,14 @@ export default function IssueCredentialPage() {
                                                                 );
                                                             case 'text':
                                                             default:
-                                                                return <Input type="text" {...fieldWithValue} />;
+                                                                return <Input type="text" {...restOfField} value={displayValue} />;
                                                         }
                                                     })()}
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
-                                        )}
+                                           );
+                                       }}
                                     />
                                 ))}
                                 <Button type="submit" disabled={isIssuing}>
@@ -272,6 +282,18 @@ export default function IssueCredentialPage() {
                                 </Button>
                             </form>
                         </Form>
+
+                        {submissionError && (
+                            <Alert variant="destructive" className="mt-6">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Error Detallado</AlertTitle>
+                                <AlertDescription>
+                                    <pre className="mt-2 text-xs whitespace-pre-wrap font-mono bg-transparent">
+                                        {submissionError}
+                                    </pre>
+                                </AlertDescription>
+                            </Alert>
+                        )}
                     </CardContent>
                  </Card>
             )}
@@ -306,4 +328,5 @@ export default function IssueCredentialPage() {
     );
 }
 
+    
     

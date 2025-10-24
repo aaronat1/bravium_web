@@ -157,11 +157,14 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
     return { verifiableCredentialJws: jws };
 
   } catch (error) {
-    console.error(`Error al emitir la credencial para el cliente ${customerId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Error al emitir la credencial para el cliente ${customerId}:`, errorMessage);
+    
     if (error instanceof functions.https.HttpsError) {
       throw error;
     }
-    throw new functions.https.HttpsError('internal', 'Ocurrió un error interno al emitir la credencial.');
+    // Lanza un HttpsError con el mensaje de error original para que el cliente lo reciba.
+    throw new functions.https.HttpsError('internal', errorMessage, { originalError: errorMessage });
   }
 });
 
@@ -388,4 +391,5 @@ async function createJws(payload, kmsKeyPath, issuerDid) {
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
 
+    
     
