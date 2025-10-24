@@ -41,16 +41,14 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
         
         switch(field.type) {
             case 'file':
-                // For file inputs, we expect a FileList. Zod validation for files is tricky on the client.
-                // We'll use a simple check for now. For production, more robust validation is needed.
                 const fileSchema = z.any().refine((files) => files instanceof FileList && files.length > 0, 'File is required.');
                 fieldSchema = field.required ? fileSchema : z.any().optional();
                 break;
             default:
                 const stringSchema = z.string({
                     required_error: "This field is required.",
-                }).min(field.required ? 1 : 0, {message: "This field is required"});
-                fieldSchema = stringSchema;
+                });
+                fieldSchema = field.required ? stringSchema.min(1, {message: "This field is required"}) : stringSchema.optional();
         }
         shape[field.fieldName] = fieldSchema;
     });
@@ -232,9 +230,10 @@ export default function IssueCredentialPage() {
                                                 <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
                                                 <FormControl>
                                                     {(() => {
+                                                        const fieldWithValue = {...field, value: field.value || ''};
                                                         switch(fieldInfo.type) {
                                                             case 'date':
-                                                                return <Input type="date" {...field} />;
+                                                                return <Input type="date" {...fieldWithValue} />;
                                                             case 'select':
                                                                 return (
                                                                     <Select onValueChange={field.onChange} value={field.value || ""}>
@@ -258,7 +257,7 @@ export default function IssueCredentialPage() {
                                                                 );
                                                             case 'text':
                                                             default:
-                                                                return <Input type="text" {...field} />;
+                                                                return <Input type="text" {...fieldWithValue} />;
                                                         }
                                                     })()}
                                                 </FormControl>
