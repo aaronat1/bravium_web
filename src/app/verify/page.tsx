@@ -7,8 +7,9 @@ import jsQR from "jsqr";
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Loader2, CheckCircle, XCircle, FileSignature, Video, VideoOff } from "lucide-react";
+import { ShieldCheck, Loader2, CheckCircle, XCircle, FileSignature, Video, VideoOff, Eye } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getCredentialDetailsByJws, type CredentialDetails } from "@/actions/verificationActions";
+import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from "@/components/ui/table";
 
 
 type VerificationStatus = "pending" | "success" | "error";
@@ -44,6 +47,11 @@ export default function VerifyPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [activeTab, setActiveTab] = useState("jws");
+
+  const [credentialDetails, setCredentialDetails] = useState<CredentialDetails | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isFetchingDetails, startFetchingDetails] = useTransition();
+
 
   const handleVerifyJws = useCallback(async (jws: string) => {
     if (!jws) return;
@@ -80,6 +88,23 @@ export default function VerifyPage() {
       }
     });
   }, []);
+
+  const handleShowDetails = async () => {
+    if (!jwsInput) return;
+    startFetchingDetails(async () => {
+      const result = await getCredentialDetailsByJws(jwsInput);
+      if (result.success && result.data) {
+        setCredentialDetails(result.data);
+        setIsDetailsDialogOpen(true);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.message || "Could not fetch credential details.",
+        });
+      }
+    });
+  };
 
   const tick = useCallback(() => {
     if (isCameraOn && videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
@@ -186,6 +211,7 @@ export default function VerifyPage() {
     setVerificationResult(null);
     setJwsInput('');
     setIsCameraOn(false);
+    setCredentialDetails(null);
   }
 
   const renderContent = () => {
@@ -259,17 +285,23 @@ export default function VerifyPage() {
                                      <div className="w-full mt-4 text-left">
                                         <Card>
                                             <CardHeader>
-                                                <CardTitle>Detalles Verificados</CardTitle>
+                                                <CardTitle>Datos de la Carga Útil (Payload)</CardTitle>
                                             </CardHeader>
                                             <CardContent className="pt-2">
-                                                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-60">
+                                                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
                                                     {JSON.stringify(currentResult.claims, null, 2)}
                                                 </pre>
                                             </CardContent>
                                         </Card>
                                     </div>
                                 )}
-                                <Button onClick={resetAll} className="mt-4">{t.verifyPage.new_verification_button}</Button>
+                                <div className="flex items-center gap-4 mt-4">
+                                  <Button onClick={resetAll} variant="outline">{t.verifyPage.new_verification_button}</Button>
+                                  <Button onClick={handleShowDetails} disabled={isFetchingDetails}>
+                                    {isFetchingDetails ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Eye className="mr-2 h-4 w-4" />}
+                                    Ver Credencial
+                                  </Button>
+                                </div>
                             </div>
                         );
                     case 'error':
@@ -309,6 +341,53 @@ export default function VerifyPage() {
         </div>
       </main>
       <LandingFooter />
+
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Detalles de la Credencial</DialogTitle>
+            <DialogDescription>
+              Información del destinatario contenida en la credencial.
+            </DialogDescription>
+          </DialogHeader>
+          {credentialDetails ? (
+            <div className="py-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Campo</TableHead>
+                    <TableHead>Valor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(credentialDetails.recipientData).map(([key, value]) => (
+                    <TableRow key={key}>
+                      <TableCell className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</TableCell>
+                      <TableCell>
+                        {typeof value === 'string' && (value.startsWith('http') || value.startsWith('https')) ? (
+                          <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                            Abrir Enlace
+                          </a>
+                        ) : (
+                          String(value)
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+             <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setIsDetailsDialogOpen(false)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
