@@ -38,11 +38,21 @@ export async function getCredentialDetailsByJws(jws: string): Promise<{ success:
         }
 
         const doc = snapshot.docs[0];
-        const data = doc.data() as Omit<CredentialDetails, 'id'>;
+        const data = doc.data();
         
+        // This is the fix: convert the Firestore Timestamp to a plain object
+        // before sending it to the client component.
+        const issuedAtObject = {
+            _seconds: data.issuedAt._seconds,
+            _nanoseconds: data.issuedAt._nanoseconds,
+        };
+
         const result: CredentialDetails = {
             id: doc.id,
-            ...data
+            templateName: data.templateName,
+            recipientData: data.recipientData,
+            issuedAt: issuedAtObject,
+            customerId: data.customerId,
         };
 
         return { success: true, data: result };
