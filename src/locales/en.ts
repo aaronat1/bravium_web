@@ -359,7 +359,7 @@ export const en = {
     col_issued_at: "Issued At",
     view_button: "View",
     view_dialog_title: "View Credential",
-    view_dialog_desc: "Scan the QR code to add to a digital wallet.",
+    view_dialog_desc: "",
     close_button: "Close",
     filter_placeholder: "Filter by template or recipient...",
     actions: "Actions",
@@ -442,5 +442,3 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-    

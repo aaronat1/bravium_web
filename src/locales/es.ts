@@ -359,7 +359,7 @@ col_fields: "Campos",
     col_issued_at: "Fecha de Emisión",
     view_button: "Ver",
     view_dialog_title: "Ver Credencial",
-    view_dialog_desc: "Escanea el código QR para añadir a una cartera digital.",
+    view_dialog_desc: "",
     close_button: "Cerrar",
     filter_placeholder: "Filtrar por plantilla o destinatario...",
     actions: "Acciones",
@@ -442,5 +442,3 @@ col_fields: "Campos",
     p4_link_text: "contáctanos",
   },
 };
-
-    
