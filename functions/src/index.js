@@ -218,7 +218,7 @@ exports.openid4vp = functions.region("us-central1").https.onRequest(async (reque
 
             const requestObjectJwt = await createJws(sessionData.requestObject, kmsKeyPath, verifierDid);
             
-            response.set('Content-Type', 'application/jwt');
+            response.set('Content-Type', 'application/oauth-authz-req+jwt');
             response.status(200).send(requestObjectJwt);
 
         } catch (error) {
@@ -391,5 +391,4 @@ async function createJws(payload, kmsKeyPath, issuerDid) {
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
 
-    
     

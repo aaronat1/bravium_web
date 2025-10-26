@@ -36,7 +36,11 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
     const nonce = uuidv4();
     
     // This must match the deployed Cloud Function region and project ID.
-    const functionUrl = `https://us-central1-bravium-d1e08.cloudfunctions.net/openid4vp`;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    if (!projectId) {
+        throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set in the environment variables.");
+    }
+    const functionUrl = `https://us-central1-${projectId}.cloudfunctions.net/openid4vp`;
     const verifierClientId = "did:web:bravium.es";
     
     const presentationDefinition = {
@@ -56,7 +60,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
               path: ["$.issuer"],
               filter: {
                 type: "string",
-                pattern: `^${verifierClientId}$`
+                pattern: `^did:bravium:.*` // Accepts any bravium customer DID
               }
             }
           ]
@@ -79,11 +83,7 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
       scope: "openid",
       nonce: nonce,
       state: state,
-      claims: {
-        vp_token: {
-          presentation_definition: presentationDefinition
-        }
-      }
+      presentation_definition: presentationDefinition
     };
     
     // Store the unsigned request object in Firestore. The Cloud Function will sign it.
@@ -103,3 +103,5 @@ export async function generateRequest(input: GenerateRequestInput): Promise<Gene
       state: state,
     };
 }
+
+    
