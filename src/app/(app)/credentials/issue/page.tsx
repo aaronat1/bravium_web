@@ -75,6 +75,9 @@ export default function IssueCredentialPage() {
     const qrCodeRef = useRef<HTMLDivElement>(null);
     
     const [isShareSupported, setIsShareSupported] = useState(false);
+
+    const isAdmin = user?.uid === ADMIN_UID;
+
     useEffect(() => {
         // This check ensures navigator is available (client-side)
         if (typeof navigator !== 'undefined' && navigator.share) {
@@ -386,6 +389,5 @@ export default function IssueCredentialPage() {
 
         </div>
     );
-}
 
     
