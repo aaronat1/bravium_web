@@ -49,6 +49,7 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
                 if (field.required) {
                     stringSchema = stringSchema.min(1, {message: "This field is required"});
                 } else {
+                    // For optional fields, we explicitly mark them as optional in Zod
                     stringSchema = stringSchema.optional();
                 }
                 fieldSchema = stringSchema;
@@ -72,9 +73,14 @@ export default function IssueCredentialPage() {
     const [hasCopied, setHasCopied] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const qrCodeRef = useRef<HTMLDivElement>(null);
+    
     const [isShareSupported, setIsShareSupported] = useState(false);
-
-    const isAdmin = user?.uid === ADMIN_UID;
+    useEffect(() => {
+        // This check ensures navigator is available (client-side)
+        if (typeof navigator !== 'undefined' && navigator.share) {
+            setIsShareSupported(true);
+        }
+    }, []);
 
     const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
 
@@ -85,12 +91,6 @@ export default function IssueCredentialPage() {
     });
     
     const { handleSubmit, reset, control, register } = form;
-
-    useEffect(() => {
-        if (typeof navigator !== 'undefined' && navigator.share) {
-            setIsShareSupported(true);
-        }
-    }, []);
 
     useEffect(() => {
         if (!user) return;
@@ -112,8 +112,11 @@ export default function IssueCredentialPage() {
     }, [user, isAdmin, t, toast]);
 
     useEffect(() => {
+        // This is the correct pattern for dynamically updating form default values
+        // with react-hook-form. It triggers when the selected template changes.
         if (selectedTemplate) {
             const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
+                // Ensure every field has a defined value, defaulting to an empty string.
                 acc[field.fieldName] = field.defaultValue || '';
                 return acc;
             }, {} as Record<string, any>);
@@ -181,6 +184,7 @@ export default function IssueCredentialPage() {
 
         } catch (error: any) {
             console.error("Error issuing credential:", error);
+            // This now extracts the detailed error message from the HttpsError if available.
             const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
@@ -210,7 +214,14 @@ export default function IssueCredentialPage() {
     };
 
     const handleShare = async () => {
-        if (!isShareSupported || !issuedCredential) return;
+        if (!isShareSupported || !issuedCredential) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Sharing is not supported on this device or there is no credential to share.',
+            });
+            return;
+        }
         
         try {
             await navigator.share({
@@ -218,13 +229,13 @@ export default function IssueCredentialPage() {
                 text: `Here is my verifiable credential: ${issuedCredential}`,
             });
         } catch (error: any) {
-            // AbortError is thrown when the user cancels the share action, so we can ignore it.
+            // AbortError is a common error when the user cancels the share dialog, so we can safely ignore it.
             if (error.name !== 'AbortError') {
-                console.error('Error sharing:', error);
-                 toast({
+                console.error('Share API error:', error);
+                toast({
                     variant: 'destructive',
-                    title: 'Error',
-                    description: `Could not share: ${error.message}`,
+                    title: 'Sharing Failed',
+                    description: error.message || 'Could not share the credential at this time.',
                 });
             }
         }
@@ -274,6 +285,7 @@ export default function IssueCredentialPage() {
                                         control={control}
                                         name={fieldInfo.fieldName as any}
                                         render={({ field }) => {
+                                           // Crucially, we ensure the value passed to the input is never undefined.
                                            const displayValue = field.value ?? '';
                                            return (
                                             <FormItem>
@@ -341,7 +353,7 @@ export default function IssueCredentialPage() {
             <Dialog open={!!issuedCredential} onOpenChange={(open) => !open && setIssuedCredential(null)}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>{t.issueCredentialPage.result_dialog_title}</DialogTitle>
+                        <DialogTitle>Credencial Generada</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col items-center gap-6 py-4">
                         <div ref={qrCodeRef} className="p-4 bg-white rounded-lg border">
@@ -376,3 +388,4 @@ export default function IssueCredentialPage() {
     );
 }
 
+    
