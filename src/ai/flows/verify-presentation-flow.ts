@@ -1,107 +1,75 @@
 
 'use server';
 /**
- * @fileOverview Flow for generating a verifiable presentation request.
- * This flow is responsible for creating a session and storing the unsigned
- * presentation request object for later signing by the Cloud Function.
+ * @fileOverview Generates an OpenID4VP request URL.
+ * This file is now deprecated in favor of a direct verification flow.
  */
 
-import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
+// This entire flow is deprecated and will be removed in a future update.
+// The new verification logic is handled client-side by calling the `verifyCredential`
+// cloud function directly.
+
 import { adminDb } from '@/lib/firebase/admin';
 
 if (!adminDb) {
-  throw new Error("Firebase Admin DB is not initialized. Verification flows will fail.");
+  throw new Error("Firebase Admin DB is not initialized. Verification flow will fail.");
 }
 
-const verificationSessions = adminDb.collection('verificationSessions');
+const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+if (!PROJECT_ID) {
+    throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set.");
+}
 
-// Input for generating the request
-const GenerateRequestInputSchema = z.object({
-    baseUrl: z.string().url().describe("The base URL of the application, provided by the client."),
-});
-export type GenerateRequestInput = z.infer<typeof GenerateRequestInputSchema>;
+// Function is now a simple server action, no Genkit needed.
+export async function generateRequest(
+  { baseUrl }: { baseUrl: string }
+): Promise<{ requestUrl: string; state: string }> {
 
-// Output for the generated request
-const GenerateRequestOutputSchema = z.object({
-    requestUrl: z.string().describe("The full OpenID4VP request URL for the QR code."),
-    state: z.string().describe("The unique state for this verification session."),
-});
-export type GenerateRequestOutput = z.infer<typeof GenerateRequestOutputSchema>;
+  const state = Math.random().toString(36).substring(2);
+  const functionUrl = `https://us-central1-${PROJECT_ID}.cloudfunctions.net/openid4vp`;
+  const callbackUrl = `${baseUrl}/verify/callback`;
 
-
-// The exported function to generate a request.
-export async function generateRequest(input: GenerateRequestInput): Promise<GenerateRequestOutput> {
-    const state = uuidv4();
-    const nonce = uuidv4();
-    
-    // This must match the deployed Cloud Function region and project ID.
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    if (!projectId) {
-        throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set in the environment variables.");
-    }
-    const functionUrl = `https://us-central1-${projectId}.cloudfunctions.net/openid4vp`;
-    const verifierClientId = "did:web:bravium.es";
-    
-    const presentationDefinition = {
-      id: "presentation-def-" + uuidv4(),
-      input_descriptors: [{
-        id: "vc-bravium-" + uuidv4(),
-        name: "Bravium Issued Credential",
-        purpose: "Please provide any credential issued by Bravium.",
-        schema: [
+  const requestObject = {
+      response_type: 'vp_token',
+      client_id: baseUrl,
+      redirect_uri: callbackUrl,
+      presentation_definition: {
+        id: 'Bravium-Verification-Request',
+        input_descriptors: [
           {
-            uri: "https://www.w3.org/2018/credentials#VerifiableCredential"
-          }
-        ],
-        constraints: {
-          fields: [
-            {
-              path: ["$.issuer"],
-              filter: {
-                type: "string",
-                pattern: `^did:bravium:.*` // Accepts any bravium customer DID
-              }
+            id: 'verifiable_credential',
+            name: 'Bravium Credential',
+            purpose: 'To verify the authenticity of a credential issued by a Bravium customer.',
+            constraints: {
+              fields: [
+                {
+                  path: ['$.type'],
+                  filter: {
+                    type: 'string',
+                    pattern: 'VerifiableCredential'
+                  }
+                }
+              ]
             }
-          ]
-        }
-      }]
-    };
-    
-    // The responseUri is where the wallet POSTs the vp_token to the cloud function
-    const responseUri = `${functionUrl}`;
+          }
+        ]
+      },
+      nonce: Math.random().toString(36).substring(2),
+      state: state
+  };
 
-    // The redirectUri is where the user is sent after successful verification. Must match a real page.
-    const redirectUri = `${input.baseUrl}/verify/callback`;
-
-    const requestObject = {
-      client_id: verifierClientId,
-      redirect_uri: redirectUri,
-      response_uri: responseUri,
-      response_type: "vp_token",
-      response_mode: "direct_post",
-      scope: "openid",
-      nonce: nonce,
-      state: state,
-      presentation_definition: presentationDefinition
-    };
-    
-    // Store the unsigned request object in Firestore. The Cloud Function will sign it.
-    await verificationSessions.doc(state).set({
-        status: 'pending',
-        createdAt: new Date(),
-        requestObject: requestObject
+  try {
+    await adminDb.collection('verificationSessions').doc(state).set({
+      status: 'pending',
+      createdAt: new Date(),
+      requestObject: requestObject
     });
-    
-    const requestParams = new URLSearchParams({
-        client_id: verifierClientId,
-        request_uri: `${functionUrl}?state=${state}`,
-    });
+  } catch (error: any) {
+     console.error("Error creating verification session in Firestore:", error);
+     throw new Error(`Failed to create session: ${error.message}`);
+  }
 
-    return {
-      requestUrl: `openid-vc://?${requestParams.toString()}`,
-      state: state,
-    };
+  const requestUrl = `openid-vc://?request_uri=${encodeURIComponent(functionUrl)}&state=${state}`;
+
+  return { requestUrl, state };
 }
-
-    

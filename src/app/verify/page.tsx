@@ -1,161 +1,203 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useTransition } from "react";
-import QRCode from "qrcode.react";
+import { useState, useEffect, useCallback, useTransition, useRef } from "react";
+import jsQR from "jsqr";
 
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode, FileSignature } from "lucide-react";
+import { ShieldCheck, Loader2, CheckCircle, XCircle, FileSignature, Video, VideoOff } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
-import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase/config";
-import { generateRequest } from "@/ai/flows/verify-presentation-flow";
-import CodeBlock from "@/components/code-block";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { verifyJws } from "@/actions/verificationActions";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 
-type VerificationStatus = "pending" | "success" | "error" | "expired";
-type PageState = "idle" | "loading" | "verifying" | "result";
+type VerificationStatus = "pending" | "success" | "error";
+type PageState = "idle" | "verifying" | "result";
 
 interface VerificationResult {
     status: VerificationStatus;
     message?: string;
     claims?: Record<string, any>;
-    verifiedAt?: Timestamp | Date;
+    verifiedAt?: Date;
 }
+
+const VERIFY_ENDPOINT = "https://us-central1-bravium-d1e08.cloudfunctions.net/verifyCredential";
 
 export default function VerifyPage() {
   const { t } = useI18n();
+  const { toast } = useToast();
+
   const [pageState, setPageState] = useState<PageState>("idle");
-  const [requestData, setRequestData] = useState<{ requestUrl: string; state: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const [isRequesting, startRequestTransition] = useTransition();
-
+  const [isVerifying, startJwsVerification] = useTransition();
   const [jwsInput, setJwsInput] = useState('');
-  const [isVerifyingJws, startJwsVerification] = useTransition();
+  
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [activeTab, setActiveTab] = useState("jws");
 
-  const handleCreateRequest = useCallback(() => {
-    startRequestTransition(async () => {
-      setPageState("loading");
-      setError(null);
-      setVerificationResult(null);
-      setRequestData(null);
-      
+  const handleVerifyJws = useCallback(async (jws: string) => {
+    if (!jws) return;
+    setIsCameraOn(false); // Turn off camera on verification
+    setPageState('verifying');
+    startJwsVerification(async () => {
       try {
-        const baseUrl = window.location.origin;
-        const response = await generateRequest({ baseUrl });
+        const response = await fetch(VERIFY_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jws })
+        });
         
-        if (!response || !response.requestUrl) {
-            throw new Error("Failed to generate verification request.");
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || `Request failed with status ${response.status}`);
         }
 
-        setRequestData(response);
-        setPageState("verifying");
-      } catch (e: any) {
-        console.error("Error creating request:", e);
-        const errorMessage = e.message || "An unexpected error occurred.";
-        setError(errorMessage);
-        setVerificationResult({ status: "error", message: errorMessage });
-        setPageState("result");
+        setVerificationResult({
+          status: 'success',
+          message: 'JWS verified successfully.',
+          claims: result.claims,
+          verifiedAt: new Date()
+        });
+
+      } catch (error: any) {
+         setVerificationResult({
+          status: 'error',
+          message: error.message || "An unknown error occurred."
+        });
+      } finally {
+        setPageState('result');
       }
     });
   }, []);
 
-  useEffect(() => {
-    if (pageState !== 'verifying' || !requestData?.state) {
-      return;
+  const tick = useCallback(() => {
+    if (isCameraOn && videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+        if (ctx) {
+            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            try {
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                  inversionAttempts: "dontInvert",
+              });
+              if (code) {
+                  setJwsInput(code.data);
+                  setIsCameraOn(false);
+                  setActiveTab("jws");
+                  toast({ title: "Código QR detectado", description: "El JWS ha sido copiado. Haz clic en verificar." });
+              }
+            } catch (e) {
+              // Ignore getImageData errors if canvas is tainted
+            }
+        }
     }
+  }, [isCameraOn, toast]);
+  
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    let animationFrameId: number;
 
-    const sessionDocRef = doc(db, "verificationSessions", requestData.state);
-
-    const unsubscribe = onSnapshot(sessionDocRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-        if (data.status === "success") {
-          setVerificationResult({ 
-              status: "success", 
-              message: data.message || "Credential verified successfully!",
-              claims: data.claims,
-              verifiedAt: data.verifiedAt,
-          });
-          setPageState("result");
-          unsubscribe();
-        } else if (data.status === "error") {
-          setVerificationResult({ status: "error", message: data.error || "Verification failed." });
-          setPageState("result");
-          unsubscribe();
+    const startCamera = async () => {
+      if (isCameraOn && hasCameraPermission) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play();
+            const animate = () => {
+              tick();
+              animationFrameId = requestAnimationFrame(animate);
+            };
+            animate();
+          }
+        } catch (err) {
+          console.error("Error starting camera:", err);
+          setHasCameraPermission(false);
+          setIsCameraOn(false);
+          toast({ variant: "destructive", title: "Error de Cámara", description: "No se pudo acceder a la cámara."})
         }
       }
-    });
-    
-    const timer = setTimeout(() => {
-        if (pageState === 'verifying') {
-            unsubscribe();
-            setVerificationResult({ status: "expired", message: "The request has expired."});
-            setPageState("result");
-        }
-    }, 180000); // 3 minutes
-
-    return () => {
-        unsubscribe();
-        clearTimeout(timer);
     };
 
-  }, [requestData, pageState]);
+    if (isCameraOn) {
+      startCamera();
+    } else {
+       if (videoRef.current && videoRef.current.srcObject) {
+         const currentStream = videoRef.current.srcObject as MediaStream;
+         currentStream.getTracks().forEach(track => track.stop());
+         videoRef.current.srcObject = null;
+       }
+    }
 
-  const handleVerifyJws = () => {
-    if (!jwsInput) return;
-
-    startJwsVerification(async () => {
-      setPageState('loading');
-      const result = await verifyJws(jwsInput);
-      if (result.success && result.claims) {
-        setVerificationResult({
-          status: 'success',
-          message: 'JWS verificado con éxito.',
-          claims: result.claims,
-          verifiedAt: new Date()
-        });
-      } else {
-        setVerificationResult({
-          status: 'error',
-          message: result.error
-        });
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const currentStream = videoRef.current.srcObject as MediaStream;
+        currentStream.getTracks().forEach(track => track.stop());
       }
-      setPageState('result');
-    });
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [isCameraOn, hasCameraPermission, tick, toast]);
+
+  const requestCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(track => track.stop());
+      setHasCameraPermission(true);
+      setIsCameraOn(true);
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      setHasCameraPermission(false);
+      toast({
+        variant: "destructive",
+        title: "Acceso a Cámara Denegado",
+        description: "Por favor, habilita los permisos de cámara en tu navegador.",
+      });
+    }
+  };
+
+  const handleCameraToggle = () => {
+    if (!isCameraOn && !hasCameraPermission) {
+      requestCameraPermission();
+    } else {
+      setIsCameraOn(prev => !prev);
+    }
   }
 
   const resetAll = () => {
     setPageState('idle');
     setVerificationResult(null);
-    setError(null);
-    setRequestData(null);
     setJwsInput('');
+    setIsCameraOn(false);
   }
 
   const renderContent = () => {
     switch (pageState) {
         case "idle":
             return (
-              <Tabs defaultValue="qr" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="qr">Verificar con QR</TabsTrigger>
                   <TabsTrigger value="jws">Verificar JWS</TabsTrigger>
+                  <TabsTrigger value="camera">Verificar con Cámara</TabsTrigger>
                 </TabsList>
-                <TabsContent value="qr" className="flex flex-col items-center justify-center min-h-[256px] gap-4 pt-4">
-                  <Button onClick={handleCreateRequest} size="lg" disabled={isRequesting}>
-                    <QrCode className="mr-2 h-5 w-5" />
-                    {t.verifyPage.new_verification_button}
-                  </Button>
-                </TabsContent>
+                
                 <TabsContent value="jws" className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="jws-input">Pegar JWS de la Credencial</Label>
@@ -169,44 +211,43 @@ export default function VerifyPage() {
                     />
                   </div>
                   <div className="flex justify-center">
-                    <Button onClick={handleVerifyJws} disabled={isVerifyingJws || !jwsInput}>
-                        {isVerifyingJws ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSignature className="mr-2 h-4 w-4" />}
+                    <Button onClick={() => handleVerifyJws(jwsInput)} disabled={isVerifying || !jwsInput}>
+                        {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSignature className="mr-2 h-4 w-4" />}
                         Verificar JWS
                     </Button>
                   </div>
                 </TabsContent>
+
+                <TabsContent value="camera" className="space-y-4 pt-4">
+                    <div className="w-full aspect-video bg-muted rounded-md overflow-hidden relative flex items-center justify-center">
+                        <video ref={videoRef} className={cn("h-full w-full object-cover", { "hidden": !isCameraOn })} autoPlay playsInline muted />
+                         <canvas ref={canvasRef} className="hidden" />
+                        {!isCameraOn && <VideoOff className="h-16 w-16 text-muted-foreground" />}
+                    </div>
+                    {hasCameraPermission === false && (
+                       <Alert variant="destructive">
+                            <AlertTitle>Acceso a Cámara Requerido</AlertTitle>
+                            <AlertDescription>Por favor, permite el acceso a la cámara para usar esta función.</AlertDescription>
+                        </Alert>
+                    )}
+                    <div className="flex flex-col items-center gap-4">
+                        <Button onClick={handleCameraToggle}>
+                           {isCameraOn ? <VideoOff className="mr-2 h-4 w-4"/> : <Video className="mr-2 h-4 w-4"/>}
+                           {isCameraOn ? 'Apagar Cámara' : 'Encender Cámara'}
+                        </Button>
+                    </div>
+                </TabsContent>
               </Tabs>
             );
-        case "loading":
+        case "verifying":
             return (
                 <div className="flex flex-col items-center justify-center min-h-[256px] gap-4">
                     <Loader2 className="h-12 w-12 animate-spin text-primary" />
                     <p className="text-muted-foreground">{t.verifyPage.loading_request}</p>
                 </div>
             );
-        case "verifying":
-             if (requestData) {
-                return (
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="p-4 bg-white rounded-lg border">
-                            <QRCode value={requestData.requestUrl} size={256} />
-                        </div>
-                        <div className="w-full">
-                           <CodeBlock code={requestData.requestUrl} />
-                        </div>
-                        <div className="text-center">
-                            <p className="text-muted-foreground">{t.verifyPage.scan_qr_description}</p>
-                            <div className="mt-4 flex items-center justify-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span>{t.verifyPage.waiting_for_presentation}</span>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-            return null;
         case "result":
-            const currentResult = verificationResult || { status: 'error', message: error };
+            const currentResult = verificationResult;
             if (currentResult) {
                 switch (currentResult.status) {
                     case 'success':
@@ -217,26 +258,27 @@ export default function VerifyPage() {
                                 {currentResult.claims && (
                                      <div className="w-full mt-4 text-left">
                                         <Card>
-                                            <CardContent className="pt-6">
-                                                <h4 className="font-semibold mb-2">Detalles Verificados:</h4>
-                                                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
+                                            <CardHeader>
+                                                <CardTitle>Detalles Verificados</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="pt-2">
+                                                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-60">
                                                     {JSON.stringify(currentResult.claims, null, 2)}
                                                 </pre>
                                             </CardContent>
                                         </Card>
                                     </div>
                                 )}
-                                <Button onClick={resetAll} className="mt-4" disabled={isRequesting}>{t.verifyPage.new_verification_button}</Button>
+                                <Button onClick={resetAll} className="mt-4">{t.verifyPage.new_verification_button}</Button>
                             </div>
                         );
                     case 'error':
-                    case 'expired':
                         return (
                             <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
                                 <XCircle className="h-16 w-16 text-destructive" />
-                                <h3 className="text-2xl font-bold">{currentResult.status === 'error' ? t.verifyPage.result_error_title : t.verifyPage.result_expired_title}</h3>
+                                <h3 className="text-2xl font-bold">{t.verifyPage.result_error_title}</h3>
                                 <p className="text-muted-foreground max-w-full text-left break-words">{currentResult.message}</p>
-                                <Button onClick={resetAll} disabled={isRequesting}>{t.verifyPage.retry_button}</Button>
+                                <Button onClick={resetAll}>{t.verifyPage.retry_button}</Button>
                             </div>
                         );
                 }
@@ -270,5 +312,3 @@ export default function VerifyPage() {
     </div>
   );
 }
-
-    

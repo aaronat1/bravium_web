@@ -47,7 +47,10 @@ exports.onCustomerCreate = functions.firestore
 
       // If this is the verifier customer, also create the public did.json
       if (customerId === VERIFIER_CUSTOMER_ID) {
-          await db.collection('dids').doc('did.json').set(didDocument);
+          // Note: did.json is not a valid document ID for Firestore, but we use it for a specific lookup purpose
+          // A better approach would be a dedicated 'dids_public' collection. For now, this works for demo.
+          const publicDidRef = db.collection('dids_public').doc('did.json');
+          await publicDidRef.set(didDocument);
           console.log('did.json para el verificador almacenado en Firestore.');
       }
 
@@ -92,7 +95,7 @@ exports.onCustomerDelete = functions.firestore
         console.log(`DID ${did} eliminado con éxito.`);
         
         if (customerId === VERIFIER_CUSTOMER_ID) {
-            await db.collection('dids').doc('did.json').delete();
+            await db.collection('dids_public').doc('did.json').delete();
             console.log('did.json del verificador eliminado de Firestore.');
         }
 
@@ -168,122 +171,76 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
   }
 });
 
+
 /**
  * ----------------------------------------------------------------
- * FUNCIÓN DE VERIFICACIÓN OpenID4VP
+ * FUNCIÓN DE VERIFICACIÓN
  * ----------------------------------------------------------------
- * Maneja las peticiones GET (servir petición) y POST (verificar presentación).
+ * Verifica un JWS de una credencial.
  */
-exports.openid4vp = functions.region("us-central1").https.onRequest(async (request, response) => {
+exports.verifyCredential = functions.https.onRequest(async (request, response) => {
+    // Enable CORS
     response.set("Access-Control-Allow-Origin", "*");
-    response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response.set("Access-Control-Allow-Methods", "POST, OPTIONS");
     response.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
     if (request.method === "OPTIONS") {
         response.status(204).send();
         return;
     }
-
-    // --- GET: La cartera solicita el objeto de la petición ---
-    if (request.method === "GET") {
-        const state = request.query.state;
-        if (!state) {
-            console.error("Petición GET sin 'state'.");
-            response.status(400).send("Bad Request: Falta el parámetro 'state'.");
-            return;
-        }
-
-        try {
-            const sessionDoc = await db.collection('verificationSessions').doc(state).get();
-            if (!sessionDoc.exists) {
-                console.error(`Sesión no encontrada para el state: ${state}`);
-                response.status(404).send("Not Found: 'state' inválido o expirado.");
-                return;
-            }
-            const sessionData = sessionDoc.data();
-            
-            if (!sessionData || !sessionData.requestObject) {
-                console.error(`requestObject no encontrado para el state: ${state}`);
-                response.status(500).send("Error interno: request object no encontrado.");
-                return;
-            }
-
-            const verifierDid = "did:web:bravium.es";
-            const verifierDoc = await db.collection('customers').doc(VERIFIER_CUSTOMER_ID).get();
-            if (!verifierDoc.exists || !verifierDoc.data().kmsKeyPath) {
-                console.error(`Verifier customer ${VERIFIER_CUSTOMER_ID} or its KMS key not found.`);
-                throw new Error("Verifier configuration error.");
-            }
-            const kmsKeyPath = verifierDoc.data().kmsKeyPath;
-
-            const requestObjectJwt = await createJws(sessionData.requestObject, kmsKeyPath, verifierDid);
-            
-            response.set('Content-Type', 'application/oauth-authz-req+jwt');
-            response.status(200).send(requestObjectJwt);
-
-        } catch (error) {
-            console.error(`Error en GET para el state ${state}:`, error);
-            response.status(500).send("Internal Server Error");
-        }
+    if (request.method !== "POST") {
+        response.status(405).send("Method Not Allowed");
         return;
     }
 
-    // --- POST: La cartera envía la presentación para ser verificada ---
-    if (request.method === "POST") {
-        const { vp_token, state } = request.body;
-        if (!vp_token || !state) {
-            console.error("Petición POST sin vp_token o state", { body: request.body });
-            response.status(400).send("Bad Request: Faltan vp_token o state.");
-            return;
-        }
-
-        const sessionDocRef = db.collection('verificationSessions').doc(state);
-        const jose = await import('jose');
-
-        try {
-            const decodedToken = jose.decodeJwt(vp_token);
-            if (!decodedToken || typeof decodedToken.iss !== 'string') {
-                throw new Error("El vp_token está malformado o no contiene un 'issuer' (iss).");
-            }
-            const issuerDid = decodedToken.iss;
-            
-            const didDocRef = db.collection('dids').doc(issuerDid);
-            const didDoc = await didDocRef.get();
-
-            if (!didDoc.exists) {
-                throw new Error(`El DID del emisor '${issuerDid}' no fue encontrado.`);
-            }
-
-            const didDocument = didDoc.data();
-            const verificationMethod = didDocument.verificationMethod?.[0];
-            if (!verificationMethod || !verificationMethod.publicKeyJwk) {
-                throw new Error(`No se encontró una 'publicKeyJwk' válida en el documento DID para ${issuerDid}.`);
-            }
-
-            const publicKey = await jose.importJWK(verificationMethod.publicKeyJwk, 'ES256');
-            const { payload } = await jose.jwtVerify(vp_token, publicKey);
-
-            await sessionDocRef.set({
-                status: 'success',
-                verifiedAt: new Date(),
-                claims: payload,
-                message: "Presentación verificada con éxito."
-            }, { merge: true });
-
-            console.log(`Verificación exitosa para el state: ${state}`);
-            response.status(200).send({ redirect_uri: 'https://bravium.es/verify/callback' });
-
-        } catch (error) {
-            console.error(`Error en la verificación criptográfica para el state ${state}:`, error);
-            const errorMessage = error instanceof Error ? error.message : "La verificación de la presentación falló.";
-            
-            await sessionDocRef.set({ status: 'error', error: errorMessage }, { merge: true }).catch();
-            response.status(400).json({ error: "Verificación fallida", details: errorMessage });
-        }
+    const { jws } = request.body;
+    if (!jws || typeof jws !== 'string') {
+        response.status(400).json({ success: false, error: 'JWS is missing or invalid.' });
         return;
     }
+    
+    const jose = await import('jose');
 
-    response.status(405).send("Method Not Allowed");
+    try {
+        const decodedHeader = jose.decodeProtectedHeader(jws);
+
+        if (!decodedHeader.kid || typeof decodedHeader.kid !== 'string') {
+            throw new Error("El JWS no contiene un 'kid' (Key ID) en la cabecera.");
+        }
+        
+        const did = decodedHeader.kid.split('#')[0];
+        
+        // Check both possible collections for the DID document
+        let didDocSnapshot;
+        if (did.startsWith('did:web:')) {
+             didDocSnapshot = await db.collection('dids_public').doc('did.json').get();
+             if (didDocSnapshot.exists && didDocSnapshot.data().id !== did) {
+                 didDocSnapshot = null; // Found did.json but it's not the one we are looking for
+             }
+        } else {
+             didDocSnapshot = await db.collection('dids').doc(did).get();
+        }
+
+        if (!didDocSnapshot || !didDocSnapshot.exists) {
+            throw new Error(`El documento DID '${did}' no fue encontrado en Firestore.`);
+        }
+
+        const didDocument = didDocSnapshot.data();
+        const verificationMethod = didDocument?.verificationMethod?.[0];
+        if (!verificationMethod || !verificationMethod.publicKeyJwk) {
+            throw new Error(`No se encontró un 'publicKeyJwk' válido en el documento DID para ${did}.`);
+        }
+
+        const publicKey = await jose.importJWK(verificationMethod.publicKeyJwk, 'ES256');
+        const { payload } = await jose.jwtVerify(jws, publicKey);
+
+        response.status(200).json({ success: true, claims: payload });
+
+    } catch (error) {
+        console.error("Error verifying JWS:", error);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during JWS verification.";
+        response.status(400).json({ success: false, error: errorMessage });
+    }
 });
 
 
