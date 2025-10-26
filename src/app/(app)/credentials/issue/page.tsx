@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileCheck, Copy, Check, AlertTriangle } from "lucide-react";
+import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -49,8 +49,6 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
                 if (field.required) {
                     stringSchema = stringSchema.min(1, {message: "This field is required"});
                 } else {
-                    // Important: make non-required fields optional so Zod doesn't complain
-                    // if they are empty strings.
                     stringSchema = stringSchema.optional();
                 }
                 fieldSchema = stringSchema;
@@ -73,6 +71,7 @@ export default function IssueCredentialPage() {
     const [issuedCredential, setIssuedCredential] = useState<string | null>(null);
     const [hasCopied, setHasCopied] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
+    const qrCodeRef = useRef<HTMLDivElement>(null);
 
     const isAdmin = user?.uid === ADMIN_UID;
 
@@ -82,7 +81,6 @@ export default function IssueCredentialPage() {
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
-        // defaultValues will be set by useEffect
     });
     
     const { handleSubmit, reset, control, register } = form;
@@ -106,16 +104,15 @@ export default function IssueCredentialPage() {
         return () => unsubscribe();
     }, [user, isAdmin, t, toast]);
 
-    // This is the correct way to handle dynamic defaultValues with react-hook-form
     useEffect(() => {
         if (selectedTemplate) {
             const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
-                acc[field.fieldName] = field.defaultValue || ''; // Ensure it's always a string
+                acc[field.fieldName] = field.defaultValue || '';
                 return acc;
             }, {} as Record<string, any>);
             reset(defaultValues);
         } else {
-            reset({}); // Reset form if no template is selected
+            reset({});
         }
     }, [selectedTemplate, reset]);
 
@@ -123,7 +120,7 @@ export default function IssueCredentialPage() {
     const handleTemplateChange = (templateId: string) => {
         const template = templates.find(t => t.id === templateId) || null;
         setSelectedTemplate(template);
-        setSubmissionError(null); // Clear error when template changes
+        setSubmissionError(null);
     };
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
@@ -177,7 +174,6 @@ export default function IssueCredentialPage() {
 
         } catch (error: any) {
             console.error("Error issuing credential:", error);
-            // This is the key change: we extract the detailed message from the HttpsError
             const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
@@ -191,6 +187,38 @@ export default function IssueCredentialPage() {
         navigator.clipboard.writeText(issuedCredential);
         setHasCopied(true);
         setTimeout(() => setHasCopied(false), 2000);
+    };
+
+    const handleDownloadQR = () => {
+        const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
+        if (canvas) {
+            const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            let downloadLink = document.createElement("a");
+            downloadLink.href = pngUrl;
+            downloadLink.download = "credential-qr.png";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    };
+
+    const handleShare = async () => {
+        if (navigator.share && issuedCredential) {
+            try {
+                await navigator.share({
+                    title: 'Verifiable Credential',
+                    text: `Here is my verifiable credential: ${issuedCredential}`,
+                });
+            } catch (error) {
+                console.error('Error sharing:', error);
+            }
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'La función de compartir no es compatible con este navegador.',
+            });
+        }
     };
 
     return (
@@ -237,7 +265,6 @@ export default function IssueCredentialPage() {
                                         control={control}
                                         name={fieldInfo.fieldName as any}
                                         render={({ field }) => {
-                                           // This ensures the value is never null/undefined, preventing uncontrolled->controlled error
                                            const displayValue = field.value ?? '';
                                            return (
                                             <FormItem>
@@ -246,11 +273,9 @@ export default function IssueCredentialPage() {
                                                     {(() => {
                                                         switch(fieldInfo.type) {
                                                             case 'date':
-                                                                // Use value instead of field.value which could be undefined
                                                                 return <Input type="date" {...field} value={displayValue} />;
                                                             case 'select':
                                                                 return (
-                                                                    // Use value to ensure it's never undefined
                                                                     <Select onValueChange={field.onChange} value={displayValue}>
                                                                         <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
                                                                         <SelectContent>
@@ -272,7 +297,6 @@ export default function IssueCredentialPage() {
                                                                 );
                                                             case 'text':
                                                             default:
-                                                                // Use value to ensure it's never undefined
                                                                 return <Input type="text" {...field} value={displayValue} />;
                                                         }
                                                     })()}
@@ -309,12 +333,20 @@ export default function IssueCredentialPage() {
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>{t.issueCredentialPage.result_dialog_title}</DialogTitle>
-                        <DialogDescription>{t.issueCredentialPage.result_dialog_desc}</DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col items-center gap-6 py-4">
-                        <div className="p-4 bg-white rounded-lg border">
+                        <div ref={qrCodeRef} className="p-4 bg-white rounded-lg border">
                             <QRCode value={issuedCredential!} size={256} />
                         </div>
+                        <div className="flex items-center gap-2">
+                             <Button variant="outline" onClick={handleDownloadQR}>
+                                <Download className="mr-2 h-4 w-4" /> Descargar QR
+                            </Button>
+                            <Button variant="outline" onClick={handleShare} disabled={!navigator.share}>
+                                <Share2 className="mr-2 h-4 w-4" /> Compartir
+                            </Button>
+                        </div>
+
                         <div className="w-full space-y-2">
                              <Label htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</Label>
                             <div className="relative">
@@ -334,3 +366,5 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
+
+    
