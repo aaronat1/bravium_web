@@ -379,10 +379,10 @@ col_fields: "Campos",
     pagination_page: "Página {current} de {total}",
     pagination_previous: "Anterior",
     pagination_next: "Siguiente",
-    download_qr_button: "Descargar QR",
+    download_pdf_button: "Descargar PDF",
     share_button: "Compartir",
     share_title: "Credencial Verificable",
-    share_text: "Aquí está mi credencial verificable: {jws}",
+    share_text: "Aquí tienes mi documento de credencial verificable.",
   },
   issueCredentialPage: {
     title: "Emitir Nueva Credencial",
@@ -448,4 +448,5 @@ col_fields: "Campos",
   },
 };
 
+    
     

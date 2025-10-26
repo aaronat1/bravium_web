@@ -4,7 +4,7 @@
 import { useEffect, useState, useMemo, useTransition, useRef } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
-import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X, Download, Share2 } from "lucide-react";
+import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X, Share2, Download } from "lucide-react";
 import QRCode from "qrcode.react";
 import { format, isSameDay } from 'date-fns';
 import { es, enUS } from "date-fns/locale";
@@ -62,37 +62,68 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
     const handleCopy = () => {
         navigator.clipboard.writeText(credential.jws);
         setHasCopied(true);
+        toast({ title: t.toast_success_title, description: "JWS copied to clipboard."});
         setTimeout(() => setHasCopied(false), 2000);
     };
 
-    const handleDownloadQR = () => {
+    const generateCredentialPdf = async (): Promise<Blob> => {
+        const doc = new jsPDF();
         const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
-        if (canvas) {
-            const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            let downloadLink = document.createElement("a");
-            downloadLink.href = pngUrl;
-            downloadLink.download = `${credential.templateName.replace(/\s+/g, '_')}-qr.png`;
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
+        if (!canvas) {
+            throw new Error("QR Code canvas not found.");
         }
+        const qrCodeImage = canvas.toDataURL('image/png');
+
+        doc.setFontSize(18);
+        doc.text(credential.templateName, 14, 22);
+
+        doc.addImage(qrCodeImage, 'PNG', 14, 30, 60, 60);
+
+        doc.setFontSize(11);
+        doc.text("JWS:", 14, 100);
+        const jwsLines = doc.splitTextToSize(credential.jws, 180);
+        doc.text(jwsLines, 14, 105);
+
+        const finalY = (jwsLines.length * 5) + 110;
+        doc.setFontSize(12);
+        doc.textWithLink("check in https://bravium.es/verify", 14, finalY, { url: 'https://bravium.es/verify' });
+        
+        return doc.output('blob');
     };
 
+    const handleDownloadPdf = async () => {
+        try {
+            const pdfBlob = await generateCredentialPdf();
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = `Bravium-Credential-${credential.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error: any) {
+             toast({ variant: "destructive", title: t.toast_error_title, description: error.message });
+        }
+    };
+    
     const handleShare = async () => {
         if (!navigator.share || !credential) return;
+
         try {
-            await navigator.share({
-                title: t.credentialsPage.share_title,
-                text: t.credentialsPage.share_text.replace('{jws}', credential.jws),
-            });
-        } catch (error: any) {
-            // AbortError is triggered when the user closes the share dialog, so we ignore it.
-            if (error.name !== 'AbortError') {
-                 toast({
-                    variant: "destructive",
-                    title: t.toast_error_title,
-                    description: error.message,
+            const pdfBlob = await generateCredentialPdf();
+            const pdfFile = new File([pdfBlob], `Bravium-Credential-${credential.id}.pdf`, { type: 'application/pdf' });
+
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                await navigator.share({
+                    files: [pdfFile],
+                    title: t.credentialsPage.share_title,
+                    text: t.credentialsPage.share_text.replace('{jws}', credential.jws),
                 });
+            } else {
+                 toast({ variant: "destructive", title: t.toast_error_title, description: "Cannot share files on this browser." });
+            }
+        } catch (error: any) {
+            if (error.name !== 'AbortError') {
+                 toast({ variant: "destructive", title: t.toast_error_title, description: error.message });
             }
         }
     };
@@ -109,8 +140,8 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
                         <QRCode value={credential.jws} size={256} />
                     </div>
                      <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={handleDownloadQR}>
-                            <Download className="mr-2 h-4 w-4" /> {t.credentialsPage.download_qr_button}
+                        <Button variant="outline" onClick={handleDownloadPdf}>
+                            <Download className="mr-2 h-4 w-4" /> {t.credentialsPage.download_pdf_button}
                         </Button>
                         {isShareSupported && (
                              <Button variant="outline" onClick={handleShare}>
@@ -504,6 +535,8 @@ export default function CredentialsPage() {
         </div>
     );
 }
+
+    
 
     
 

@@ -379,10 +379,10 @@ export const en = {
     pagination_page: "Page {current} of {total}",
     pagination_previous: "Previous",
     pagination_next: "Next",
-    download_qr_button: "Download QR",
+    download_pdf_button: "Download PDF",
     share_button: "Share",
     share_title: "Verifiable Credential",
-    share_text: "Here is my verifiable credential: {jws}",
+    share_text: "Here is my verifiable credential document.",
   },
   issueCredentialPage: {
     title: "Issue New Credential",
@@ -448,4 +448,5 @@ export const en = {
   },
 };
 
+    
     
