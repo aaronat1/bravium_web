@@ -8,12 +8,17 @@ import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode } from "lucide-react";
+import { ShieldCheck, Loader2, CheckCircle, XCircle, QrCode, FileSignature } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
 import { onSnapshot, doc, type Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { generateRequest } from "@/ai/flows/verify-presentation-flow";
 import CodeBlock from "@/components/code-block";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { verifyJws } from "@/actions/verificationActions";
+
 
 type VerificationStatus = "pending" | "success" | "error" | "expired";
 type PageState = "idle" | "loading" | "verifying" | "result";
@@ -22,7 +27,7 @@ interface VerificationResult {
     status: VerificationStatus;
     message?: string;
     claims?: Record<string, any>;
-    verifiedAt?: Timestamp;
+    verifiedAt?: Timestamp | Date;
 }
 
 export default function VerifyPage() {
@@ -33,6 +38,9 @@ export default function VerifyPage() {
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [isRequesting, startRequestTransition] = useTransition();
 
+  const [jwsInput, setJwsInput] = useState('');
+  const [isVerifyingJws, startJwsVerification] = useTransition();
+
   const handleCreateRequest = useCallback(() => {
     startRequestTransition(async () => {
       setPageState("loading");
@@ -42,7 +50,6 @@ export default function VerifyPage() {
       
       try {
         const baseUrl = window.location.origin;
-        // This function is now a simple server action that does not use Genkit
         const response = await generateRequest({ baseUrl });
         
         if (!response || !response.requestUrl) {
@@ -103,17 +110,72 @@ export default function VerifyPage() {
 
   }, [requestData, pageState]);
 
+  const handleVerifyJws = () => {
+    if (!jwsInput) return;
+
+    startJwsVerification(async () => {
+      setPageState('loading');
+      const result = await verifyJws(jwsInput);
+      if (result.success && result.claims) {
+        setVerificationResult({
+          status: 'success',
+          message: 'JWS verificado con éxito.',
+          claims: result.claims,
+          verifiedAt: new Date()
+        });
+      } else {
+        setVerificationResult({
+          status: 'error',
+          message: result.error
+        });
+      }
+      setPageState('result');
+    });
+  }
+
+  const resetAll = () => {
+    setPageState('idle');
+    setVerificationResult(null);
+    setError(null);
+    setRequestData(null);
+    setJwsInput('');
+  }
 
   const renderContent = () => {
     switch (pageState) {
         case "idle":
             return (
-                <div className="flex flex-col items-center justify-center min-h-[256px] gap-4">
-                    <Button onClick={handleCreateRequest} size="lg" disabled={isRequesting}>
-                        <QrCode className="mr-2 h-5 w-5" />
-                        {t.verifyPage.new_verification_button}
+              <Tabs defaultValue="qr" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="qr">Verificar con QR</TabsTrigger>
+                  <TabsTrigger value="jws">Verificar JWS</TabsTrigger>
+                </TabsList>
+                <TabsContent value="qr" className="flex flex-col items-center justify-center min-h-[256px] gap-4 pt-4">
+                  <Button onClick={handleCreateRequest} size="lg" disabled={isRequesting}>
+                    <QrCode className="mr-2 h-5 w-5" />
+                    {t.verifyPage.new_verification_button}
+                  </Button>
+                </TabsContent>
+                <TabsContent value="jws" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="jws-input">Pegar JWS de la Credencial</Label>
+                    <Textarea
+                      id="jws-input"
+                      rows={8}
+                      value={jwsInput}
+                      onChange={(e) => setJwsInput(e.target.value)}
+                      placeholder="eyJhbGciOiJFUzI1NiIs..."
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                  <div className="flex justify-center">
+                    <Button onClick={handleVerifyJws} disabled={isVerifyingJws || !jwsInput}>
+                        {isVerifyingJws ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSignature className="mr-2 h-4 w-4" />}
+                        Verificar JWS
                     </Button>
-                </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             );
         case "loading":
             return (
@@ -164,7 +226,7 @@ export default function VerifyPage() {
                                         </Card>
                                     </div>
                                 )}
-                                <Button onClick={handleCreateRequest} className="mt-4" disabled={isRequesting}>{t.verifyPage.new_verification_button}</Button>
+                                <Button onClick={resetAll} className="mt-4" disabled={isRequesting}>{t.verifyPage.new_verification_button}</Button>
                             </div>
                         );
                     case 'error':
@@ -173,8 +235,8 @@ export default function VerifyPage() {
                             <div className="flex flex-col items-center justify-center min-h-[256px] gap-4 text-center">
                                 <XCircle className="h-16 w-16 text-destructive" />
                                 <h3 className="text-2xl font-bold">{currentResult.status === 'error' ? t.verifyPage.result_error_title : t.verifyPage.result_expired_title}</h3>
-                                <p className="text-muted-foreground">{currentResult.message}</p>
-                                <Button onClick={handleCreateRequest} disabled={isRequesting}>{t.verifyPage.retry_button}</Button>
+                                <p className="text-muted-foreground max-w-full text-left break-words">{currentResult.message}</p>
+                                <Button onClick={resetAll} disabled={isRequesting}>{t.verifyPage.retry_button}</Button>
                             </div>
                         );
                 }
