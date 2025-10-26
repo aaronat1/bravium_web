@@ -11,6 +11,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import QRCode from "qrcode.react";
 import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import jsPDF from "jspdf";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
@@ -23,7 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download } from "lucide-react";
+import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -69,10 +70,12 @@ export default function IssueCredentialPage() {
     const [selectedTemplate, setSelectedTemplate] = useState<CredentialTemplate | null>(null);
     const [loadingTemplates, setLoadingTemplates] = useState(true);
     const [isIssuing, setIsIssuing] = useState(false);
-    const [issuedCredential, setIssuedCredential] = useState<string | null>(null);
+    const [issuedCredential, setIssuedCredential] = useState<{jws: string, id: string} | null>(null);
     const [hasCopied, setHasCopied] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const qrCodeRef = useRef<HTMLDivElement>(null);
+    const isShareSupported = typeof navigator !== 'undefined' && !!navigator.share;
+
 
     const isAdmin = user?.uid === ADMIN_UID;
 
@@ -165,15 +168,21 @@ export default function IssueCredentialPage() {
             if (!jws) {
                 throw new Error("Cloud function did not return a verifiableCredentialJws.");
             }
-            setIssuedCredential(jws);
-
-            await saveIssuedCredential({
+            
+            const savedCredential = await saveIssuedCredential({
                 templateId: selectedTemplate.id,
                 templateName: selectedTemplate.name,
                 customerId: selectedTemplate.customerId,
                 recipientData: credentialSubject,
                 jws,
             });
+
+            if (!savedCredential.success || !savedCredential.id) {
+                throw new Error(savedCredential.message || "Failed to save credential record.");
+            }
+
+            setIssuedCredential({jws, id: savedCredential.id});
+
             toast({ title: t.issueCredentialPage.toast_success_title, description: t.issueCredentialPage.toast_success_desc });
 
         } catch (error: any) {
@@ -189,23 +198,74 @@ export default function IssueCredentialPage() {
 
     const handleCopy = () => {
         if (!issuedCredential) return;
-        navigator.clipboard.writeText(issuedCredential);
+        navigator.clipboard.writeText(issuedCredential.jws);
         setHasCopied(true);
         setTimeout(() => setHasCopied(false), 2000);
     };
 
-    const handleDownloadQR = () => {
+    const generateCredentialPdf = async (): Promise<Blob> => {
+        if (!issuedCredential) throw new Error("Credential not available.");
+        const doc = new jsPDF();
         const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
-        if (canvas) {
-            const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            let downloadLink = document.createElement("a");
-            downloadLink.href = pngUrl;
-            downloadLink.download = "credential-qr.png";
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
+        if (!canvas) {
+            throw new Error("QR Code canvas not found.");
+        }
+        const qrCodeImage = canvas.toDataURL('image/png');
+
+        doc.setFontSize(18);
+        doc.text(selectedTemplate?.name || "Verifiable Credential", 14, 22);
+
+        doc.addImage(qrCodeImage, 'PNG', 14, 30, 60, 60);
+
+        doc.setFontSize(11);
+        doc.text("JWS:", 14, 100);
+        const jwsLines = doc.splitTextToSize(issuedCredential.jws, 180);
+        doc.text(jwsLines, 14, 105);
+
+        const finalY = (jwsLines.length * 5) + 110;
+        doc.setFontSize(12);
+        doc.textWithLink("check in https://bravium.es/verify", 14, finalY, { url: 'https://bravium.es/verify' });
+        
+        return doc.output('blob');
+    };
+
+     const handleDownloadPdf = async () => {
+        try {
+            const pdfBlob = await generateCredentialPdf();
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = `Bravium-Credential-${issuedCredential?.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error: any) {
+             toast({ variant: "destructive", title: t.toast_error_title, description: error.message });
         }
     };
+
+    const handleShare = async () => {
+        if (!navigator.share || !issuedCredential) return;
+
+        try {
+            const pdfBlob = await generateCredentialPdf();
+            const pdfFile = new File([pdfBlob], `Bravium-Credential-${issuedCredential.id}.pdf`, { type: 'application/pdf' });
+
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                await navigator.share({
+                    files: [pdfFile],
+                    title: t.credentialsPage.share_title,
+                    text: t.credentialsPage.share_text,
+                });
+            } else {
+                 toast({ variant: "destructive", title: t.toast_error_title, description: "Cannot share files on this browser." });
+            }
+        } catch (error: any) {
+            if (error.name !== 'AbortError') { // Ignore if user cancels share
+                 toast({ variant: "destructive", title: t.toast_error_title, description: error.message });
+            }
+        }
+    };
+
 
     return (
         <div className="space-y-6">
@@ -319,22 +379,28 @@ export default function IssueCredentialPage() {
             <Dialog open={!!issuedCredential} onOpenChange={(open) => !open && setIssuedCredential(null)}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Credencial Generada</DialogTitle>
+                        <DialogTitle>{t.issueCredentialPage.result_dialog_title}</DialogTitle>
+                         <DialogDescription></DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col items-center gap-6 py-4">
                         <div ref={qrCodeRef} className="p-4 bg-white rounded-lg border">
-                            <QRCode value={issuedCredential!} size={256} />
+                            <QRCode value={issuedCredential?.jws || ''} size={256} />
                         </div>
                         <div className="flex items-center gap-2">
-                             <Button variant="outline" onClick={handleDownloadQR}>
-                                <Download className="mr-2 h-4 w-4" /> Descargar QR
+                             <Button variant="outline" onClick={handleDownloadPdf}>
+                                <Download className="mr-2 h-4 w-4" /> {t.credentialsPage.download_pdf_button}
                             </Button>
+                             {isShareSupported && (
+                                <Button variant="outline" onClick={handleShare}>
+                                    <Share2 className="mr-2 h-4 w-4" /> {t.credentialsPage.share_button}
+                                </Button>
+                            )}
                         </div>
 
                         <div className="w-full space-y-2">
                              <Label htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</Label>
                             <div className="relative">
-                                <Textarea id="jws-output" readOnly value={issuedCredential || ""} rows={6} className="font-mono text-xs pr-10"/>
+                                <Textarea id="jws-output" readOnly value={issuedCredential?.jws || ""} rows={6} className="font-mono text-xs pr-10"/>
                                 <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={handleCopy}>
                                     {hasCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                                 </Button>
@@ -349,7 +415,4 @@ export default function IssueCredentialPage() {
 
         </div>
     );
-
-    
-
-    
+}

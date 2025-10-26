@@ -18,7 +18,7 @@ const IssuedCredentialSchema = z.object({
   jws: z.string(),
 });
 
-export async function saveIssuedCredential(data: z.infer<typeof IssuedCredentialSchema>) {
+export async function saveIssuedCredential(data: z.infer<typeof IssuedCredentialSchema>): Promise<{ success: boolean; message: string, id?: string }> {
     if (!adminDb) {
         return { success: false, message: 'Server configuration error.' };
     }
@@ -30,12 +30,12 @@ export async function saveIssuedCredential(data: z.infer<typeof IssuedCredential
     }
     
     try {
-        await adminDb.collection('issuedCredentials').add({
+        const docRef = await adminDb.collection('issuedCredentials').add({
             ...validatedFields.data,
             issuedAt: FieldValue.serverTimestamp(),
         });
         revalidatePath('/credentials');
-        return { success: true, message: 'Credential issuance recorded.' };
+        return { success: true, message: 'Credential issuance recorded.', id: docRef.id };
     } catch (error: any) {
         return { success: false, message: `Failed to record credential: ${error.message}` };
     }

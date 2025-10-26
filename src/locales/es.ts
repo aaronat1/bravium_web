@@ -399,7 +399,6 @@ col_fields: "Campos",
     result_dialog_title: "Credencial Generada",
     result_jws_label: "Credencial Verificable (JWS)",
     back_to_list_button: "Volver al Listado",
-    download_qr_button: "Descargar QR",
   },
   cookieConsent: {
     message: "Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptas nuestro uso de cookies.",
@@ -447,6 +446,3 @@ col_fields: "Campos",
     p4_link_text: "contáctanos",
   },
 };
-
-    
-    

@@ -399,7 +399,6 @@ export const en = {
     result_dialog_title: "Credential Generated",
     result_jws_label: "Verifiable Credential (JWS)",
     back_to_list_button: "Back to List",
-    download_qr_button: "Download QR",
   },
   cookieConsent: {
     message: "We use cookies to enhance your experience. By continuing to browse, you agree to our use of cookies.",
@@ -447,6 +446,3 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-    
-    
