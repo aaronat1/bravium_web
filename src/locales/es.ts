@@ -58,7 +58,7 @@ export const es = {
     howItWorks: {
       title: "Empieza a Emitir en Tres Sencillos Pasos",
       step1_text: "Usa nuestro asistente con IA para describir la credencial que necesitas o diseña tu plantilla en nuestro editor. Define campos, reglas y adjunta archivos si es necesario.",
-      step2_text: "Rellena los datos de forma individual o sube un archivo CSV para emitir miles de credenciales a la vez. Nuestra API se encarga del resto.",
+      step2_text: "Introduce los datos para cada credencial a través de nuestra interfaz de usuario o integra nuestra API para automatizar el proceso.",
       step3_text: "Tus usuarios reciben un certificado digital con un enlace y un código QR únicos. Ya está listo para ser compartido y verificado de forma segura e instantánea por cualquiera, en cualquier lugar.",
       cta: "Ver un Caso de Uso en Acción"
     },
@@ -129,7 +129,7 @@ export const es = {
       q4_title: "¿Mis archivos originales se suben a la blockchain? ¿Son públicos?",
       q4_text: "No, absolutamente no. Esta es una distinción crucial.\n\nNunca subimos tu archivo original (el PDF, la imagen, etc.) a la blockchain. Lo que hacemos es crear una \"huella digital\" única de ese archivo (un hash). Solo esa pequeña huella, que no contiene ninguna información sensible, es la que se sella en la blockchain. Tu archivo original se almacena de forma segura en nuestra infraestructura encriptada (Firebase Storage), y tú tienes el control total sobre él.",
       q5_title: "¿Es complicado de implementar en mi organización?",
-      q5_text: "En absoluto. Bravium está diseñado para la simplicidad.\n\nPara emitir certificados, puedes usar nuestro panel de control web. Si sabes usar una plataforma online, puedes empezar en minutos.\n\nPara emitir a escala, simplemente subes un archivo CSV con los datos de tus cientos o miles de destinatarios.\n\nPara desarrolladores, ofrecemos una API bien documentada para que puedas integrar la emisión de certificados directamente en tus propias aplicaciones y flujos de trabajo.",
+      q5_text: "En absoluto. Bravium está diseñado para la simplicidad.\n\nPara emitir certificados, puedes usar nuestro panel de control web. Si sabes usar una plataforma online, puedes empezar en minutos.\n\nPara desarrolladores, ofrecemos una API bien documentada para que puedas integrar la emisión de certificados directamente en tus propias aplicaciones y flujos de trabajo.",
       q6_title: "¿Qué tan seguro es el sistema?",
       q6_text: "La seguridad se divide en dos capas:\n\nLa Plataforma: Bravium está construido sobre la infraestructura segura y escalable de Google Cloud, garantizando la protección de tus datos y los de tus usuarios.\n\nLa Prueba: La seguridad del certificado en sí no depende de nosotros, sino de la red blockchain global. La prueba criptográfica es, por diseño, a prueba de manipulaciones y está asegurada por una red descentralizada masiva, ofreciendo el más alto nivel de confianza posible.",
     },
@@ -184,11 +184,11 @@ export const es = {
     protagonist_verifier_name: "DAVID",
     protagonist_verifier_role: "Un reclutador que busca el mejor talento",
     step1_title: "Paso 1: La Emisión (La Perspectiva de la Academia)",
-    step1_subtitle: "ACADEMIA FUTURO necesita emitir 500 certificados para su última promoción. El proceso manual es impensable.",
+    step1_subtitle: "ACADEMIA FUTURO necesita emitir certificados para su última promoción.",
     step1_desc: "",
     step1_point1: "1. Diseña la Plantilla: Desde su panel de BRAVIUM, utilizan nuestro editor visual para crear la plantilla del certificado, definiendo campos como Nombre del Estudiante, Nombre del Curso y Fecha de Finalización.",
-    step1_point2: "2. Carga los Datos a Escala: Exportan la lista de sus 500 estudiantes a un archivo CSV y lo suben a la plataforma con un solo click.",
-    step1_point3: "3. Emite y Sella en la Blockchain: Con un solo click en 'Emitir Lote', BRAVIUM genera los 500 certificados únicos y sella la prueba criptográfica de cada uno de forma inmutable en la blockchain.",
+    step1_point2: "2. Carga los Datos: Introducen los datos de cada estudiante en el formulario de emisión de la plataforma.",
+    step1_point3: "3. BRAVIUM genera los certificados únicos y sella la prueba criptográfica de cada uno de forma inmutable en la blockchain.",
     step2_title: "Paso 2: La Recepción (La Perspectiva de la Estudiante)",
     step2_subtitle: "ELENA recibe instantáneamente un correo electrónico informándole de que su certificado oficial ya está disponible.",
     step2_desc: "",
@@ -443,5 +443,3 @@ col_fields: "Campos",
     p4_link_text: "contáctanos",
   },
 };
-
-    

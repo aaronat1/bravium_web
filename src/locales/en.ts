@@ -58,7 +58,7 @@ export const en = {
     howItWorks: {
       title: "Start Issuing in Three Simple Steps",
       step1_text: "Use our AI assistant to describe the credential you need or design your template in our editor. Define fields, rules, and attach files if necessary.",
-      step2_text: "Fill in the data individually or upload a CSV file to issue thousands of credentials at once. Our API handles the rest.",
+      step2_text: "Enter the data for each credential through our user-friendly interface or integrate our API to automate the process.",
       step3_text: "Your users receive a digital certificate with a unique link and QR code. It's ready to be shared and verified securely and instantly by anyone, anywhere.",
       cta: "See a Use Case in Action"
     },
@@ -129,7 +129,7 @@ export const en = {
       q4_title: "Are my original files uploaded to the blockchain? Are they public?",
       q4_text: "No, absolutely not. This is a crucial distinction.\n\nWe never upload your original file (the PDF, image, etc.) to the blockchain. What we do is create a unique 'digital fingerprint' of that file (a hash). Only that small fingerprint, which contains no sensitive information, is what gets sealed on the blockchain. Your original file is stored securely in our encrypted infrastructure (Firebase Storage), and you have full control over it.",
       q5_title: "Is it complicated to implement in my organization?",
-      q5_text: "Not at all. Bravium is designed for simplicity.\n\nTo issue certificates, you can use our web dashboard. If you know how to use an online platform, you can start in minutes.\n\nTo issue at scale, you simply upload a CSV file with the data of your hundreds or thousands of recipients.\n\nFor developers, we offer a well-documented API so you can integrate certificate issuance directly into your own applications and workflows.",
+      q5_text: "Not at all. Bravium is designed for simplicity.\n\nTo issue certificates, you can use our web dashboard. If you know how to use an online platform, you can start in minutes.\n\nFor developers, we offer a well-documented API so you can integrate certificate issuance directly into your own applications and workflows.",
       q6_title: "How secure is the system?",
       q6_text: "Security is divided into two layers:\n\nThe Platform: Bravium is built on the secure and scalable infrastructure of Google Cloud, ensuring the protection of your data and that of your users.\n\nThe Proof: The security of the certificate itself does not depend on us, but on the global blockchain network. The cryptographic proof is, by design, tamper-proof and is secured by a massive decentralized network, offering the highest possible level of trust.",
     },
@@ -188,7 +188,7 @@ export const en = {
     step1_desc: "",
     step1_point1: "1. Diseña la Plantilla: Desde su panel de BRAVIUM, utilizan nuestro editor visual para crear la plantilla del certificado, definiendo campos como Nombre del Estudiante, Nombre del Curso y Fecha de Finalización.",
     step1_point2: "2. Carga los Datos a Escala: Exportan la lista de sus 500 estudiantes a un archivo CSV y lo suben a la plataforma con un solo click.",
-    step1_point3: "3. Emite y Sella en la Blockchain: Con un solo click en 'Emitir Lote', BRAVIUM genera los 500 certificados únicos y sella la prueba criptográfica de cada uno de forma inmutable en la blockchain.",
+    step1_point3: "3. BRAVIUM generates the unique certificates and seals the cryptographic proof of each one immutably on the blockchain.",
     step2_title: "Step 2: Reception (The Student's Perspective)",
     step2_subtitle: "ELENA recibe instantáneamente un correo electrónico informándole de que su certificado oficial ya está disponible.",
     step2_desc: "",
@@ -443,5 +443,3 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-    
