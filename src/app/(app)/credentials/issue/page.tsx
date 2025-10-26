@@ -45,7 +45,7 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
                 fieldSchema = field.required ? fileSchema : z.any().optional();
                 break;
             default:
-                let stringSchema = z.string({ required_error: "This field is required." });
+                let stringSchema = z.string();
                 if (field.required) {
                     stringSchema = stringSchema.min(1, {message: "This field is required"});
                 } else {
@@ -72,6 +72,7 @@ export default function IssueCredentialPage() {
     const [hasCopied, setHasCopied] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const qrCodeRef = useRef<HTMLDivElement>(null);
+    const [isShareSupported, setIsShareSupported] = useState(false);
 
     const isAdmin = user?.uid === ADMIN_UID;
 
@@ -84,6 +85,12 @@ export default function IssueCredentialPage() {
     });
     
     const { handleSubmit, reset, control, register } = form;
+
+    useEffect(() => {
+        if (typeof navigator !== 'undefined' && navigator.share) {
+            setIsShareSupported(true);
+        }
+    }, []);
 
     useEffect(() => {
         if (!user) return;
@@ -203,21 +210,23 @@ export default function IssueCredentialPage() {
     };
 
     const handleShare = async () => {
-        if (navigator.share && issuedCredential) {
-            try {
-                await navigator.share({
-                    title: 'Verifiable Credential',
-                    text: `Here is my verifiable credential: ${issuedCredential}`,
-                });
-            } catch (error) {
-                console.error('Error sharing:', error);
-            }
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'La función de compartir no es compatible con este navegador.',
+        if (!isShareSupported || !issuedCredential) return;
+        
+        try {
+            await navigator.share({
+                title: 'Verifiable Credential',
+                text: `Here is my verifiable credential: ${issuedCredential}`,
             });
+        } catch (error: any) {
+            // AbortError is thrown when the user cancels the share action, so we can ignore it.
+            if (error.name !== 'AbortError') {
+                console.error('Error sharing:', error);
+                 toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: `Could not share: ${error.message}`,
+                });
+            }
         }
     };
 
@@ -342,7 +351,7 @@ export default function IssueCredentialPage() {
                              <Button variant="outline" onClick={handleDownloadQR}>
                                 <Download className="mr-2 h-4 w-4" /> Descargar QR
                             </Button>
-                            <Button variant="outline" onClick={handleShare} disabled={!navigator.share}>
+                            <Button variant="outline" onClick={handleShare} disabled={!isShareSupported}>
                                 <Share2 className="mr-2 h-4 w-4" /> Compartir
                             </Button>
                         </div>
@@ -367,4 +376,3 @@ export default function IssueCredentialPage() {
     );
 }
 
-    
