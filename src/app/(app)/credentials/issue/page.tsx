@@ -23,7 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2 } from "lucide-react";
+import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -73,17 +73,8 @@ export default function IssueCredentialPage() {
     const [hasCopied, setHasCopied] = useState(false);
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const qrCodeRef = useRef<HTMLDivElement>(null);
-    
-    const [isShareSupported, setIsShareSupported] = useState(false);
 
     const isAdmin = user?.uid === ADMIN_UID;
-
-    useEffect(() => {
-        // This check ensures navigator is available (client-side)
-        if (typeof navigator !== 'undefined' && navigator.share) {
-            setIsShareSupported(true);
-        }
-    }, []);
 
     const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
 
@@ -216,34 +207,6 @@ export default function IssueCredentialPage() {
         }
     };
 
-    const handleShare = async () => {
-        if (!isShareSupported || !issuedCredential) {
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Sharing is not supported on this device or there is no credential to share.',
-            });
-            return;
-        }
-        
-        try {
-            await navigator.share({
-                title: 'Verifiable Credential',
-                text: `Here is my verifiable credential: ${issuedCredential}`,
-            });
-        } catch (error: any) {
-            // AbortError is a common error when the user cancels the share dialog, so we can safely ignore it.
-            if (error.name !== 'AbortError') {
-                console.error('Share API error:', error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Sharing Failed',
-                    description: error.message || 'Could not share the credential at this time.',
-                });
-            }
-        }
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -366,9 +329,6 @@ export default function IssueCredentialPage() {
                              <Button variant="outline" onClick={handleDownloadQR}>
                                 <Download className="mr-2 h-4 w-4" /> Descargar QR
                             </Button>
-                            <Button variant="outline" onClick={handleShare} disabled={!isShareSupported}>
-                                <Share2 className="mr-2 h-4 w-4" /> Compartir
-                            </Button>
                         </div>
 
                         <div className="w-full space-y-2">
@@ -389,5 +349,7 @@ export default function IssueCredentialPage() {
 
         </div>
     );
+
+    
 
     
