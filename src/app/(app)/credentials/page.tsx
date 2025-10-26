@@ -1,9 +1,10 @@
+
 "use client";
 
-import { useEffect, useState, useMemo, useTransition } from "react";
+import { useEffect, useState, useMemo, useTransition, useRef } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
-import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X } from "lucide-react";
+import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X, Download, Share2 } from "lucide-react";
 import QRCode from "qrcode.react";
 import { format, isSameDay } from 'date-fns';
 import { es, enUS } from "date-fns/locale";
@@ -50,7 +51,11 @@ type IssuedCredential = {
 
 function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential: IssuedCredential | null, isOpen: boolean, onOpenChange: (open: boolean) => void }) {
     const { t } = useI18n();
+    const { toast } = useToast();
     const [hasCopied, setHasCopied] = useState(false);
+    const qrCodeRef = useRef<HTMLDivElement>(null);
+    const isShareSupported = typeof navigator !== 'undefined' && !!navigator.share;
+
 
     if (!credential) return null;
 
@@ -60,16 +65,58 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
         setTimeout(() => setHasCopied(false), 2000);
     };
 
+    const handleDownloadQR = () => {
+        const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
+        if (canvas) {
+            const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            let downloadLink = document.createElement("a");
+            downloadLink.href = pngUrl;
+            downloadLink.download = `${credential.templateName.replace(/\s+/g, '_')}-qr.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    };
+
+    const handleShare = async () => {
+        if (!navigator.share || !credential) return;
+        try {
+            await navigator.share({
+                title: t.credentialsPage.share_title,
+                text: t.credentialsPage.share_text.replace('{jws}', credential.jws),
+            });
+        } catch (error: any) {
+            // AbortError is triggered when the user closes the share dialog, so we ignore it.
+            if (error.name !== 'AbortError') {
+                 toast({
+                    variant: "destructive",
+                    title: t.toast_error_title,
+                    description: error.message,
+                });
+            }
+        }
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>{t.credentialsPage.view_dialog_title}</DialogTitle>
-                    <DialogDescription>{t.credentialsPage.view_dialog_desc}</DialogDescription>
+                    <DialogDescription></DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-6 py-4">
-                    <div className="p-4 bg-white rounded-lg border">
+                    <div ref={qrCodeRef} className="p-4 bg-white rounded-lg border">
                         <QRCode value={credential.jws} size={256} />
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={handleDownloadQR}>
+                            <Download className="mr-2 h-4 w-4" /> {t.credentialsPage.download_qr_button}
+                        </Button>
+                        {isShareSupported && (
+                             <Button variant="outline" onClick={handleShare}>
+                                <Share2 className="mr-2 h-4 w-4" /> {t.credentialsPage.share_button}
+                            </Button>
+                        )}
                     </div>
                     <div className="w-full space-y-2">
                          <Label htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</Label>
@@ -457,5 +504,7 @@ export default function CredentialsPage() {
         </div>
     );
 }
+
+    
 
     

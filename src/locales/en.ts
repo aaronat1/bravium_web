@@ -379,6 +379,10 @@ export const en = {
     pagination_page: "Page {current} of {total}",
     pagination_previous: "Previous",
     pagination_next: "Next",
+    download_qr_button: "Download QR",
+    share_button: "Share",
+    share_title: "Verifiable Credential",
+    share_text: "Here is my verifiable credential: {jws}",
   },
   issueCredentialPage: {
     title: "Issue New Credential",
@@ -395,6 +399,7 @@ export const en = {
     result_dialog_title: "Credential Generated",
     result_jws_label: "Verifiable Credential (JWS)",
     back_to_list_button: "Back to List",
+    download_qr_button: "Download QR",
   },
   cookieConsent: {
     message: "We use cookies to enhance your experience. By continuing to browse, you agree to our use of cookies.",
@@ -442,3 +447,5 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
+
+    

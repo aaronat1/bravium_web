@@ -189,7 +189,7 @@ export const es = {
     step1_point1: "1. Diseña la Plantilla: Desde su panel de BRAVIUM, utilizan el editor visual para crear la plantilla del certificado, definiendo campos como Nombre del Estudiante, Nombre del Curso y Fecha de Finalización.",
     step1_point2: "2. Introduce los Datos: Rellenan los datos de Elena en el formulario de emisión.",
     step1_point3: "3. BRAVIUM genera el certificado único (JWS y código QR) y sella su prueba criptográfica de forma inmutable en la blockchain.",
-    step2_title: "Paso 2: La Recepción y el Uso Compartido (Perspectiva de la Estudiante)",
+    step2_title: "Paso 2: Recepción y Uso Compartido (Perspectiva de la Estudiante)",
     step2_subtitle: "ELENA recibe instantáneamente un correo electrónico con su certificado oficial.",
     step2_desc: "",
     step2_point1: "Acceso Inmediato: Dentro del correo, encuentra el JWS (la credencial en formato de texto) y su código QR correspondiente. No necesita crear cuentas ni descargar apps.",
@@ -379,6 +379,10 @@ col_fields: "Campos",
     pagination_page: "Página {current} de {total}",
     pagination_previous: "Anterior",
     pagination_next: "Siguiente",
+    download_qr_button: "Descargar QR",
+    share_button: "Compartir",
+    share_title: "Credencial Verificable",
+    share_text: "Aquí está mi credencial verificable: {jws}",
   },
   issueCredentialPage: {
     title: "Emitir Nueva Credencial",
@@ -395,6 +399,7 @@ col_fields: "Campos",
     result_dialog_title: "Credencial Generada",
     result_jws_label: "Credencial Verificable (JWS)",
     back_to_list_button: "Volver al Listado",
+    download_qr_button: "Descargar QR",
   },
   cookieConsent: {
     message: "Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptas nuestro uso de cookies.",
@@ -442,3 +447,5 @@ col_fields: "Campos",
     p4_link_text: "contáctanos",
   },
 };
+
+    
