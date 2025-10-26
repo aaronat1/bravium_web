@@ -28,8 +28,8 @@ export const es = {
     standards: {
       title: "Construido sobre Estándares Abiertos y Globales",
       subtitle: "BRAVIUM no reinventa la rueda; la perfecciona. Nos apoyamos en las tecnologías y estándares más robustos y reconocidos del mundo para ofrecerte una solución interoperable, segura y preparada para el futuro.",
-      item1_title: "Basado en Principios de Confianza Descentralizada",
-      item1_text: "Nuestra plataforma utiliza los principios de la tecnología blockchain pública para crear pruebas de autenticidad inmutables. Nos inspiramos en los estándares emergentes del W3C para construir una solución que garantice la máxima confianza y verificabilidad en el entorno digital.",
+      item1_title: "Alineados con los Estándares W3C y JWS",
+      item1_text: "Nuestra plataforma está alineada con los estándares de Credenciales Verificables del W3C. Cada credencial se emite como un JSON Web Signature (JWS), un formato estándar que garantiza la integridad y autenticidad. Utilizamos Identificadores Descentralizados (DIDs) del W3C para vincular criptográficamente cada credencial a su emisor, asegurando una confianza verificable y descentralizada.",
       item2_title: "Verificación Universal y Accesible",
       item2_text: "Las credenciales de BRAVIUM se pueden verificar al instante desde cualquier lugar del mundo. Cada certificado incluye un enlace o código QR que dirige a una página de verificación pública, garantizando una transparencia total sin necesidad de instalar aplicaciones especiales. La futura integración con carteras digitales líderes está en nuestro roadmap.",
       item3_title: "Alternativa Accesible a la Complejidad",
@@ -443,3 +443,5 @@ col_fields: "Campos",
     p4_link_text: "contáctanos",
   },
 };
+
+    

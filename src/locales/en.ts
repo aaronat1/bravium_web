@@ -28,8 +28,8 @@ export const en = {
     standards: {
       title: "Built on Open and Global Standards",
       subtitle: "BRAVIUM doesn't reinvent the wheel; it perfects it. We rely on the world's most robust and recognized technologies and standards to offer you an interoperable, secure, and future-ready solution.",
-      item1_title: "Based on Principles of Decentralized Trust",
-      item1_text: "Our platform uses the principles of public blockchain technology to create immutable proofs of authenticity. We are inspired by the emerging W3C standards to build a solution that guarantees maximum trust and verifiability in the digital environment.",
+      item1_title: "Aligned with W3C and JWS Standards",
+      item1_text: "Our platform is aligned with the W3C Verifiable Credentials standards. Each credential is issued as a JSON Web Signature (JWS), a standard format that guarantees integrity and authenticity. We use W3C Decentralized Identifiers (DIDs) to cryptographically link each credential to its issuer, ensuring verifiable and decentralized trust.",
       item2_title: "Universal and Accessible Verification",
       item2_text: "BRAVIUM credentials can be verified instantly from anywhere in the world. Each certificate includes a link or QR code that directs to a public verification page, ensuring full transparency without the need to install special applications. Future integration with leading digital wallets is on our roadmap.",
       item3_title: "Accessible Alternative to Complexity",
@@ -443,3 +443,5 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
+
+    
