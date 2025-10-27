@@ -216,13 +216,17 @@ export default function IssueCredentialPage() {
         doc.text(selectedTemplate?.name || "Verifiable Credential", 14, 22);
 
         doc.addImage(qrCodeImage, 'PNG', 14, 30, 60, 60);
-
+        
         doc.setFontSize(11);
+        doc.setFont('Helvetica', 'normal'); // Back to normal font
         doc.text("JWS:", 14, 100);
+        
+        doc.setFont('Courier', 'normal'); // Monospaced for JWS
         const jwsLines = doc.splitTextToSize(issuedCredential.jws, 180);
         doc.text(jwsLines, 14, 105);
 
         const finalY = (jwsLines.length * 5) + 110;
+        doc.setFont('Helvetica', 'normal'); // Back to normal font
         doc.setFontSize(12);
         doc.textWithLink("check in https://bravium.es/verify", 14, finalY, { url: 'https://bravium.es/verify' });
         
