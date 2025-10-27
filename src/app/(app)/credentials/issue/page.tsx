@@ -12,6 +12,8 @@ import QRCode from "qrcode.react";
 import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import jsPDF from "jspdf";
+import { format } from "date-fns";
+
 
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
@@ -269,7 +271,7 @@ export default function IssueCredentialPage() {
         doc.setFont('Courier', 'normal');
         
         const jwsLines = doc.splitTextToSize(issuedCredential.jws, page_width - (margin * 2));
-        doc.text(jwsLines, margin, 125);
+        doc.text(jwsLines, margin, 125, { maxWidth: page_width - 28 });
 
         doc.setFont('Helvetica', 'normal');
         doc.setFontSize(12);
@@ -318,12 +320,28 @@ export default function IssueCredentialPage() {
     // Batch Issuance Functions
     const handleDownloadCsvTemplate = () => {
         if (!selectedTemplate) return;
-
-        const headers = selectedTemplate.fields
-            .filter(field => field.type !== 'file')
-            .map(field => field.fieldName);
+    
+        const relevantFields = selectedTemplate.fields.filter(field => field.type !== 'file');
+        const headers = relevantFields.map(field => field.fieldName);
         
-        const csvContent = headers.join(',');
+        const exampleRow = relevantFields.map(field => {
+            switch (field.type) {
+                case 'text':
+                    return 'Texto de ejemplo';
+                case 'date':
+                    return format(new Date(), 'yyyy-MM-dd');
+                case 'select':
+                    return field.options?.[0] || 'Opción1';
+                default:
+                    return '';
+            }
+        });
+    
+        const csvContent = [
+            headers.join(','),
+            exampleRow.join(',')
+        ].join('\n');
+    
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -343,9 +361,15 @@ export default function IssueCredentialPage() {
         const reader = new FileReader();
         reader.onload = async (event) => {
             const csvContent = event.target?.result as string;
-            const lines = csvContent.split(/\r\n|\n/);
+            const lines = csvContent.split(/\r\n|\n/).filter(line => line.trim() !== '');
+            if (lines.length <= 1) { // Only headers or empty
+                 toast({ variant: "destructive", title: "Archivo CSV vacío", description: "El archivo no contiene filas de datos para procesar." });
+                setIsBatchIssuing(false);
+                return;
+            }
+            
             const headers = lines[0].split(',').map(h => h.trim());
-            const dataRows = lines.slice(1).filter(line => line.trim() !== '');
+            const dataRows = lines.slice(1);
 
             const totalRows = dataRows.length;
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
@@ -604,4 +628,3 @@ export default function IssueCredentialPage() {
     );
 }
 
-    
