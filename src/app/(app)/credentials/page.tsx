@@ -69,7 +69,7 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
     const generateCredentialPdf = async (): Promise<Blob> => {
         if (!credential) throw new Error("Credential not available.");
         
-        const doc = new jsPDF({ orientation: 'landscape' });
+        const doc = new jsPDF();
         const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
         if (!canvas) {
             throw new Error("QR Code canvas not found.");
@@ -82,14 +82,14 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
         doc.text(credential.templateName, 14, 22);
 
         doc.addImage(qrCodeImage, 'PNG', 14, 30, 80, 80);
-
+        
         doc.setFontSize(8);
         doc.setFont('Courier', 'normal');
         doc.text(credential.jws, 14, 125, { maxWidth: page_width - 28 });
         
         doc.setFont('Helvetica', 'normal');
         doc.setFontSize(12);
-        doc.textWithLink("Check at https://bravium.es/verify", 14, 140, { url: 'https://bravium.es/verify' });
+        doc.textWithLink("Check at https://bravium.es/verify", 14, 180, { url: 'https://bravium.es/verify' });
         
         return doc.output('blob');
     };
@@ -119,7 +119,7 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
                 await navigator.share({
                     files: [pdfFile],
                     title: t.credentialsPage.share_title,
-                    text: t.credentialsPage.share_text.replace('{jws}', credential.jws),
+                    text: t.credentialsPage.share_text,
                 });
             } else {
                  toast({ variant: "destructive", title: t.toast_error_title, description: "Cannot share files on this browser." });

@@ -206,7 +206,7 @@ export default function IssueCredentialPage() {
     const generateCredentialPdf = async (): Promise<Blob> => {
         if (!issuedCredential) throw new Error("Credential not available.");
         
-        const doc = new jsPDF({ orientation: 'landscape' });
+        const doc = new jsPDF();
         const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
         
         if (!canvas) {
@@ -227,7 +227,7 @@ export default function IssueCredentialPage() {
 
         doc.setFont('Helvetica', 'normal');
         doc.setFontSize(12);
-        doc.textWithLink("Check at https://bravium.es/verify", 14, 140, { url: 'https://bravium.es/verify' });
+        doc.textWithLink("Check at https://bravium.es/verify", 14, 180, { url: 'https://bravium.es/verify' });
         
         return doc.output('blob');
     };
