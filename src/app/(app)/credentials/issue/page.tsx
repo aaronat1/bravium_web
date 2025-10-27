@@ -24,12 +24,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2 } from "lucide-react";
+import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2, FileUp, FileDown, CheckCircle, XCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
@@ -61,6 +63,41 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
 };
 
 
+function BatchResultDialog({ results, onOpenChange }: { results: { success: boolean; data: any; error?: string }[], onOpenChange: (open: boolean) => void }) {
+    const { t } = useI18n();
+    const successfulCount = results.filter(r => r.success).length;
+    const failedCount = results.filter(r => !r.success).length;
+
+    return (
+        <Dialog open={results.length > 0} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t.issueCredentialPage.batch_result_title}</DialogTitle>
+                    <DialogDescription>
+                        {t.issueCredentialPage.batch_result_desc.replace('{success}', successfulCount.toString()).replace('{total}', results.length.toString())}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
+                    {results.map((result, index) => (
+                        <div key={index} className={`flex items-start p-2 rounded-md ${result.success ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'}`}>
+                            {result.success ? <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-1 flex-shrink-0" /> : <XCircle className="h-5 w-5 text-red-600 mr-3 mt-1 flex-shrink-0" />}
+                            <div className="flex-grow">
+                                <p className="text-sm font-medium">
+                                    {t.issueCredentialPage.batch_result_row} #{index + 1}: {Object.values(result.data)[0]}
+                                </p>
+                                {!result.success && <p className="text-xs text-red-700 dark:text-red-400">{result.error}</p>}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <DialogFooter>
+                    <Button onClick={() => onOpenChange(false)}>{t.issueCredentialPage.close_button}</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function IssueCredentialPage() {
     const { t } = useI18n();
     const router = useRouter();
@@ -75,7 +112,14 @@ export default function IssueCredentialPage() {
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const qrCodeRef = useRef<HTMLDivElement>(null);
     const isShareSupported = typeof navigator !== 'undefined' && !!navigator.share;
+    
+    // Batch state
+    const [csvFile, setCsvFile] = useState<File | null>(null);
+    const [isBatchIssuing, setIsBatchIssuing] = useState(false);
+    const [batchProgress, setBatchProgress] = useState(0);
+    const [batchResults, setBatchResults] = useState<{ success: boolean; data: any; error?: string }[]>([]);
 
+    const hasFileField = selectedTemplate?.fields.some(f => f.type === 'file') ?? false;
 
     const isAdmin = user?.uid === ADMIN_UID;
 
@@ -109,11 +153,8 @@ export default function IssueCredentialPage() {
     }, [user, isAdmin, t, toast]);
 
     useEffect(() => {
-        // This is the correct pattern for dynamically updating form default values
-        // with react-hook-form. It triggers when the selected template changes.
         if (selectedTemplate) {
             const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
-                // Ensure every field has a defined value, defaulting to an empty string.
                 acc[field.fieldName] = field.defaultValue || '';
                 return acc;
             }, {} as Record<string, any>);
@@ -128,6 +169,9 @@ export default function IssueCredentialPage() {
         const template = templates.find(t => t.id === templateId) || null;
         setSelectedTemplate(template);
         setSubmissionError(null);
+        setCsvFile(null);
+        setBatchResults([]);
+        setBatchProgress(0);
     };
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
@@ -187,7 +231,6 @@ export default function IssueCredentialPage() {
 
         } catch (error: any) {
             console.error("Error issuing credential:", error);
-            // This now extracts the detailed error message from the HttpsError if available.
             const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
@@ -216,7 +259,6 @@ export default function IssueCredentialPage() {
 
         const page_width = doc.internal.pageSize.getWidth();
         const margin = 14;
-        const text_width = page_width - (margin * 2);
         
         doc.setFontSize(20);
         doc.text(selectedTemplate?.name || "Verifiable Credential", margin, 22);
@@ -226,8 +268,7 @@ export default function IssueCredentialPage() {
         doc.setFontSize(8);
         doc.setFont('Courier', 'normal');
         
-        // This is the fix: split text manually and print line by line
-        const jwsLines = doc.splitTextToSize(issuedCredential.jws, text_width);
+        const jwsLines = doc.splitTextToSize(issuedCredential.jws, page_width - (margin * 2));
         doc.text(jwsLines, margin, 125);
 
         doc.setFont('Helvetica', 'normal');
@@ -274,6 +315,80 @@ export default function IssueCredentialPage() {
         }
     };
 
+    // Batch Issuance Functions
+    const handleDownloadCsvTemplate = () => {
+        if (!selectedTemplate) return;
+
+        const headers = selectedTemplate.fields
+            .filter(field => field.type !== 'file')
+            .map(field => field.fieldName);
+        
+        const csvContent = headers.join(',');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `${selectedTemplate.name.replace(/\s+/g, '_')}_template.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleBatchIssue = async () => {
+        if (!csvFile || !selectedTemplate || !user) return;
+
+        setIsBatchIssuing(true);
+        setBatchProgress(0);
+        setBatchResults([]);
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const csvContent = event.target?.result as string;
+            const lines = csvContent.split(/\r\n|\n/);
+            const headers = lines[0].split(',').map(h => h.trim());
+            const dataRows = lines.slice(1).filter(line => line.trim() !== '');
+
+            const totalRows = dataRows.length;
+            const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
+            const tempResults = [];
+
+            for (let i = 0; i < totalRows; i++) {
+                const row = dataRows[i];
+                const values = row.split(',').map(v => v.trim());
+                const credentialSubject = headers.reduce((acc, header, index) => {
+                    acc[header] = values[index];
+                    return acc;
+                }, {} as Record<string, any>);
+
+                try {
+                    const result: any = await issueCredentialFunc({
+                        credentialSubject,
+                        credentialType: selectedTemplate.name,
+                        customerId: selectedTemplate.customerId,
+                    });
+                    
+                    const jws = result.data.verifiableCredentialJws;
+                    if (!jws) throw new Error("Cloud function did not return JWS.");
+                    
+                    await saveIssuedCredential({
+                        templateId: selectedTemplate.id,
+                        templateName: selectedTemplate.name,
+                        customerId: selectedTemplate.customerId,
+                        recipientData: credentialSubject,
+                        jws,
+                    });
+
+                    tempResults.push({ success: true, data: credentialSubject });
+                } catch (error: any) {
+                    const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
+                    tempResults.push({ success: false, data: credentialSubject, error: detailedError });
+                }
+                setBatchProgress(((i + 1) / totalRows) * 100);
+            }
+            setBatchResults(tempResults);
+            setIsBatchIssuing(false);
+        };
+        reader.readAsText(csvFile);
+    };
 
     return (
         <div className="space-y-6">
@@ -305,83 +420,142 @@ export default function IssueCredentialPage() {
             </Card>
 
             {selectedTemplate && (
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>{t.issueCredentialPage.step2_title}</CardTitle>
-                        <CardDescription>{t.issueCredentialPage.step2_desc.replace('{templateName}', selectedTemplate.name)}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Form {...form}>
-                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                {selectedTemplate.fields.map(fieldInfo => (
-                                    <FormField
-                                        key={fieldInfo.fieldName}
-                                        control={control}
-                                        name={fieldInfo.fieldName as any}
-                                        render={({ field }) => {
-                                           // Crucially, we ensure the value passed to the input is never undefined.
-                                           const displayValue = field.value ?? '';
-                                           return (
-                                            <FormItem>
-                                                <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
-                                                <FormControl>
-                                                    {(() => {
-                                                        switch(fieldInfo.type) {
-                                                            case 'date':
-                                                                return <Input type="date" {...field} value={displayValue} />;
-                                                            case 'select':
-                                                                return (
-                                                                    <Select onValueChange={field.onChange} value={displayValue}>
-                                                                        <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {(fieldInfo.options || []).map(option => (
-                                                                                <SelectItem key={option} value={option}>{option}</SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                );
-                                                            case 'file':
-                                                                const { ref: fieldRef, ...rest } = register(fieldInfo.fieldName as any);
-                                                                return (
-                                                                    <Input 
-                                                                        type="file" 
-                                                                        accept=".pdf,.png,.jpeg,.jpg"
-                                                                        {...rest}
-                                                                        ref={fieldRef}
-                                                                    />
-                                                                );
-                                                            case 'text':
-                                                            default:
-                                                                return <Input type="text" {...field} value={displayValue} />;
-                                                        }
-                                                    })()}
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                           );
-                                       }}
-                                    />
-                                ))}
-                                <Button type="submit" disabled={isIssuing}>
-                                    {isIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
-                                    {t.issueCredentialPage.issue_button}
-                                </Button>
-                            </form>
-                        </Form>
+                <Tabs defaultValue="single" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="single">{t.issueCredentialPage.tab_single}</TabsTrigger>
+                        <TabsTrigger value="batch">{t.issueCredentialPage.tab_batch}</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="single">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{t.issueCredentialPage.step2_title}</CardTitle>
+                                <CardDescription>{t.issueCredentialPage.step2_desc.replace('{templateName}', selectedTemplate.name)}</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Form {...form}>
+                                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                                        {selectedTemplate.fields.map(fieldInfo => (
+                                            <FormField
+                                                key={fieldInfo.fieldName}
+                                                control={control}
+                                                name={fieldInfo.fieldName as any}
+                                                render={({ field }) => {
+                                                   const displayValue = field.value ?? '';
+                                                   return (
+                                                    <FormItem>
+                                                        <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
+                                                        <FormControl>
+                                                            {(() => {
+                                                                switch(fieldInfo.type) {
+                                                                    case 'date':
+                                                                        return <Input type="date" {...field} value={displayValue} />;
+                                                                    case 'select':
+                                                                        return (
+                                                                            <Select onValueChange={field.onChange} value={displayValue}>
+                                                                                <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {(fieldInfo.options || []).map(option => (
+                                                                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                                                                    ))}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        );
+                                                                    case 'file':
+                                                                        const { ref: fieldRef, ...rest } = register(fieldInfo.fieldName as any);
+                                                                        return (
+                                                                            <Input 
+                                                                                type="file" 
+                                                                                accept=".pdf,.png,.jpeg,.jpg"
+                                                                                {...rest}
+                                                                                ref={fieldRef}
+                                                                            />
+                                                                        );
+                                                                    case 'text':
+                                                                    default:
+                                                                        return <Input type="text" {...field} value={displayValue} />;
+                                                                }
+                                                            })()}
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                   );
+                                               }}
+                                            />
+                                        ))}
+                                        <Button type="submit" disabled={isIssuing}>
+                                            {isIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
+                                            {t.issueCredentialPage.issue_button}
+                                        </Button>
+                                    </form>
+                                </Form>
+        
+                                {submissionError && (
+                                    <Alert variant="destructive" className="mt-6">
+                                        <AlertTriangle className="h-4 w-4" />
+                                        <AlertTitle>Error Detallado</AlertTitle>
+                                        <AlertDescription>
+                                            <pre className="mt-2 text-xs whitespace-pre-wrap font-mono bg-transparent">
+                                                {submissionError}
+                                            </pre>
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </CardContent>
+                         </Card>
+                    </TabsContent>
 
-                        {submissionError && (
-                            <Alert variant="destructive" className="mt-6">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Error Detallado</AlertTitle>
-                                <AlertDescription>
-                                    <pre className="mt-2 text-xs whitespace-pre-wrap font-mono bg-transparent">
-                                        {submissionError}
-                                    </pre>
-                                </AlertDescription>
-                            </Alert>
-                        )}
-                    </CardContent>
-                 </Card>
+                    <TabsContent value="batch">
+                        <Card>
+                             <CardHeader>
+                                <CardTitle>{t.issueCredentialPage.batch_title}</CardTitle>
+                                <CardDescription>{t.issueCredentialPage.batch_desc}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                               {hasFileField ? (
+                                    <Alert variant="destructive">
+                                        <AlertTriangle className="h-4 w-4" />
+                                        <AlertTitle>{t.issueCredentialPage.batch_file_error_title}</AlertTitle>
+                                        <AlertDescription>{t.issueCredentialPage.batch_file_error_desc}</AlertDescription>
+                                    </Alert>
+                               ) : (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label>{t.issueCredentialPage.batch_step1_title}</Label>
+                                        <p className="text-sm text-muted-foreground">{t.issueCredentialPage.batch_step1_desc}</p>
+                                        <Button variant="outline" onClick={handleDownloadCsvTemplate}>
+                                            <FileDown className="mr-2 h-4 w-4" />
+                                            {t.issueCredentialPage.batch_download_button}
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="csv-upload">{t.issueCredentialPage.batch_step2_title}</Label>
+                                         <p className="text-sm text-muted-foreground">{t.issueCredentialPage.batch_step2_desc}</p>
+                                        <Input 
+                                            id="csv-upload"
+                                            type="file" 
+                                            accept=".csv"
+                                            onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)}
+                                        />
+                                    </div>
+                                    <Button onClick={handleBatchIssue} disabled={!csvFile || isBatchIssuing}>
+                                        {isBatchIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
+                                        {t.issueCredentialPage.batch_issue_button}
+                                    </Button>
+
+                                    {isBatchIssuing && (
+                                        <div className="space-y-2">
+                                            <Label>{t.issueCredentialPage.batch_progress_title}</Label>
+                                            <Progress value={batchProgress} />
+                                            <p className="text-sm text-muted-foreground text-center">{Math.round(batchProgress)}%</p>
+                                        </div>
+                                    )}
+                                </>
+                               )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             )}
 
             <Dialog open={!!issuedCredential} onOpenChange={(open) => !open && setIssuedCredential(null)}>
@@ -420,6 +594,11 @@ export default function IssueCredentialPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+             <BatchResultDialog 
+                results={batchResults}
+                onOpenChange={(open) => { if(!open) setBatchResults([]) }}
+            />
 
         </div>
     );
