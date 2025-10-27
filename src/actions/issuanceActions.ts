@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
+import * as jose from 'jose';
 
 if (!adminDb) {
   console.warn("Firebase Admin DB is not initialized. Issuance actions will fail.");
@@ -51,11 +52,43 @@ export async function deleteIssuedCredential(credentialId: string): Promise<{ su
     return { message: 'Invalid credential ID.', success: false };
   }
 
+  const issuedCredentialRef = adminDb.collection('issuedCredentials').doc(credentialId);
+
   try {
-    await adminDb.collection('issuedCredentials').doc(credentialId).delete();
+    const docSnapshot = await issuedCredentialRef.get();
+    if (!docSnapshot.exists) {
+      throw new Error("Credential record not found.");
+    }
+    
+    const credentialData = docSnapshot.data();
+    const jws = credentialData?.jws;
+
+    const batch = adminDb.batch();
+
+    // 1. Delete the issued credential record
+    batch.delete(issuedCredentialRef);
+
+    // 2. If there's a JWS, decode it to find the associated DID and delete it.
+    if (jws) {
+        try {
+            const decodedHeader = jose.decodeProtectedHeader(jws);
+            if (decodedHeader.kid && typeof decodedHeader.kid === 'string') {
+                const did = decodedHeader.kid.split('#')[0];
+                const didRef = adminDb.collection('dids').doc(did);
+                batch.delete(didRef);
+            }
+        } catch (decodeError) {
+            console.warn(`Could not decode JWS to find associated DID for deletion: ${decodeError}`);
+        }
+    }
+    
+    // Commit the atomic batch
+    await batch.commit();
+
     revalidatePath('/credentials');
-    return { message: 'Credential record deleted successfully.', success: true };
+    return { message: 'Credential record and associated DID deleted successfully.', success: true };
   } catch (error: any) {
+    console.error(`Error deleting credential record: ${error.message}`);
     return { message: `Error deleting credential record: ${error.message}`, success: false };
   }
 }
