@@ -96,7 +96,8 @@ export default function VerifyPage() {
   const handleShowDetails = async () => {
     if (!jwsInput) return;
     startFetchingDetails(async () => {
-      const result = await getCredentialDetailsByJws(jwsInput);
+      const cleanedJws = jwsInput.replace(/\s/g, '');
+      const result = await getCredentialDetailsByJws(cleanedJws);
       if (result.success && result.data) {
         setCredentialDetails(result.data);
         setIsDetailsDialogOpen(true);
