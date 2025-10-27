@@ -77,19 +77,24 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
         const qrCodeImage = canvas.toDataURL('image/png');
 
         const page_width = doc.internal.pageSize.getWidth();
+        const margin = 14;
+        const text_width = page_width - (margin * 2);
 
         doc.setFontSize(20);
-        doc.text(credential.templateName, 14, 22);
+        doc.text(credential.templateName, margin, 22);
 
-        doc.addImage(qrCodeImage, 'PNG', 14, 30, 80, 80);
+        doc.addImage(qrCodeImage, 'PNG', margin, 30, 80, 80);
         
         doc.setFontSize(8);
         doc.setFont('Courier', 'normal');
-        doc.text(credential.jws, 14, 125, { maxWidth: page_width - 28 });
+        
+        // This is the fix: split text manually and print line by line
+        const jwsLines = doc.splitTextToSize(credential.jws, text_width);
+        doc.text(jwsLines, margin, 125);
         
         doc.setFont('Helvetica', 'normal');
         doc.setFontSize(12);
-        doc.textWithLink("Check at https://bravium.es/verify", 14, 180, { url: 'https://bravium.es/verify' });
+        doc.textWithLink("Check at https://bravium.es/verify", margin, 180, { url: 'https://bravium.es/verify' });
         
         return doc.output('blob');
     };
