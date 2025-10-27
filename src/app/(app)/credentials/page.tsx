@@ -67,30 +67,29 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
     };
 
     const generateCredentialPdf = async (): Promise<Blob> => {
-        const doc = new jsPDF();
+        if (!credential) throw new Error("Credential not available.");
+        
+        const doc = new jsPDF({ orientation: 'landscape' });
         const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
         if (!canvas) {
             throw new Error("QR Code canvas not found.");
         }
         const qrCodeImage = canvas.toDataURL('image/png');
 
-        doc.setFontSize(18);
+        const page_width = doc.internal.pageSize.getWidth();
+
+        doc.setFontSize(20);
         doc.text(credential.templateName, 14, 22);
 
-        doc.addImage(qrCodeImage, 'PNG', 14, 30, 60, 60);
+        doc.addImage(qrCodeImage, 'PNG', 14, 30, 80, 80);
 
-        doc.setFontSize(11);
-        doc.setFont('Helvetica', 'normal'); // Back to normal font
-        doc.text("JWS:", 14, 100);
-
-        doc.setFont('Courier', 'normal'); // Monospaced font for JWS
-        const jwsLines = doc.splitTextToSize(credential.jws, 180);
-        doc.text(jwsLines, 14, 105);
-
-        const finalY = (jwsLines.length * 5) + 110;
-        doc.setFont('Helvetica', 'normal'); // Back to normal font
+        doc.setFontSize(8);
+        doc.setFont('Courier', 'normal');
+        doc.text(credential.jws, 14, 125, { maxWidth: page_width - 28 });
+        
+        doc.setFont('Helvetica', 'normal');
         doc.setFontSize(12);
-        doc.textWithLink("check in https://bravium.es/verify", 14, finalY, { url: 'https://bravium.es/verify' });
+        doc.textWithLink("Check at https://bravium.es/verify", 14, 140, { url: 'https://bravium.es/verify' });
         
         return doc.output('blob');
     };
@@ -539,9 +538,5 @@ export default function CredentialsPage() {
         </div>
     );
 }
-
-    
-
-    
 
     
