@@ -55,6 +55,10 @@ export default function VerifyPage() {
 
   const handleVerifyJws = useCallback(async (jws: string) => {
     if (!jws) return;
+    
+    // Clean the JWS string by removing all whitespace, including newlines
+    const cleanedJws = jws.replace(/\s/g, '');
+    
     setIsCameraOn(false); // Turn off camera on verification
     setPageState('verifying');
     startJwsVerification(async () => {
@@ -62,7 +66,7 @@ export default function VerifyPage() {
         const response = await fetch(VERIFY_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jws })
+          body: JSON.stringify({ jws: cleanedJws }) // Use the cleaned JWS
         });
         
         const result = await response.json();
@@ -391,3 +395,5 @@ export default function VerifyPage() {
     </div>
   );
 }
+
+    
