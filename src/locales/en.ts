@@ -58,7 +58,7 @@ export const en = {
     howItWorks: {
       title: "Start Issuing in Three Simple Steps",
       step1_text: "Use our AI assistant to describe the credential you need or design your template in our editor. Define fields, rules, and attach files if necessary.",
-      step2_text: "Enter the data for each credential through our user-friendly interface or integrate our API to automate the process.",
+      step2_text: "Enter data for each credential individually, upload a CSV file for batch issuance, or integrate our API to automate the process.",
       step3_text: "Your users receive the credential as a JWS string and a QR code. They can share it with anyone who needs to verify it. The verifier uses the 'Verify' section of our website to validate it instantly.",
       cta: "See a Use Case in Action"
     },
@@ -455,4 +455,4 @@ export const en = {
   },
 };
 
-    
+  

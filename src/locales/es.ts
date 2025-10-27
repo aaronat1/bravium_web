@@ -58,7 +58,7 @@ export const es = {
     howItWorks: {
       title: "Empieza a Emitir en Tres Sencillos Pasos",
       step1_text: "Usa nuestro asistente con IA para describir la credencial que necesitas o diseña tu plantilla en nuestro editor. Define campos, reglas y adjunta archivos si es necesario.",
-      step2_text: "Introduce los datos para cada credencial a través de nuestra interfaz de usuario o integra nuestra API para automatizar el proceso.",
+      step2_text: "Introduce los datos para cada credencial individualmente, carga un fichero CSV para la emisión por lotes o integra nuestra API para automatizar el proceso.",
       step3_text: "Tus usuarios reciben la credencial como un JWS y un código QR. Pueden compartirlo con quien necesite verificarlo. El verificador usa la sección 'Verificar' de nuestra web para validarlo al instante.",
       cta: "Ver un Caso de Uso en Acción"
     },
@@ -455,4 +455,4 @@ export const es = {
   },
 };
 
-    
+  
