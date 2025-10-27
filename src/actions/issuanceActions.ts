@@ -43,52 +43,5 @@ export async function saveIssuedCredential(data: z.infer<typeof IssuedCredential
 }
 
 // --- DELETE ISSUED CREDENTIAL ---
-export async function deleteIssuedCredential(credentialId: string): Promise<{ success: boolean; message: string }> {
-  if (!adminDb) {
-    return { message: 'Server configuration error.', success: false };
-  }
+// This functionality has been removed as per user request.
 
-  if (!credentialId) {
-    return { message: 'Invalid credential ID.', success: false };
-  }
-
-  const issuedCredentialRef = adminDb.collection('issuedCredentials').doc(credentialId);
-
-  try {
-    const docSnapshot = await issuedCredentialRef.get();
-    if (!docSnapshot.exists) {
-      throw new Error("Credential record not found.");
-    }
-    
-    const credentialData = docSnapshot.data();
-    const jws = credentialData?.jws;
-
-    const batch = adminDb.batch();
-
-    // 1. Delete the issued credential record
-    batch.delete(issuedCredentialRef);
-
-    // 2. If there's a JWS, decode it to find the associated DID and delete it.
-    if (jws) {
-        try {
-            const decodedHeader = jose.decodeProtectedHeader(jws);
-            if (decodedHeader.kid && typeof decodedHeader.kid === 'string') {
-                const did = decodedHeader.kid.split('#')[0];
-                const didRef = adminDb.collection('dids').doc(did);
-                batch.delete(didRef);
-            }
-        } catch (decodeError) {
-            console.warn(`Could not decode JWS to find associated DID for deletion: ${decodeError}`);
-        }
-    }
-    
-    // Commit the atomic batch
-    await batch.commit();
-
-    revalidatePath('/credentials');
-    return { message: 'Credential record and associated DID deleted successfully.', success: true };
-  } catch (error: any) {
-    console.error(`Error deleting credential record: ${error.message}`);
-    return { message: `Error deleting credential record: ${error.message}`, success: false };
-  }
-}

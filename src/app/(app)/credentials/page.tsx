@@ -4,7 +4,7 @@
 import { useEffect, useState, useMemo, useTransition, useRef } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
-import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X, Share2, Download } from "lucide-react";
+import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X, Share2, Download } from "lucide-react";
 import QRCode from "qrcode.react";
 import { format, isSameDay } from 'date-fns';
 import { es, enUS } from "date-fns/locale";
@@ -15,14 +15,12 @@ import autoTable from 'jspdf-autotable';
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
-import { deleteIssuedCredential } from "@/actions/issuanceActions";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -78,7 +76,6 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
 
         const page_width = doc.internal.pageSize.getWidth();
         const margin = 14;
-        const text_width = page_width - (margin * 2);
 
         doc.setFontSize(20);
         doc.text(credential.templateName, margin, 22);
@@ -88,8 +85,7 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
         doc.setFontSize(8);
         doc.setFont('Courier', 'normal');
         
-        // This is the fix: split text manually and print line by line
-        const jwsLines = doc.splitTextToSize(credential.jws, text_width);
+        const jwsLines = doc.splitTextToSize(credential.jws, page_width - (margin * 2));
         doc.text(jwsLines, margin, 125);
         
         doc.setFont('Helvetica', 'normal');
@@ -178,13 +174,10 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
 // MAIN PAGE COMPONENT
 export default function CredentialsPage() {
     const { t, locale } = useI18n();
-    const { toast } = useToast();
     const { user } = useAuth();
     const [credentials, setCredentials] = useState<IssuedCredential[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewingCredential, setViewingCredential] = useState<IssuedCredential | null>(null);
-    const [credentialToDelete, setCredentialToDelete] = useState<IssuedCredential | null>(null);
-    const [isDeleting, startDeleteTransition] = useTransition();
 
     const [searchTerm, setSearchTerm] = useState("");
     const [dateFilter, setDateFilter] = useState<Date | undefined>();
@@ -220,20 +213,6 @@ export default function CredentialsPage() {
             .map(key => recipientData[key])
             .filter(val => val !== null && val !== undefined && val !== '')
             .join(', ');
-    };
-
-    const handleDeleteCredential = () => {
-        if (!credentialToDelete) return;
-
-        startDeleteTransition(async () => {
-            const result = await deleteIssuedCredential(credentialToDelete.id);
-            toast({
-                title: result.success ? t.credentialsPage.toast_delete_success_title : t.credentialsPage.toast_delete_error_title,
-                description: result.message,
-                variant: result.success ? "default" : "destructive",
-            });
-            setCredentialToDelete(null);
-        });
     };
     
     const sortedAndFilteredCredentials = useMemo(() => {
@@ -459,10 +438,6 @@ export default function CredentialsPage() {
                                                         <Eye className="mr-2 h-4 w-4" />
                                                         <span>{t.credentialsPage.view_button}</span>
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => setCredentialToDelete(cred)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        <span>{t.credentialsPage.delete}</span>
-                                                    </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -525,21 +500,6 @@ export default function CredentialsPage() {
                 onOpenChange={(open) => !open && setViewingCredential(null)}
             />
 
-            <AlertDialog open={!!credentialToDelete} onOpenChange={(open) => !open && setCredentialToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t.credentialsPage.delete_dialog_title}</AlertDialogTitle>
-                        <AlertDialogDescription>{t.credentialsPage.delete_dialog_desc}</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t.credentialsPage.cancel}</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteCredential} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {t.credentialsPage.confirm}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </div>
     );
 }
