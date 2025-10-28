@@ -158,17 +158,17 @@ export default function TryNowPage() {
                 }
             }
 
-            // Simulate the JWS creation to avoid needing a real KMS signature for the demo.
-            const fakeHeader = btoa(JSON.stringify({ alg: 'ES256', typ: 'JWT' }));
-            const fakePayload = btoa(JSON.stringify({
-                sub: "demo-user",
-                iss: `did:web:bravium.es`,
-                iat: Math.floor(Date.now() / 1000),
-                credentialSubject: credentialSubject,
-                type: ['VerifiableCredential', selectedTemplate.name],
-            }));
-            const fakeSignature = btoa("fake-signature");
-            const jws = `${fakeHeader}.${fakePayload}.${fakeSignature}`;
+            const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
+            const result: any = await issueCredentialFunc({
+                credentialSubject,
+                credentialType: selectedTemplate.name,
+                customerId: DEMO_CUSTOMER_ID, 
+            });
+            
+            const jws = result.data.verifiableCredentialJws;
+            if (!jws) {
+                throw new Error("Cloud function did not return a verifiableCredentialJws.");
+            }
             
             const savedCredential = await saveIssuedCredential({
                 templateId: selectedTemplate.id,
@@ -189,7 +189,7 @@ export default function TryNowPage() {
             console.error("Error issuing demo credential:", error);
             const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
             setSubmissionError(detailedError);
-            toast({ variant: "destructive", title: t.toast_error_title, description: "This is a demo. Credential issuance is simulated.", duration: 10000 });
+            toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
         } finally {
             setIsIssuing(false);
         }
@@ -288,7 +288,8 @@ export default function TryNowPage() {
                         <CardContent className="space-y-4 py-8">
                              <Form {...form}>
                                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                    <div className="space-y-2">
+                                    
+                                     <div className="space-y-2">
                                         <Label>{t.tryNowPage.select_template_label}</Label>
                                         <Select onValueChange={handleTemplateChange} disabled={loadingTemplates}>
                                             <SelectTrigger>
@@ -430,3 +431,5 @@ export default function TryNowPage() {
         </div>
     );
 }
+
+    
