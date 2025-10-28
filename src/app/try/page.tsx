@@ -11,10 +11,11 @@ import QRCode from "qrcode.react";
 import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import jsPDF from "jspdf";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
-import { db, functions } from "@/lib/firebase/config";
+import { db, functions, storage } from "@/lib/firebase/config";
 import { saveIssuedCredential } from "@/actions/issuanceActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
@@ -35,12 +36,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
 const DEMO_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
-const formSchema = z.object({
-    email: z.string().email({ message: "Por favor, introduce un email válido." }),
-    templateId: z.string().min(1, { message: "Debes seleccionar una plantilla." }),
-});
+const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
+    if (!fields) return z.object({});
+    
+    const shape: Record<string, z.ZodType<any, any>> = {};
+    fields.forEach(field => {
+        let fieldSchema: z.ZodType<any, any>;
+        
+        switch(field.type) {
+            case 'file':
+                const fileSchema = z.any().refine((files) => files instanceof FileList && files.length > 0, 'File is required.');
+                fieldSchema = field.required ? fileSchema : z.any().optional();
+                break;
+            default:
+                let stringSchema = z.string();
+                if (field.required) {
+                    stringSchema = stringSchema.min(1, {message: "This field is required"});
+                } else {
+                    // For optional fields, we explicitly mark them as optional in Zod
+                    stringSchema = stringSchema.optional();
+                }
+                fieldSchema = stringSchema;
+        }
+        shape[field.fieldName] = fieldSchema;
+    });
+    return z.object(shape);
+};
 
-type FormData = z.infer<typeof formSchema>;
 
 export default function TryNowPage() {
     const { t } = useI18n();
@@ -59,16 +81,20 @@ export default function TryNowPage() {
     const isShareSupported = typeof navigator !== 'undefined' && !!navigator.share;
     
 
+    const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
+
+    type FormData = z.infer<typeof formSchema>;
+
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            email: "",
-            templateId: "",
-        }
     });
     
-    const { handleSubmit, control, watch } = form;
-    const watchedTemplateId = watch("templateId");
+    const { handleSubmit, control, watch, register, reset } = form;
+    
+    const handleTemplateChange = (templateId: string) => {
+        const template = publicTemplates.find(t => t.id === templateId) || null;
+        setSelectedTemplate(template);
+    };
 
     useEffect(() => {
         setLoadingTemplates(true);
@@ -88,10 +114,17 @@ export default function TryNowPage() {
         return () => unsubscribe();
     }, [t, toast]);
 
-     useEffect(() => {
-        const template = publicTemplates.find(t => t.id === watchedTemplateId) || null;
-        setSelectedTemplate(template);
-    }, [watchedTemplateId, publicTemplates]);
+    useEffect(() => {
+        if (selectedTemplate) {
+            const defaultValues = selectedTemplate.fields.reduce((acc, field) => {
+                acc[field.fieldName] = field.defaultValue || '';
+                return acc;
+            }, {} as Record<string, any>);
+            reset(defaultValues);
+        } else {
+            reset({});
+        }
+    }, [selectedTemplate, reset]);
 
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
@@ -103,14 +136,32 @@ export default function TryNowPage() {
         setIsIssuing(true);
         setSubmissionError(null);
         try {
-            const credentialSubject = {
-                email: data.email,
-            };
+            const credentialSubject: Record<string, any> = {};
 
+            for (const fieldInfo of selectedTemplate.fields) {
+                const fieldName = fieldInfo.fieldName;
+                const value = data[fieldName as keyof FormData];
+
+                if (fieldInfo.type === 'file' && value instanceof FileList && value.length > 0) {
+                    const file: File = value[0];
+                    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+                    if (!allowedTypes.includes(file.type)) {
+                        throw new Error(`Invalid file type for ${fieldInfo.label}. Accepted formats: PDF, PNG, JPG.`);
+                    }
+                    // In a real demo, we might want to upload to a public demo bucket with a TTL policy.
+                    // For simplicity, we are faking this part for now.
+                    const downloadURL = `https://fake-storage.bravium.es/demo-attachments/${Date.now()}_${file.name}`;
+                    credentialSubject[fieldName] = downloadURL;
+                } else if (value !== undefined && value !== null && value !== '') {
+                    credentialSubject[fieldName] = value;
+                }
+            }
+
+            // Simulate the JWS creation to avoid needing a real KMS signature for the demo.
             const fakeHeader = btoa(JSON.stringify({ alg: 'ES256', typ: 'JWT' }));
             const fakePayload = btoa(JSON.stringify({
                 sub: "demo-user",
-                iss: "did:bravium:demo",
+                iss: `did:web:bravium.es`,
                 iat: Math.floor(Date.now() / 1000),
                 credentialSubject: credentialSubject,
                 type: ['VerifiableCredential', selectedTemplate.name],
@@ -236,45 +287,73 @@ export default function TryNowPage() {
                         <CardContent className="space-y-4 py-8">
                              <Form {...form}>
                                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                     <FormField
-                                        control={control}
-                                        name="email"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>{t.tryNowPage.email_label}</FormLabel>
-                                                <FormControl>
-                                                    <Input type="email" placeholder="tu@email.com" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                     <FormField
-                                        control={control}
-                                        name="templateId"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>{t.tryNowPage.select_template_label}</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loadingTemplates}>
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder={loadingTemplates ? t.tryNowPage.loading_templates : t.tryNowPage.select_template_placeholder} />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {publicTemplates.map(template => (
-                                                            <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormDescription>
-                                                   {t.tryNowPage.template_selection_description}
-                                                </FormDescription>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    <div className="space-y-2">
+                                        <Label>{t.tryNowPage.select_template_label}</Label>
+                                        <Select onValueChange={handleTemplateChange} disabled={loadingTemplates}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={loadingTemplates ? t.tryNowPage.loading_templates : t.tryNowPage.select_template_placeholder} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {publicTemplates.map(template => (
+                                                    <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-sm text-muted-foreground">{t.tryNowPage.template_selection_description}</p>
+                                    </div>
+                                    
+                                    {selectedTemplate && (
+                                        <>
+                                            {selectedTemplate.fields.map(fieldInfo => (
+                                                <FormField
+                                                    key={fieldInfo.fieldName}
+                                                    control={control}
+                                                    name={fieldInfo.fieldName as any}
+                                                    render={({ field }) => {
+                                                    const displayValue = field.value ?? '';
+                                                    return (
+                                                        <FormItem>
+                                                            <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
+                                                            <FormControl>
+                                                                {(() => {
+                                                                    switch(fieldInfo.type) {
+                                                                        case 'date':
+                                                                            return <Input type="date" {...field} value={displayValue} />;
+                                                                        case 'select':
+                                                                            return (
+                                                                                <Select onValueChange={field.onChange} value={displayValue}>
+                                                                                    <SelectTrigger><SelectValue placeholder={fieldInfo.label} /></SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        {(fieldInfo.options || []).map(option => (
+                                                                                            <SelectItem key={option} value={option}>{option}</SelectItem>
+                                                                                        ))}
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            );
+                                                                        case 'file':
+                                                                            const { ref: fieldRef, ...rest } = register(fieldInfo.fieldName as any);
+                                                                            return (
+                                                                                <Input 
+                                                                                    type="file" 
+                                                                                    accept=".pdf,.png,.jpeg,.jpg"
+                                                                                    {...rest}
+                                                                                    ref={fieldRef}
+                                                                                />
+                                                                            );
+                                                                        case 'text':
+                                                                        default:
+                                                                            return <Input type="text" {...field} value={displayValue} />;
+                                                                    }
+                                                                })()}
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    );
+                                                }}
+                                                />
+                                            ))}
+                                        </>
+                                    )}
                                     
                                      <Alert>
                                         <AlertTriangle className="h-4 w-4" />
@@ -351,6 +430,3 @@ export default function TryNowPage() {
     );
 }
 
-    
-
-    
