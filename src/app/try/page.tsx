@@ -37,8 +37,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
 const DEMO_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
-const DEMO_USER_EMAIL = "verifier@bravium.org";
-const DEMO_USER_PASSWORD = DEMO_CUSTOMER_ID; // The password is the UID for demo purposes
+const DEMO_USER_EMAIL = process.env.NEXT_PUBLIC_DEMO_USER_EMAIL!;
+const DEMO_USER_PASSWORD = process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD!;
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     if (!fields) return z.object({});
