@@ -287,6 +287,7 @@ export default function LandingPage() {
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_unlimited}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_certify_documents}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_starter}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -500,5 +501,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
