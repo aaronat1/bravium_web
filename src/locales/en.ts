@@ -94,7 +94,7 @@ export const en = {
       plan_starter_title: "Starter",
       plan_starter_target: "For freelancers, small NGOs, and startups.",
       plan_starter_price: "€49/month",
-      feature_emissions_starter: "Up to 50 Issuances/month",
+      feature_emissions_starter: "Up to 60 Issuances/month",
       feature_verifications_unlimited: "Unlimited Verifications",
       feature_certify_documents: "Certify Documents (PDF, JPG, etc.)",
       feature_storage_starter: "2 GB Secure Storage",
@@ -456,3 +456,5 @@ export const en = {
 };
 
   
+
+    

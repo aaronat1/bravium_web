@@ -94,7 +94,7 @@ export const es = {
       plan_starter_title: "Starter",
       plan_starter_target: "Para freelancers, pequeñas ONGs y startups.",
       plan_starter_price: "49€/mes",
-      feature_emissions_starter: "Hasta 50 Emisiones/mes",
+      feature_emissions_starter: "Hasta 60 Emisiones/mes",
       feature_verifications_unlimited: "Verificaciones Ilimitadas",
       feature_certify_documents: "Certifica Documentos (PDF, JPG, etc.)",
       feature_storage_starter: "2 GB de Almacenamiento Seguro",
@@ -456,3 +456,5 @@ export const es = {
 };
 
   
+
+    
