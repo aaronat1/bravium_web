@@ -178,6 +178,12 @@ export const en = {
     result_error_title: "Verification Failed",
     result_expired_title: "Request Expired"
   },
+  tryNowPage: {
+    title: "Try Bravium Now",
+    subtitle: "Issue your first verifiable credential in seconds. No registration required.",
+    demo_alert_title: "Demonstration Only",
+    demo_alert_desc: "This is a public demo. The issuance is simulated and does not require an authenticated user. The generated credential uses a demo issuer.",
+  },
   helpPage: {
     title: "From Issuance to Verification: A Real Use Case",
     subtitle: "Discover step-by-step how an institution uses BRAVIUM to issue a secure digital certificate and how a third party can verify it instantly.",
@@ -460,3 +466,5 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
+
+    

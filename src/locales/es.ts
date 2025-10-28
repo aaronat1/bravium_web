@@ -178,6 +178,12 @@ export const es = {
     result_error_title: "Verificación Fallida",
     result_expired_title: "Solicitud Expirada"
   },
+  tryNowPage: {
+    title: "Prueba Bravium Ahora",
+    subtitle: "Emite tu primera credencial verificable en segundos. Sin necesidad de registrarte.",
+    demo_alert_title: "Demostración",
+    demo_alert_desc: "Esta es una demo pública. La emisión es simulada y no requiere un usuario autenticado. La credencial generada utiliza un emisor de demostración.",
+  },
   helpPage: {
     title: "De la Emisión a la Verificación: Un Caso de Uso Real",
     subtitle: "Descubre paso a paso cómo una institución utiliza BRAVIUM para emitir un certificado digital seguro y cómo un tercero puede verificarlo al instante.",
@@ -460,3 +466,5 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
+
+    

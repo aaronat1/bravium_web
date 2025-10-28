@@ -82,7 +82,7 @@ export default function LandingPage() {
                 </p>
                 <div className="mt-8 flex justify-center gap-4">
                 <Button asChild size="lg">
-                    <Link href="/login">{t.landingPage.hero.cta_demo}</Link>
+                    <Link href="/try">{t.landingPage.hero.cta_demo}</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
                     <Link href="#pricing">{t.landingPage.hero.cta_prices}</Link>
@@ -524,5 +524,7 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
 
     
