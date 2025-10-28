@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,10 +10,11 @@ import * as z from 'zod';
 import QRCode from "qrcode.react";
 import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import jsPDF from "jspdf";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
-import { functions } from "@/lib/firebase/config";
+import { db, functions } from "@/lib/firebase/config";
 import { saveIssuedCredential } from "@/actions/issuanceActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
@@ -28,53 +29,28 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 // For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
 const DEMO_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 
-// For the demo, we use a hardcoded template.
-const demoTemplate: Omit<CredentialTemplate, 'id' | 'customerId'> = {
-    name: "Certificado de Demostración",
-    description: "Esta es una credencial de prueba generada por Bravium.",
-    fields: [
-        {
-            fieldName: "fullName",
-            label: "Nombre Completo",
-            type: "text",
-            required: true,
-        },
-        {
-            fieldName: "courseName",
-            label: "Nombre del Curso",
-            type: "text",
-            required: true,
-            defaultValue: "Introducción a las Credenciales Verificables"
-        },
-    ],
-};
+const formSchema = z.object({
+    email: z.string().email({ message: "Por favor, introduce un email válido." }),
+    templateId: z.string().min(1, { message: "Debes seleccionar una plantilla." }),
+});
 
-const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
-    if (!fields) return z.object({});
-    
-    const shape: Record<string, z.ZodType<any, any>> = {};
-    fields.forEach(field => {
-        let stringSchema = z.string();
-        if (field.required) {
-            stringSchema = stringSchema.min(1, {message: "Este campo es obligatorio"});
-        } else {
-            stringSchema = stringSchema.optional();
-        }
-        shape[field.fieldName] = stringSchema;
-    });
-    return z.object(shape);
-};
-
+type FormData = z.infer<typeof formSchema>;
 
 export default function TryNowPage() {
     const { t } = useI18n();
     const router = useRouter();
     const { toast } = useToast();
     
+    const [publicTemplates, setPublicTemplates] = useState<CredentialTemplate[]>([]);
+    const [loadingTemplates, setLoadingTemplates] = useState(true);
+    const [selectedTemplate, setSelectedTemplate] = useState<CredentialTemplate | null>(null);
+
     const [isIssuing, setIsIssuing] = useState(false);
     const [issuedCredential, setIssuedCredential] = useState<{jws: string, id: string} | null>(null);
     const [hasCopied, setHasCopied] = useState(false);
@@ -82,52 +58,71 @@ export default function TryNowPage() {
     const qrCodeRef = useRef<HTMLDivElement>(null);
     const isShareSupported = typeof navigator !== 'undefined' && !!navigator.share;
     
-    const formSchema = React.useMemo(() => getBaseSchema(demoTemplate.fields), []);
-
-    type FormData = z.infer<typeof formSchema>;
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            fullName: "",
-            courseName: "Introducción a las Credenciales Verificables"
+            email: "",
+            templateId: "",
         }
     });
     
-    const { handleSubmit, control } = form;
+    const { handleSubmit, control, watch } = form;
+    const watchedTemplateId = watch("templateId");
+
+    useEffect(() => {
+        setLoadingTemplates(true);
+        const templatesCollectionRef = collection(db, "credentialSchemas");
+        const q = query(templatesCollectionRef, where("public", "==", true));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
+            setPublicTemplates(fetchedTemplates);
+            setLoadingTemplates(false);
+        }, (error) => {
+            console.error("Error fetching public templates:", error);
+            toast({ variant: "destructive", title: t.toast_error_title, description: "Failed to load demo templates." });
+            setLoadingTemplates(false);
+        });
+        
+        return () => unsubscribe();
+    }, [t, toast]);
+
+     useEffect(() => {
+        const template = publicTemplates.find(t => t.id === watchedTemplateId) || null;
+        setSelectedTemplate(template);
+    }, [watchedTemplateId, publicTemplates]);
+
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
+        if (!selectedTemplate) {
+            toast({ variant: "destructive", title: "Error", description: "No template selected." });
+            return;
+        }
+
         setIsIssuing(true);
         setSubmissionError(null);
         try {
-            // The issueCredential cloud function requires an authenticated user.
-            // For a public demo, this is tricky. A potential solution would be
-            // to use an anonymous user, but that still requires a sign-in step.
-            // Another option is a separate, unsecured cloud function for demos,
-            // but that's a security risk.
-            // For now, we will show an alert that this part is a demo and simulate the result.
-            // To make this functional, we need to adjust the security rules of `issueCredential`
-            // or create a dedicated, rate-limited public endpoint.
-            
-            // We'll call the function, but it's expected to fail without auth.
-            // Let's create a "fake" JWS for the demo UI.
-            
+            const credentialSubject = {
+                email: data.email,
+            };
+
             const fakeHeader = btoa(JSON.stringify({ alg: 'ES256', typ: 'JWT' }));
             const fakePayload = btoa(JSON.stringify({
                 sub: "demo-user",
                 iss: "did:bravium:demo",
                 iat: Math.floor(Date.now() / 1000),
-                credentialSubject: data,
+                credentialSubject: credentialSubject,
+                type: ['VerifiableCredential', selectedTemplate.name],
             }));
             const fakeSignature = btoa("fake-signature");
             const jws = `${fakeHeader}.${fakePayload}.${fakeSignature}`;
             
-            // We'll simulate saving and show the result dialog.
             const savedCredential = await saveIssuedCredential({
-                templateId: 'demo-template',
-                templateName: demoTemplate.name,
+                templateId: selectedTemplate.id,
+                templateName: selectedTemplate.name,
                 customerId: DEMO_CUSTOMER_ID,
-                recipientData: data,
+                recipientData: credentialSubject,
                 jws,
             });
 
@@ -156,7 +151,7 @@ export default function TryNowPage() {
     };
 
     const generateCredentialPdf = async (): Promise<Blob> => {
-        if (!issuedCredential) throw new Error("Credential not available.");
+        if (!issuedCredential || !selectedTemplate) throw new Error("Credential not available.");
         
         const doc = new jsPDF();
         const canvas = qrCodeRef.current?.querySelector<HTMLCanvasElement>('canvas');
@@ -170,7 +165,7 @@ export default function TryNowPage() {
         const margin = 14;
         
         doc.setFontSize(20);
-        doc.text(demoTemplate.name, margin, 22);
+        doc.text(selectedTemplate.name, margin, 22);
 
         doc.addImage(qrCodeImage, 'PNG', margin, 30, 80, 80);
         
@@ -241,22 +236,42 @@ export default function TryNowPage() {
                         <CardContent className="space-y-4 py-8">
                              <Form {...form}>
                                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                    {demoTemplate.fields.map(fieldInfo => (
-                                        <FormField
-                                            key={fieldInfo.fieldName}
-                                            control={control}
-                                            name={fieldInfo.fieldName as any}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>{fieldInfo.label} {fieldInfo.required && '*'}</FormLabel>
+                                     <FormField
+                                        control={control}
+                                        name="templateId"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t.tryNowPage.select_template_label}</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loadingTemplates}>
                                                     <FormControl>
-                                                        <Input type="text" {...field} />
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder={loadingTemplates ? t.tryNowPage.loading_templates : t.tryNowPage.select_template_placeholder} />
+                                                        </SelectTrigger>
                                                     </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    ))}
+                                                    <SelectContent>
+                                                        {publicTemplates.map(template => (
+                                                            <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                     <FormField
+                                        control={control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t.tryNowPage.email_label}</FormLabel>
+                                                <FormControl>
+                                                    <Input type="email" placeholder="tu@email.com" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                     
                                      <Alert>
                                         <AlertTriangle className="h-4 w-4" />
@@ -267,7 +282,7 @@ export default function TryNowPage() {
                                     </Alert>
 
                                     <div className="flex justify-center">
-                                    <Button type="submit" disabled={isIssuing} size="lg">
+                                    <Button type="submit" disabled={isIssuing || !selectedTemplate} size="lg">
                                         {isIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
                                         {t.issueCredentialPage.issue_button}
                                     </Button>

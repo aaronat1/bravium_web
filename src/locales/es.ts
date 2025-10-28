@@ -141,7 +141,7 @@ export const es = {
     finalCta: {
         title: "¿Listo para Liderar la Revolución de la Confianza Digital?",
         subtitle: "Únete a las instituciones que ya no solo emiten documentos, sino que entregan confianza verificable.",
-        cta: "Solicita una Demo",
+        cta: "¡Prueba Ahora!",
     },
     contact: {
       title: "Contacto",
@@ -183,6 +183,10 @@ export const es = {
     subtitle: "Emite tu primera credencial verificable en segundos. Sin necesidad de registrarte.",
     demo_alert_title: "Demostración",
     demo_alert_desc: "Esta es una demo pública. La emisión es simulada y no requiere un usuario autenticado. La credencial generada utiliza un emisor de demostración.",
+    select_template_label: "Tipo de Credencial de Demostración",
+    select_template_placeholder: "Selecciona un tipo de credencial",
+    loading_templates: "Cargando plantillas de demo...",
+    email_label: "Tu Correo Electrónico",
   },
   helpPage: {
     title: "De la Emisión a la Verificación: Un Caso de Uso Real",

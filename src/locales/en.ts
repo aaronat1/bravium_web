@@ -141,7 +141,7 @@ export const en = {
     finalCta: {
         title: "Ready to Lead the Digital Trust Revolution?",
         subtitle: "Join the institutions that are no longer just issuing documents, but delivering verifiable trust.",
-        cta: "Request a Demo",
+        cta: "Try Now!",
     },
     contact: {
       title: "Contact",
@@ -183,6 +183,10 @@ export const en = {
     subtitle: "Issue your first verifiable credential in seconds. No registration required.",
     demo_alert_title: "Demonstration Only",
     demo_alert_desc: "This is a public demo. The issuance is simulated and does not require an authenticated user. The generated credential uses a demo issuer.",
+    select_template_label: "Demo Credential Type",
+    select_template_placeholder: "Select a credential type",
+    loading_templates: "Loading demo templates...",
+    email_label: "Your Email",
   },
   helpPage: {
     title: "From Issuance to Verification: A Real Use Case",
