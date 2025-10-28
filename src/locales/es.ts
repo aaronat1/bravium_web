@@ -187,6 +187,7 @@ export const es = {
     select_template_placeholder: "Selecciona un tipo de credencial",
     loading_templates: "Cargando plantillas de demo...",
     email_label: "Tu Correo Electrónico",
+    template_selection_description: "Cuando crees tu cuenta podrás crear y seleccionar tus propias plantillas (incluso con asistencia de IA)."
   },
   helpPage: {
     title: "De la Emisión a la Verificación: Un Caso de Uso Real",
@@ -470,5 +471,7 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
+
+    
 
     

@@ -187,6 +187,7 @@ export const en = {
     select_template_placeholder: "Select a credential type",
     loading_templates: "Loading demo templates...",
     email_label: "Your Email",
+    template_selection_description: "When you create your account you will be able to create and select your own templates (even with AI assistance)."
   },
   helpPage: {
     title: "From Issuance to Verification: A Real Use Case",
@@ -470,5 +471,7 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
+
+    
 
     

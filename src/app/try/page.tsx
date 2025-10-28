@@ -19,7 +19,7 @@ import { saveIssuedCredential } from "@/actions/issuanceActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -238,6 +238,20 @@ export default function TryNowPage() {
                                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                                      <FormField
                                         control={control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t.tryNowPage.email_label}</FormLabel>
+                                                <FormControl>
+                                                    <Input type="email" placeholder="tu@email.com" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                     <FormField
+                                        control={control}
                                         name="templateId"
                                         render={({ field }) => (
                                             <FormItem>
@@ -254,20 +268,9 @@ export default function TryNowPage() {
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                     <FormField
-                                        control={control}
-                                        name="email"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>{t.tryNowPage.email_label}</FormLabel>
-                                                <FormControl>
-                                                    <Input type="email" placeholder="tu@email.com" {...field} />
-                                                </FormControl>
+                                                <FormDescription>
+                                                   {t.tryNowPage.template_selection_description}
+                                                </FormDescription>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
@@ -347,5 +350,7 @@ export default function TryNowPage() {
         </div>
     );
 }
+
+    
 
     
