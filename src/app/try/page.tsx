@@ -37,7 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
 const DEMO_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
-const DEMO_USER_EMAIL = "admin@bravium.es";
+const DEMO_USER_EMAIL = "info@bravium.es";
 const DEMO_USER_PASSWORD = DEMO_CUSTOMER_ID; // The password is the UID for demo purposes
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
@@ -449,6 +449,8 @@ export default function TryNowPage() {
         </div>
     );
 }
+
+    
 
     
 
