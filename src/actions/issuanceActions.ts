@@ -17,6 +17,8 @@ const IssuedCredentialSchema = z.object({
   customerId: z.string(),
   recipientData: z.record(z.any()),
   jws: z.string(),
+  test: z.boolean().optional(),
+  emailTester: z.string().email().optional(),
 });
 
 export async function saveIssuedCredential(data: z.infer<typeof IssuedCredentialSchema>): Promise<{ success: boolean; message: string, id?: string }> {
@@ -44,4 +46,5 @@ export async function saveIssuedCredential(data: z.infer<typeof IssuedCredential
 
 // --- DELETE ISSUED CREDENTIAL ---
 // This functionality has been removed as per user request.
+
 

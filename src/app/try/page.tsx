@@ -41,29 +41,32 @@ const DEMO_USER_EMAIL = process.env.NEXT_PUBLIC_DEMO_USER_EMAIL!;
 const DEMO_USER_PASSWORD = process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD!;
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
-    if (!fields) return z.object({});
+    let shape: Record<string, z.ZodType<any, any>> = {
+        email: z.string().email("Please enter a valid email."),
+    };
     
-    const shape: Record<string, z.ZodType<any, any>> = {};
-    fields.forEach(field => {
-        let fieldSchema: z.ZodType<any, any>;
-        
-        switch(field.type) {
-            case 'file':
-                const fileSchema = z.any().refine((files) => files instanceof FileList && files.length > 0, 'File is required.');
-                fieldSchema = field.required ? fileSchema : z.any().optional();
-                break;
-            default:
-                let stringSchema = z.string();
-                if (field.required) {
-                    stringSchema = stringSchema.min(1, {message: "This field is required"});
-                } else {
-                    // For optional fields, we explicitly mark them as optional in Zod
-                    stringSchema = stringSchema.optional();
-                }
-                fieldSchema = stringSchema;
-        }
-        shape[field.fieldName] = fieldSchema;
-    });
+    if (fields) {
+        fields.forEach(field => {
+            let fieldSchema: z.ZodType<any, any>;
+            
+            switch(field.type) {
+                case 'file':
+                    const fileSchema = z.any().refine((files) => files instanceof FileList && files.length > 0, 'File is required.');
+                    fieldSchema = field.required ? fileSchema : z.any().optional();
+                    break;
+                default:
+                    let stringSchema = z.string();
+                    if (field.required) {
+                        stringSchema = stringSchema.min(1, {message: "This field is required"});
+                    } else {
+                        // For optional fields, we explicitly mark them as optional in Zod
+                        stringSchema = stringSchema.optional();
+                    }
+                    fieldSchema = stringSchema;
+            }
+            shape[field.fieldName] = fieldSchema;
+        });
+    }
     return z.object(shape);
 };
 
@@ -124,11 +127,13 @@ export default function TryNowPage() {
                 acc[field.fieldName] = field.defaultValue || '';
                 return acc;
             }, {} as Record<string, any>);
-            reset(defaultValues);
+             // Keep the email if it was already entered
+            const currentEmail = form.getValues('email');
+            reset({ ...defaultValues, email: currentEmail });
         } else {
-            reset({});
+            reset({ email: form.getValues('email') });
         }
-    }, [selectedTemplate, reset]);
+    }, [selectedTemplate, reset, form]);
 
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
@@ -172,6 +177,8 @@ export default function TryNowPage() {
                     credentialSubject[fieldName] = value;
                 }
             }
+            // Add the email to the subject, which might be useful
+            credentialSubject.email = data.email;
 
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
             const result: any = await issueCredentialFunc({
@@ -191,6 +198,8 @@ export default function TryNowPage() {
                 customerId: DEMO_CUSTOMER_ID,
                 recipientData: credentialSubject,
                 jws,
+                test: true,
+                emailTester: data.email,
             });
 
             if (!savedCredential.success || !savedCredential.id) {
@@ -463,4 +472,3 @@ export default function TryNowPage() {
     );
 }
 
-    
