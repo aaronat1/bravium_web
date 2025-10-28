@@ -148,9 +148,10 @@ export default function TryNowPage() {
                     if (!allowedTypes.includes(file.type)) {
                         throw new Error(`Invalid file type for ${fieldInfo.label}. Accepted formats: PDF, PNG, JPG.`);
                     }
-                    // In a real demo, we might want to upload to a public demo bucket with a TTL policy.
-                    // For simplicity, we are faking this part for now.
-                    const downloadURL = `https://fake-storage.bravium.es/demo-attachments/${Date.now()}_${file.name}`;
+                    const filePath = `credential-attachments/demo/${Date.now()}_${file.name}`;
+                    const fileRef = ref(storage, filePath);
+                    await uploadBytes(fileRef, file);
+                    const downloadURL = await getDownloadURL(fileRef);
                     credentialSubject[fieldName] = downloadURL;
                 } else if (value !== undefined && value !== null && value !== '') {
                     credentialSubject[fieldName] = value;
@@ -429,4 +430,3 @@ export default function TryNowPage() {
         </div>
     );
 }
-
