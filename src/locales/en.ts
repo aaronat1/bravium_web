@@ -22,7 +22,7 @@ export const en = {
     hero: {
       title: "The New Era of Digital Trust.\n Issue Verifiable, Unforgeable Credentials, Instantly.",
       subtitle: "Bravium is the leading Verifiable Credentials as a Service (VCaaS) platform that enables universities, NGOs, and companies to issue diplomas, certificates, and any digital document with cryptographic security. Eliminate fraud, automate verification, and give control back to the user.",
-      cta_demo: "Request a Demo",
+      cta_demo: "Try Now!",
       cta_prices: "View Pricing",
     },
     standards: {
