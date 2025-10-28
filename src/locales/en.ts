@@ -91,6 +91,11 @@ export const en = {
     },
     pricing: {
       title: "A Plan for Every Stage of Your Digital Transformation",
+      plan_free_title: "Free",
+      plan_free_target: "Ideal for getting started or testing.",
+      plan_free_price: "Free",
+      feature_emissions_free: "Up to 30 Issuances/month",
+      feature_storage_free: "Up to 100MB Secure Storage",
       plan_starter_title: "Starter",
       plan_starter_target: "For freelancers, small NGOs, and startups.",
       plan_starter_price: "€49/month",
@@ -454,7 +459,5 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-  
 
     

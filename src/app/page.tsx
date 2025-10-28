@@ -273,7 +273,30 @@ export default function LandingPage() {
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.pricing.title}</h2>
             </div>
-            <div className="grid md:grid-cols-3 gap-8 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
+               {/* Free Plan */}
+              <Card className="flex flex-col">
+                <CardHeader>
+                  <CardTitle>{t.landingPage.pricing.plan_free_title}</CardTitle>
+                  <CardDescription>{t.landingPage.pricing.plan_free_target}</CardDescription>
+                  <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.plan_free_price}</p>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_emissions_free}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_unlimited}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_certify_documents}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_free}</span></li>
+                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                    <Button asChild variant="outline" className="w-full">
+                        <Link href="/login">{t.landingPage.pricing.cta_choose_plan}</Link>
+                    </Button>
+                </CardFooter>
+              </Card>
+
               {/* Starter Plan */}
               <Card className="flex flex-col">
                 <CardHeader>
@@ -501,3 +524,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    

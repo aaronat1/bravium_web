@@ -91,6 +91,11 @@ export const es = {
     },
     pricing: {
       title: "Un Plan para Cada Etapa de tu Transformación Digital",
+      plan_free_title: "Free",
+      plan_free_target: "Ideal para iniciarse o para pruebas.",
+      plan_free_price: "Gratis",
+      feature_emissions_free: "Hasta 30 Emisiones/mes",
+      feature_storage_free: "Hasta 100MB de Almacenamiento",
       plan_starter_title: "Starter",
       plan_starter_target: "Para freelancers, pequeñas ONGs y startups.",
       plan_starter_price: "49€/mes",
@@ -454,7 +459,5 @@ export const es = {
     p4_link_text: "contáctanos",
   },
 };
-
-  
 
     
