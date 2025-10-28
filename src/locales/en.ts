@@ -194,11 +194,11 @@ export const en = {
     subtitle: "Discover step-by-step how an institution uses BRAVIUM to issue a secure digital certificate and how a third party can verify it instantly.",
     protagonists_title: "The Protagonists",
     protagonist_institution_name: "ACADEMIA FUTURO",
-    protagonist_institution_role: "Una innovadora universidad online",
+    protagonist_institution_role: "An innovative online university",
     protagonist_recipient_name: "ELENA",
-    protagonist_recipient_role: "Una estudiante recién graduada",
+    protagonist_recipient_role: "A recent graduate student",
     protagonist_verifier_name: "DAVID",
-    protagonist_verifier_role: "Un reclutador que busca el mejor talento",
+    protagonist_verifier_role: "A recruiter looking for the best talent",
     step1_title: "Step 1: The Issuance (The Academy's Perspective)",
     step1_subtitle: "ACADEMIA FUTURO needs to issue a certificate for its latest graduate.",
     step1_desc: "",
@@ -471,6 +471,8 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
+
+    
 
     
 

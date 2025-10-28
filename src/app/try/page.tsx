@@ -12,6 +12,8 @@ import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import jsPDF from "jspdf";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { signIn, signOut } from "@/lib/firebase/auth";
+
 
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +37,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
 const DEMO_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+const DEMO_USER_EMAIL = "admin@bravium.es";
+const DEMO_USER_PASSWORD = DEMO_CUSTOMER_ID; // The password is the UID for demo purposes
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     if (!fields) return z.object({});
@@ -135,7 +139,18 @@ export default function TryNowPage() {
 
         setIsIssuing(true);
         setSubmissionError(null);
+        
+        let demoUserSignedIn = false;
+
         try {
+            // Sign in demo user silently
+            const { error: signInError } = await signIn(DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
+            if (signInError) {
+                throw new Error(`Demo authentication failed: ${signInError.message}`);
+            }
+            demoUserSignedIn = true;
+
+
             const credentialSubject: Record<string, any> = {};
 
             for (const fieldInfo of selectedTemplate.fields) {
@@ -191,6 +206,9 @@ export default function TryNowPage() {
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
         } finally {
+            if (demoUserSignedIn) {
+                await signOut();
+            }
             setIsIssuing(false);
         }
     };
@@ -431,5 +449,7 @@ export default function TryNowPage() {
         </div>
     );
 }
+
+    
 
     
