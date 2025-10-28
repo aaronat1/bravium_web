@@ -36,7 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 // For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
-const DEMO_CUSTOMER_ID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 const DEMO_USER_EMAIL = process.env.NEXT_PUBLIC_DEMO_USER_EMAIL!;
 const DEMO_USER_PASSWORD = process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD!;
 
@@ -307,6 +307,19 @@ export default function TryNowPage() {
                              <Form {...form}>
                                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                                     
+                                    <FormField
+                                        control={control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t.tryNowPage.email_label} *</FormLabel>
+                                                <FormControl>
+                                                    <Input type="email" placeholder="tu@email.com" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                      <div className="space-y-2">
                                         <Label>{t.tryNowPage.select_template_label}</Label>
                                         <Select onValueChange={handleTemplateChange} disabled={loadingTemplates}>
