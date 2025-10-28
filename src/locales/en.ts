@@ -262,6 +262,7 @@ export const en = {
     actions: "Actions",
     no_customers: "No customers found.",
     no_customers_filter: "No customers match your filter.",
+    plan_free: "Free",
     plan_starter: "Starter",
     plan_pro: "Pro",
     plan_enterprise: "Enterprise",
@@ -459,5 +460,3 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-    

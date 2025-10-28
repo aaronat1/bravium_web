@@ -41,7 +41,7 @@ type Customer = {
   name: string;
   email: string;
   did?: string;
-  subscriptionPlan: 'starter' | 'pro' | 'enterprise';
+  subscriptionPlan: 'free' | 'starter' | 'pro' | 'enterprise';
   subscriptionStatus: 'active' | 'inactive' | 'cancelled';
   kmsKeyPath?: string;
 };
@@ -121,6 +121,7 @@ function AddCustomerDialog({ isOpen, onOpenChange, onCustomerAdded }: { isOpen: 
                         <Select name="subscriptionPlan" required>
                             <SelectTrigger id="add-subscriptionPlan"><SelectValue placeholder={t.customersPage.form_plan_placeholder} /></SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="free">{t.customersPage.plan_free}</SelectItem>
                                 <SelectItem value="starter">{t.customersPage.plan_starter}</SelectItem>
                                 <SelectItem value="pro">{t.customersPage.plan_pro}</SelectItem>
                                 <SelectItem value="enterprise">{t.customersPage.plan_enterprise}</SelectItem>
@@ -182,6 +183,7 @@ function EditCustomerDialog({ customer, isOpen, onOpenChange }: { customer: Cust
                         <Select name="subscriptionPlan" defaultValue={customer.subscriptionPlan} required>
                             <SelectTrigger id="edit-subscriptionPlan"><SelectValue /></SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="free">{t.customersPage.plan_free}</SelectItem>
                                 <SelectItem value="starter">{t.customersPage.plan_starter}</SelectItem>
                                 <SelectItem value="pro">{t.customersPage.plan_pro}</SelectItem>
                                 <SelectItem value="enterprise">{t.customersPage.plan_enterprise}</SelectItem>
@@ -337,6 +339,7 @@ export default function CustomersPage() {
   
   const getPlanText = (plan: string) => {
     switch (plan?.toLowerCase()) {
+      case 'free': return t.customersPage.plan_free;
       case 'starter': return t.customersPage.plan_starter;
       case 'pro': return t.customersPage.plan_pro;
       case 'enterprise': return t.customersPage.plan_enterprise;
@@ -426,6 +429,7 @@ export default function CustomersPage() {
 
   const getPlanBadge = (plan: string) => {
     switch (plan?.toLowerCase()) {
+      case 'free': return <Badge variant="outline">{t.customersPage.plan_free}</Badge>;
       case 'starter': return <Badge variant="secondary">{t.customersPage.plan_starter}</Badge>;
       case 'pro': return <Badge variant="default">{t.customersPage.plan_pro}</Badge>;
       case 'enterprise': return <Badge variant="default">{t.customersPage.plan_enterprise}</Badge>;

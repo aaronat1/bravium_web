@@ -7,7 +7,7 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin';
 const AddCustomerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
   email: z.string().email({ message: "El correo electrónico no es válido." }),
-  subscriptionPlan: z.enum(['starter', 'pro', 'enterprise'], { errorMap: () => ({ message: 'Debe seleccionar un plan.'}) }),
+  subscriptionPlan: z.enum(['free', 'starter', 'pro', 'enterprise'], { errorMap: () => ({ message: 'Debe seleccionar un plan.'}) }),
 });
 
 export type AddCustomerState = {
@@ -95,7 +95,7 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
 const UpdateCustomerSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
-  subscriptionPlan: z.enum(['starter', 'pro', 'enterprise'], { errorMap: () => ({ message: 'Debe seleccionar un plan.'}) }),
+  subscriptionPlan: z.enum(['free', 'starter', 'pro', 'enterprise'], { errorMap: () => ({ message: 'Debe seleccionar un plan.'}) }),
   subscriptionStatus: z.enum(['active', 'inactive', 'cancelled'], { errorMap: () => ({ message: 'Debe seleccionar un estado.'}) }),
 });
 
