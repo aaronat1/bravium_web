@@ -292,7 +292,7 @@ export default function LandingPage() {
                 </CardContent>
                 <CardFooter>
                     <Button asChild variant="outline" className="w-full">
-                        <Link href="/#contact">{t.landingPage.pricing.cta_choose_plan}</Link>
+                        <Link href="#contact">{t.landingPage.pricing.cta_choose_plan}</Link>
                     </Button>
                 </CardFooter>
               </Card>
@@ -528,4 +528,5 @@ export default function LandingPage() {
     
 
     
+
 
