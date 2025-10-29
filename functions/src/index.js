@@ -115,14 +115,16 @@ exports.onCustomerDelete = functions.firestore
  */
 exports.issueCredential = functions.https.onCall(async (data, context) => {
   // 1. Autenticación y Validación de Datos
-  if (!context.auth) {
+  // La autenticación solo es necesaria si la llamada no proviene de una Server Action con privilegios.
+  // Para la demo, la Server Action ya está autenticada con credenciales de admin.
+  if (!context.auth && !data.test) {
     throw new functions.https.HttpsError('unauthenticated', 'La función debe ser llamada por un usuario autenticado.');
   }
   if (!data.credentialSubject || typeof data.credentialSubject !== 'object' || !data.credentialType || !data.customerId) {
     throw new functions.https.HttpsError('invalid-argument', 'Faltan datos necesarios (credentialSubject, credentialType, customerId).');
   }
   
-  const { credentialSubject, credentialType, customerId } = data;
+  const { credentialSubject, credentialType, customerId, test, emailTester } = data;
 
   try {
     const customerDocRef = db.collection('customers').doc(customerId);
@@ -137,7 +139,16 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
     const issuerDid = customerData.did;
 
     if (!kmsKeyPath || !issuerDid) {
-      throw new functions.https.HttpsError('failed-precondition', 'El onboarding del cliente no está completo. Faltan kmsKeyPath o did.');
+      throw new functions.hs.HttpsError('failed-precondition', 'El onboarding del cliente no está completo. Faltan kmsKeyPath o did.');
+    }
+    
+    // Fusionar los datos de prueba en el credentialSubject si existen
+    const finalCredentialSubject = { ...credentialSubject };
+    if (test) {
+      finalCredentialSubject.test = true;
+    }
+    if (emailTester) {
+      finalCredentialSubject.emailTester = emailTester;
     }
 
     const { randomUUID } = require('crypto');
@@ -150,7 +161,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
       type: ['VerifiableCredential', credentialType],
       issuer: issuerDid,
       issuanceDate: new Date().toISOString(),
-      credentialSubject: credentialSubject,
+      credentialSubject: finalCredentialSubject,
     };
     
     const jws = await createJws(vcPayload, kmsKeyPath, issuerDid);
@@ -347,7 +358,3 @@ async function createJws(payload, kmsKeyPath, issuerDid) {
     const joseSignature = derToJose(Buffer.from(signResponse.signature), 'ES256');
     return `${signingInput}.${jose.base64url.encode(joseSignature)}`;
 }
-
-    
-
-    

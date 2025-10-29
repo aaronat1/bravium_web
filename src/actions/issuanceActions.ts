@@ -7,7 +7,6 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { getFunctions } from 'firebase-admin/functions';
-import { HttpsError } from 'firebase-functions/v1/https';
 
 
 const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
@@ -64,36 +63,44 @@ export async function issueDemoCredential(
     if (!ip) {
         return { success: false, message: "Could not determine visitor's IP address." };
     }
-
+    
+    const rateLimitRef = adminDb.collection('testIssuanceRateLimits').doc(ip);
+    
     try {
-        // 2. Guardar la IP y el timestamp en Firestore
-        const rateLimitRef = adminDb.collection('testIssuanceRateLimits').doc(ip);
-        await rateLimitRef.set({
-            timestamp: FieldValue.serverTimestamp(),
-        });
+        const rateLimitDoc = await rateLimitRef.get();
+        if (rateLimitDoc.exists) {
+            const lastIssuance = rateLimitDoc.data()?.timestamp.toDate();
+            const now = new Date();
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+            if (now.getTime() - lastIssuance.getTime() < twentyFourHours) {
+                return { success: false, message: 'You can only issue one demo credential every 24 hours from the same IP address.'};
+            }
+        }
         
         // AQUÍ SE LLAMA A LA CLOUD FUNCTION `issueCredential` DESDE EL SERVIDOR DE NEXT.JS
         // Se le pasa un objeto con la siguiente información:
         // - credentialSubject: Un objeto con los datos del formulario (ej: { studentName: 'Jane Doe', ... })
         // - credentialType: El nombre de la plantilla (ej: "Certificado de Participación")
         // - customerId: El ID del cliente de demostración.
+        // - test: true, para marcar que es una prueba.
+        // - emailTester: el email del usuario de la demo.
         const issueCredentialFunc = getFunctions().httpsCallable('issueCredential');
         const result = await issueCredentialFunc({
-            credentialSubject: {
-                ...credentialSubject,
-                test: true,
-                emailTester: email
-            },
+            credentialSubject: credentialSubject,
             credentialType: templateName,
             customerId: DEMO_CUSTOMER_ID,
+            test: true,
+            emailTester: email
         });
 
         const jws = (result.data as any).verifiableCredentialJws;
         if (!jws) {
             throw new Error("Cloud function did not return a verifiableCredentialJws.");
         }
+        
+        // 3. Guardar el registro de la credencial emitida (incluyendo la actualización del timestamp del rate limit)
+        await rateLimitRef.set({ timestamp: FieldValue.serverTimestamp() });
 
-        // 3. Guardar el registro de la credencial emitida
         const savedCredential = await saveIssuedCredential({
             templateId: templateId,
             templateName: templateName,
