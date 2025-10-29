@@ -155,22 +155,12 @@ export default function TryNowPage() {
         setIsIssuing(true);
         setSubmissionError(null);
         
-        let demoUserSignedIn = false;
-
         try {
             // First, verify reCAPTCHA token
             const recaptchaResult = await verifyRecaptcha(recaptchaToken);
             if (!recaptchaResult.success) {
                 throw new Error(recaptchaResult.message || "reCAPTCHA verification failed.");
             }
-
-            // Sign in demo user silently
-            const { error: signInError } = await signIn(DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
-            if (signInError) {
-                throw new Error(`Demo authentication failed: ${signInError.message}`);
-            }
-            demoUserSignedIn = true;
-
 
             const credentialSubject: Record<string, any> = {};
 
@@ -199,7 +189,7 @@ export default function TryNowPage() {
                 credentialSubject,
                 credentialType: selectedTemplate.name,
                 customerId: DEMO_CUSTOMER_ID,
-                test: true,
+                test: true, 
                 emailTester: data.email
             });
             
@@ -231,9 +221,6 @@ export default function TryNowPage() {
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
         } finally {
-            if (demoUserSignedIn) {
-                await signOut();
-            }
             setIsIssuing(false);
         }
     };
@@ -457,7 +444,7 @@ export default function TryNowPage() {
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>{t.issueCredentialPage.result_dialog_title}</DialogTitle>
-                         <DialogDescription></DialogDescription>
+                         <DialogDescription>{t.tryNowPage.result_dialog_desc}</DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col items-center gap-6 py-4">
                         <div ref={qrCodeRef} className="p-4 bg-white rounded-lg border">

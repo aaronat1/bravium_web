@@ -187,7 +187,8 @@ export const en = {
     select_template_placeholder: "Select a credential type",
     loading_templates: "Loading demo templates...",
     email_label: "Your Email",
-    template_selection_description: "When you create your account you will be able to create and select your own templates (even with AI assistance)."
+    template_selection_description: "When you create your account you will be able to create and select your own templates (even with AI assistance).",
+    result_dialog_desc: "Great! Now save your credential (by downloading the PDF or copying the JWS text) and go to the 'Verify' page to check its authenticity. This way you will experience the full cycle.",
   },
   helpPage: {
     title: "From Issuance to Verification: A Real Use Case",
@@ -471,9 +472,3 @@ export const en = {
     p4_link_text: "contact us",
   },
 };
-
-    
-
-    
-
-    
