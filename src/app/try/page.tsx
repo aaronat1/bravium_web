@@ -193,14 +193,14 @@ export default function TryNowPage() {
                     credentialSubject[fieldName] = value;
                 }
             }
-            // Add the email to the subject, which might be useful
-            credentialSubject.email = data.email;
-
+            
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
             const result: any = await issueCredentialFunc({
                 credentialSubject,
                 credentialType: selectedTemplate.name,
-                customerId: DEMO_CUSTOMER_ID, 
+                customerId: DEMO_CUSTOMER_ID,
+                test: true,
+                emailTester: data.email
             });
             
             const jws = result.data.verifiableCredentialJws;
