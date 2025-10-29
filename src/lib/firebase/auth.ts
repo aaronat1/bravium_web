@@ -1,5 +1,5 @@
 import { auth, db } from './config';
-import { signInWithEmailAndPassword, signOut as firebaseSignOut, type AuthError } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut as firebaseSignOut, type AuthError, sendPasswordResetEmail as firebaseSendPasswordResetEmail } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export const signIn = async (email: string, password: string): Promise<{ user: any; error: AuthError | null }> => {
@@ -18,6 +18,18 @@ export const signOut = async (): Promise<{ error: AuthError | null }> => {
   } catch (error) {
     return { error: error as AuthError };
   }
+};
+
+export const sendPasswordResetEmail = async (email: string): Promise<{ success: boolean; error: AuthError | null }> => {
+    if (!auth) {
+        return { success: false, error: { code: 'auth/unavailable', message: 'Firebase Auth is not initialized.'} as AuthError };
+    }
+    try {
+        await firebaseSendPasswordResetEmail(auth, email);
+        return { success: true, error: null };
+    } catch (error) {
+        return { success: false, error: error as AuthError };
+    }
 };
 
 interface ContactMessage {

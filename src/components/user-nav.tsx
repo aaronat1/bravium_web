@@ -3,6 +3,7 @@
 
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -72,8 +73,14 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          {/* Add more items here if needed, e.g. Profile, Settings */}
+           <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/profile">
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>{t.userNav.profile}</span>
+              </Link>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           <span>{t.userNav.logout}</span>
