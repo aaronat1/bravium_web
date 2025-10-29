@@ -7,7 +7,7 @@ import { I18nProvider } from '@/contexts/i18n-provider';
 import CookieConsent from '@/components/cookie-consent';
 
 export const metadata: Metadata = {
-  title: 'BraviumCertBoard',
+  title: 'Bravium',
   description: 'Panel de Gestión de Certificados',
 };
 
