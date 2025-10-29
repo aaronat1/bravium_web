@@ -154,6 +154,7 @@ export default function TryNowPage() {
 
         setIsIssuing(true);
         setSubmissionError(null);
+        let demoUserSignedIn = false;
         
         try {
             // First, verify reCAPTCHA token
@@ -161,6 +162,14 @@ export default function TryNowPage() {
             if (!recaptchaResult.success) {
                 throw new Error(recaptchaResult.message || "reCAPTCHA verification failed.");
             }
+
+            // Sign in demo user silently
+            const { error: signInError } = await signIn(DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
+            if (signInError) {
+                throw new Error(`Demo authentication failed: ${signInError.message}`);
+            }
+            demoUserSignedIn = true;
+
 
             const credentialSubject: Record<string, any> = {};
 
@@ -221,6 +230,9 @@ export default function TryNowPage() {
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
         } finally {
+            if (demoUserSignedIn) {
+                await signOut();
+            }
             setIsIssuing(false);
         }
     };
@@ -480,3 +492,5 @@ export default function TryNowPage() {
         </div>
     );
 }
+
+    
