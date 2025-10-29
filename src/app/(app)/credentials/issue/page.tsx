@@ -204,6 +204,11 @@ export default function IssueCredentialPage() {
             }
             
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
+            // AQUÍ SE LLAMA A LA CLOUD FUNCTION `issueCredential`
+            // Se le pasa un objeto con la siguiente información:
+            // - credentialSubject: Un objeto con los datos del formulario (ej: { studentName: 'John Doe', course: 'Physics 101' })
+            // - credentialType: El nombre de la plantilla (ej: "Certificado de Asistencia")
+            // - customerId: El ID del cliente que está emitiendo la credencial.
             const result: any = await issueCredentialFunc({
                 credentialSubject,
                 credentialType: selectedTemplate.name,
