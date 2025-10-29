@@ -139,7 +139,7 @@ exports.issueCredential = functions.https.onCall(async (data, context) => {
     const issuerDid = customerData.did;
 
     if (!kmsKeyPath || !issuerDid) {
-      throw new functions.hs.HttpsError('failed-precondition', 'El onboarding del cliente no está completo. Faltan kmsKeyPath o did.');
+      throw new functions.https.HttpsError('failed-precondition', 'El onboarding del cliente no está completo. Faltan kmsKeyPath o did.');
     }
     
     // Fusionar los datos de prueba en el credentialSubject si existen
