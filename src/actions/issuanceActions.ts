@@ -79,7 +79,11 @@ export async function issueDemoCredential(
         // - customerId: El ID del cliente de demostración.
         const issueCredentialFunc = getFunctions().httpsCallable('issueCredential');
         const result = await issueCredentialFunc({
-            credentialSubject,
+            credentialSubject: {
+                ...credentialSubject,
+                test: true,
+                emailTester: email
+            },
             credentialType: templateName,
             customerId: DEMO_CUSTOMER_ID,
         });
