@@ -287,7 +287,7 @@ export default function LandingPage() {
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_unlimited}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_certify_documents}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_free}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
+                    <li className="flex items-center gap-2"><X className="h-5 w-5 text-muted-foreground flex-shrink-0" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -310,7 +310,7 @@ export default function LandingPage() {
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_verifications_unlimited}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_certify_documents}</span></li>
                     <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_storage_starter}</span></li>
-                    <li className="flex items-center gap-2"><Check className="h-5 w-5 text-primary flex-shrink-0" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
+                    <li className="flex items-center gap-2"><X className="h-5 w-5 text-muted-foreground flex-shrink-0" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
                   </ul>
                 </CardContent>
                 <CardFooter>
@@ -431,7 +431,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-8">
               <Button asChild size="lg">
-                <Link href="#contact">{t.landingPage.finalCta.cta}</Link>
+                <Link href="/try">{t.landingPage.finalCta.cta}</Link>
               </Button>
             </div>
           </div>
@@ -528,3 +528,4 @@ export default function LandingPage() {
     
 
     
+
