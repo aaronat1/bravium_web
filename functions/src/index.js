@@ -39,6 +39,10 @@ exports.onCustomerCreate = functions.firestore
       const kmsKeyPath = await generateKmsKeyForCustomer(customerId);
       console.log(`Clave KMS generada para ${customerId}: ${kmsKeyPath}`);
 
+      // CRITICAL FIX: Wait for KMS key to be enabled to avoid race condition.
+      // The key can take a moment to transition from PENDING_GENERATION to ENABLED.
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       const { did, didDocument } = await generateDidForCustomer(customerId, kmsKeyPath);
       console.log(`DID generado para ${customerId}: ${did}`);
 
@@ -341,7 +345,7 @@ async function createJws(payload, kmsKeyPath, issuerDid) {
     };
 
     const encodedHeader = jose.base64url.encode(JSON.stringify(protectedHeader));
-    const encodedPayload = jose.base64url.encode(JSON.stringify(payload));
+    const encodedPayload = jose.base64url.encode(JSON.stringify(encodedPayload));
     const signingInput = `${encodedHeader}.${encodedPayload}`;
     const digest = createHash('sha256').update(signingInput).digest();
 
