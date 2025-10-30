@@ -81,31 +81,9 @@ function EditCustomerSubmitButton() {
     );
 }
 
-function AddCustomerDialog({ isOpen, onOpenChange, onCustomerAdded }: { isOpen: boolean, onOpenChange: (open: boolean) => void, onCustomerAdded: (info: NewUserInfo) => void }) {
+function AddCustomerDialog({ isOpen, onOpenChange, onFormAction }: { isOpen: boolean, onOpenChange: (open: boolean) => void, onFormAction: (action: FormData) => void }) {
     const { t } = useI18n();
-    const { toast } = useToast();
     const formRef = useRef<HTMLFormElement>(null);
-
-    const initialState: AddCustomerState = { message: "", success: false, errors: {} };
-    const [state, formAction] = useActionState(addCustomer, initialState);
-
-    useEffect(() => {
-        if (state.message) {
-            toast({
-                title: state.success ? t.customersPage.toast_success_title : t.customersPage.toast_error_title,
-                description: state.message,
-                variant: state.success ? "default" : "destructive",
-            });
-            if (state.success && state.newUser) {
-                formRef.current?.reset();
-                onOpenChange(false); 
-                // We call this after a short delay to ensure the first dialog has closed
-                setTimeout(() => {
-                    onCustomerAdded(state.newUser!);
-                }, 100);
-            }
-        }
-    }, [state, toast, onOpenChange, t, onCustomerAdded]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -114,16 +92,14 @@ function AddCustomerDialog({ isOpen, onOpenChange, onCustomerAdded }: { isOpen: 
                     <DialogTitle>{t.customersPage.add_customer_dialog_title}</DialogTitle>
                     <DialogDescription>{t.customersPage.add_customer_dialog_desc}</DialogDescription>
                 </DialogHeader>
-                <form ref={formRef} action={formAction} className="space-y-4">
+                <form ref={formRef} action={onFormAction} className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="add-name">{t.customersPage.form_name_label}</Label>
                         <Input id="add-name" name="name" placeholder={t.customersPage.form_name_placeholder} required />
-                        {state.errors?.name && <p className="text-sm font-medium text-destructive">{state.errors.name[0]}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="add-email">{t.customersPage.form_email_label}</Label>
                         <Input id="add-email" name="email" type="email" placeholder={t.customersPage.form_email_placeholder} required />
-                        {state.errors?.email && <p className="text-sm font-medium text-destructive">{state.errors.email[0]}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="add-subscriptionPlan">{t.customersPage.form_plan_label}</Label>
@@ -136,7 +112,6 @@ function AddCustomerDialog({ isOpen, onOpenChange, onCustomerAdded }: { isOpen: 
                                 <SelectItem value="enterprise">{t.customersPage.plan_enterprise}</SelectItem>
                             </SelectContent>
                         </Select>
-                        {state.errors?.subscriptionPlan && <p className="text-sm font-medium text-destructive">{state.errors.subscriptionPlan[0]}</p>}
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" type="button" onClick={() => onOpenChange(false)}>{t.customersPage.cancel}</Button>
@@ -290,9 +265,23 @@ export default function CustomersPage() {
   const [newlyCreatedUser, setNewlyCreatedUser] = useState<NewUserInfo | null>(null);
   const [isDeleting, startDeleteTransition] = useTransition();
 
-  const handleCustomerAdded = (info: NewUserInfo) => {
-    setNewlyCreatedUser(info);
-  };
+  const initialState: AddCustomerState = { message: "", success: false, errors: {} };
+  const [state, formAction] = useActionState(addCustomer, initialState);
+
+   useEffect(() => {
+    if (state.message) {
+        toast({
+            title: state.success ? t.customersPage.toast_success_title : t.customersPage.toast_error_title,
+            description: state.message,
+            variant: state.success ? "default" : "destructive",
+        });
+        if (state.success && state.newUser) {
+            setIsAddDialogOpen(false);
+            setNewlyCreatedUser(state.newUser);
+        }
+    }
+  }, [state, t, toast]);
+
 
   useEffect(() => {
     if (!authLoading && user?.uid !== ADMIN_UID) {
@@ -577,7 +566,7 @@ export default function CustomersPage() {
     <AddCustomerDialog 
         isOpen={isAddDialogOpen} 
         onOpenChange={setIsAddDialogOpen}
-        onCustomerAdded={handleCustomerAdded}
+        onFormAction={formAction}
     />
 
     {customerToEdit && (
