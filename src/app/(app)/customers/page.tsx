@@ -98,8 +98,11 @@ function AddCustomerDialog({ isOpen, onOpenChange, onCustomerAdded }: { isOpen: 
             });
             if (state.success && state.newUser) {
                 formRef.current?.reset();
-                onOpenChange(false);
-                onCustomerAdded(state.newUser);
+                onOpenChange(false); 
+                // We call this after a short delay to ensure the first dialog has closed
+                setTimeout(() => {
+                    onCustomerAdded(state.newUser!);
+                }, 100);
             }
         }
     }, [state, toast, onOpenChange, t, onCustomerAdded]);
@@ -589,7 +592,11 @@ export default function CustomersPage() {
         <NewUserCredentialsDialog 
             userInfo={newlyCreatedUser}
             isOpen={!!newlyCreatedUser}
-            onOpenChange={(open) => !open && setNewlyCreatedUser(null)}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setNewlyCreatedUser(null);
+                }
+            }}
         />
     )}
     
@@ -611,3 +618,5 @@ export default function CustomersPage() {
     </TooltipProvider>
   );
 }
+
+    
