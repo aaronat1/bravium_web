@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { sendPasswordResetEmail } from '@/lib/firebase/auth';
 import { revalidatePath } from 'next/cache';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // --- UPDATE PROFILE NAME ---
 const UpdateNameSchema = z.object({
@@ -57,6 +58,36 @@ export async function updateProfileName(prevState: UpdateNameState, formData: Fo
     return { message: `Error al actualizar el nombre: ${error.message}`, success: false };
   }
 }
+
+// --- UPDATE SUBSCRIPTION PLAN ---
+export async function updateSubscriptionPlan(userId: string, newPlan: 'starter' | 'pro' | 'enterprise'): Promise<{ success: boolean, message: string }> {
+  if (!adminDb) {
+    return {
+      message: 'Error de configuración del servidor.',
+      success: false,
+    };
+  }
+  
+  if (!userId || !newPlan) {
+    return { message: 'Faltan datos para actualizar el plan.', success: false };
+  }
+
+  try {
+    const newRenewalDate = new Date();
+    newRenewalDate.setDate(newRenewalDate.getDate() + 30);
+
+    await adminDb.collection('customers').doc(userId).update({
+      subscriptionPlan: newPlan,
+      renewalDate: FieldValue.serverTimestamp(), // Firestore will set the server time
+    });
+
+    revalidatePath('/profile');
+    return { message: 'Plan de suscripción actualizado correctamente. Tu nuevo ciclo de facturación ha comenzado.', success: true };
+  } catch (error: any) {
+    return { message: `Error al actualizar el plan: ${error.message}`, success: false };
+  }
+}
+
 
 // --- SEND PASSWORD RESET EMAIL ---
 export async function sendPasswordReset(email: string): Promise<{ success: boolean; message: string }> {

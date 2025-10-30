@@ -6,17 +6,17 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es, enUS } from "date-fns/locale";
-import { LogOut, Save, KeyRound, AlertTriangle, Loader2, Copy, Check } from "lucide-react";
+import { LogOut, Save, KeyRound, AlertTriangle, Loader2, Copy, Check, CheckCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signOut } from "@/lib/firebase/auth";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { updateProfileName, sendPasswordReset, deleteOwnAccount, type UpdateNameState } from "@/actions/profileActions";
+import { updateProfileName, sendPasswordReset, deleteOwnAccount, updateSubscriptionPlan, type UpdateNameState } from "@/actions/profileActions";
 import { Badge } from "@/components/ui/badge";
 
 function ProfileSubmitButton() {
@@ -29,6 +29,32 @@ function ProfileSubmitButton() {
     </Button>
   );
 }
+
+function ChangePlanButton({ plan, currentPlan, userId }: { plan: 'starter' | 'pro' | 'enterprise', currentPlan: string, userId: string }) {
+    const { t } = useI18n();
+    const { toast } = useToast();
+    const [isUpdating, startUpdateTransition] = useTransition();
+    const isCurrentPlan = plan === currentPlan;
+
+    const handleChangePlan = () => {
+        startUpdateTransition(async () => {
+            const result = await updateSubscriptionPlan(userId, plan);
+            toast({
+                title: result.success ? t.toast_success_title : t.toast_error_title,
+                description: result.message,
+                variant: result.success ? "default" : "destructive",
+            });
+        });
+    };
+
+    return (
+        <Button onClick={handleChangePlan} disabled={isUpdating || isCurrentPlan} className="w-full">
+            {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isCurrentPlan ? t.profilePage.current_plan_button : t.profilePage.change_plan_button}
+        </Button>
+    );
+}
+
 
 export default function ProfilePage() {
   const { user, customerData, loading: authLoading } = useAuth();
@@ -203,6 +229,71 @@ export default function ProfilePage() {
             </div>
         </CardContent>
       </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>{t.profilePage.manage_subscription_title}</CardTitle>
+                <CardDescription>{t.profilePage.manage_subscription_desc}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6 md:grid-cols-3">
+                 {/* Starter Plan */}
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle>{t.landingPage.pricing.plan_starter_title}</CardTitle>
+                        <CardDescription>{t.landingPage.pricing.plan_starter_target}</CardDescription>
+                        <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.plan_starter_price}<span className="text-lg font-normal text-muted-foreground">/{t.profilePage.month}</span></p>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <ul className="space-y-3">
+                            <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_emissions_starter}</span></li>
+                            <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_storage_starter}</span></li>
+                        </ul>
+                    </CardContent>
+                    <CardFooter>
+                        <ChangePlanButton plan="starter" currentPlan={customerData.subscriptionPlan} userId={user.uid} />
+                    </CardFooter>
+                </Card>
+
+                {/* Pro Plan */}
+                <Card className="flex flex-col border-primary border-2 relative">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">{t.landingPage.pricing.popular}</div>
+                    <CardHeader>
+                        <CardTitle>{t.landingPage.pricing.plan_pro_title}</CardTitle>
+                        <CardDescription>{t.landingPage.pricing.plan_pro_target}</CardDescription>
+                        <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.plan_pro_price}<span className="text-lg font-normal text-muted-foreground">/{t.profilePage.month}</span></p>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <ul className="space-y-3">
+                            <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_emissions_pro}</span></li>
+                            <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_storage_pro}</span></li>
+                            <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_api_access}</span></li>
+                        </ul>
+                    </CardContent>
+                    <CardFooter>
+                        <ChangePlanButton plan="pro" currentPlan={customerData.subscriptionPlan} userId={user.uid} />
+                    </CardFooter>
+                </Card>
+
+                {/* Enterprise Plan */}
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle>{t.landingPage.pricing.plan_enterprise_title}</CardTitle>
+                        <CardDescription>{t.landingPage.pricing.plan_enterprise_target}</CardDescription>
+                        <p className="text-4xl font-bold pt-4">{t.landingPage.pricing.price_enterprise}</p>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                        <ul className="space-y-3">
+                            <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_emissions_custom}</span></li>
+                            <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_advanced}</span></li>
+                             <li className="flex items-start gap-2"><CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.pricing.feature_support_sla}</span></li>
+                        </ul>
+                    </CardContent>
+                    <CardFooter>
+                         <ChangePlanButton plan="enterprise" currentPlan={customerData.subscriptionPlan} userId={user.uid} />
+                    </CardFooter>
+                </Card>
+            </CardContent>
+        </Card>
 
       <Card>
         <CardHeader>

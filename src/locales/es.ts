@@ -482,5 +482,10 @@ export const es = {
     delete_account_fail: "Error al eliminar la cuenta.",
     cancel_button: "Cancelar",
     logout_button: "Cerrar Sesión",
+    manage_subscription_title: "Gestionar Suscripción",
+    manage_subscription_desc: "Puedes mejorar o cambiar tu plan en cualquier momento.",
+    change_plan_button: "Cambiar a este Plan",
+    current_plan_button: "Plan Actual",
+    month: "mes",
   },
 };

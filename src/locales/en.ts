@@ -482,5 +482,10 @@ export const en = {
     delete_account_fail: "Failed to delete account.",
     cancel_button: "Cancel",
     logout_button: "Log Out",
+    manage_subscription_title: "Manage Subscription",
+    manage_subscription_desc: "You can upgrade or change your plan at any time.",
+    change_plan_button: "Change Plan",
+    current_plan_button: "Current Plan",
+    month: "month",
   },
 };
