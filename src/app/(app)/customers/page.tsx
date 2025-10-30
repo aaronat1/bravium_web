@@ -4,10 +4,12 @@
 import { useEffect, useState, useRef, useActionState, useMemo, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, type Timestamp } from "firebase/firestore";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Users, PlusCircle, Loader2, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Pencil, Trash2, FileDown, Copy, Check, Info } from "lucide-react";
+import { format } from "date-fns";
+import { es, enUS } from "date-fns/locale";
+import { Users, PlusCircle, Loader2, ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Pencil, Trash2, FileDown, Copy, Check, Info, KeyRound } from "lucide-react";
 
 import { db } from "@/lib/firebase/config";
 import { addCustomer, type AddCustomerState, deleteCustomer, updateCustomer, type UpdateCustomerState } from "@/actions/customerActions";
@@ -44,6 +46,10 @@ type Customer = {
   subscriptionPlan: 'free' | 'starter' | 'pro' | 'enterprise';
   subscriptionStatus: 'active' | 'inactive' | 'cancelled';
   kmsKeyPath?: string;
+  apiKey?: string;
+  createdAt?: Timestamp;
+  renewalDate?: Timestamp;
+  onboardingStatus?: 'pending' | 'completed' | 'failed';
 };
 
 type NewUserInfo = {
@@ -268,7 +274,7 @@ function NewUserCredentialsDialog({ userInfo, isOpen, onOpenChange }: { userInfo
 export default function CustomersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -280,6 +286,10 @@ export default function CustomersPage() {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const [newlyCreatedUser, setNewlyCreatedUser] = useState<NewUserInfo | null>(null);
   const [isDeleting, startDeleteTransition] = useTransition();
+
+  const handleCustomerAdded = (info: NewUserInfo) => {
+    setNewlyCreatedUser(info);
+  };
 
   useEffect(() => {
     if (!authLoading && user?.uid !== ADMIN_UID) {
@@ -426,6 +436,16 @@ export default function CustomersPage() {
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
+  
+  const getOnboardingStatusBadge = (status: Customer['onboardingStatus']) => {
+    switch (status) {
+      case 'completed': return <Badge variant="secondary" className="bg-green-100 text-green-800">{status}</Badge>;
+      case 'pending': return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">{status}</Badge>;
+      case 'failed': return <Badge variant="destructive">{status}</Badge>;
+      default: return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
+
 
   const getPlanBadge = (plan: string) => {
     switch (plan?.toLowerCase()) {
@@ -437,7 +457,7 @@ export default function CustomersPage() {
     }
   }
   
-  const truncateString = (str: string, num: number) => {
+  const truncateString = (str: string | undefined, num: number) => {
     if (!str) return '';
     if (str.length <= num) return str;
     return '...' + str.slice(str.length - num);
@@ -490,10 +510,11 @@ export default function CustomersPage() {
                 <TableRow>
                   <SortableHeader sortKey="name">{t.customersPage.col_name}</SortableHeader>
                   <SortableHeader sortKey="email">{t.customersPage.col_email}</SortableHeader>
-                  <SortableHeader sortKey="did">{t.customersPage.col_did}</SortableHeader>
-                  <SortableHeader sortKey="kmsKeyPath">{t.customersPage.col_kms_key}</SortableHeader>
+                  <SortableHeader sortKey="apiKey">{t.customersPage.col_apiKey}</SortableHeader>
+                  <SortableHeader sortKey="createdAt">{t.customersPage.col_createdAt}</SortableHeader>
+                  <SortableHeader sortKey="renewalDate">{t.customersPage.col_renewalDate}</SortableHeader>
                   <SortableHeader sortKey="subscriptionPlan">{t.customersPage.col_plan}</SortableHeader>
-                  <SortableHeader sortKey="subscriptionStatus">{t.customersPage.col_status}</SortableHeader>
+                  <SortableHeader sortKey="onboardingStatus">{t.customersPage.col_onboarding_status}</SortableHeader>
                   <TableHead>{t.customersPage.actions}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -502,19 +523,20 @@ export default function CustomersPage() {
                   <TableRow key={customer.id}>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>{customer.email}</TableCell>
-                    <TableCell className="font-mono text-xs">{truncateString(customer.did || '', 20)}</TableCell>
-                    <TableCell>
-                      <Tooltip>
+                    <TableCell className="font-mono text-xs">
+                       <Tooltip>
                         <TooltipTrigger asChild>
-                           <span className="font-mono text-xs cursor-help">{truncateString(customer.kmsKeyPath || '', 30)}</span>
+                           <span className="cursor-help">{truncateString(customer.apiKey, 20)}</span>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{customer.kmsKeyPath || 'N/A'}</p>
+                          <p>{customer.apiKey || 'N/A'}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TableCell>
+                    <TableCell>{customer.createdAt ? format(customer.createdAt.toDate(), 'P', { locale: locale === 'es' ? es : enUS }) : 'N/A'}</TableCell>
+                    <TableCell>{customer.renewalDate ? format(customer.renewalDate.toDate(), 'P', { locale: locale === 'es' ? es : enUS }) : 'N/A'}</TableCell>
                     <TableCell>{getPlanBadge(customer.subscriptionPlan)}</TableCell>
-                    <TableCell>{getStatusBadge(customer.subscriptionStatus)}</TableCell>
+                    <TableCell>{getOnboardingStatusBadge(customer.onboardingStatus)}</TableCell>
                     <TableCell>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -552,7 +574,7 @@ export default function CustomersPage() {
     <AddCustomerDialog 
         isOpen={isAddDialogOpen} 
         onOpenChange={setIsAddDialogOpen}
-        onCustomerAdded={(info) => setNewlyCreatedUser(info)}
+        onCustomerAdded={handleCustomerAdded}
     />
 
     {customerToEdit && (
@@ -563,11 +585,13 @@ export default function CustomersPage() {
         />
     )}
 
-    <NewUserCredentialsDialog 
-        userInfo={newlyCreatedUser}
-        isOpen={!!newlyCreatedUser}
-        onOpenChange={(open) => !open && setNewlyCreatedUser(null)}
-    />
+    {newlyCreatedUser && (
+        <NewUserCredentialsDialog 
+            userInfo={newlyCreatedUser}
+            isOpen={!!newlyCreatedUser}
+            onOpenChange={(open) => !open && setNewlyCreatedUser(null)}
+        />
+    )}
     
     <AlertDialog open={!!customerToDelete} onOpenChange={(open) => !open && setCustomerToDelete(null)}>
         <AlertDialogContent>

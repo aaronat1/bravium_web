@@ -3,6 +3,8 @@
 
 import { z } from 'zod';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
+import { createHmac } from 'crypto';
 
 const AddCustomerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -69,6 +71,13 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
       password: uid,
     });
 
+    const creationDate = new Date();
+    const renewalDate = new Date(creationDate);
+    renewalDate.setDate(creationDate.getDate() + 30);
+
+    const secret = process.env.API_KEY_SECRET || 'default-secret';
+    const apiKey = createHmac('sha256', secret).update(uid).digest('hex');
+
     const customerData = {
       id: uid,
       name,
@@ -77,6 +86,10 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
       subscriptionPlan,
       subscriptionStatus: 'active',
       kmsKeyPath: "",
+      onboardingStatus: 'pending',
+      createdAt: FieldValue.serverTimestamp(),
+      renewalDate: renewalDate,
+      apiKey: apiKey,
     };
 
     await adminDb.collection('customers').doc(uid).set(customerData);
