@@ -3,7 +3,7 @@
 
 import { useState, useEffect, createContext, type ReactNode } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, type Timestamp } from "firebase/firestore";
 import { auth, db } from '@/lib/firebase/config';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -11,8 +11,11 @@ type CustomerData = {
   id: string;
   name: string;
   email: string;
-  subscriptionPlan: 'starter' | 'pro' | 'enterprise';
+  subscriptionPlan: 'free' | 'starter' | 'pro' | 'enterprise';
   subscriptionStatus: 'active' | 'inactive' | 'cancelled';
+  apiKey?: string;
+  createdAt?: Timestamp;
+  renewalDate?: Timestamp;
 };
 
 interface AuthContextType {
@@ -59,9 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Clean up auth subscription
     return () => unsubscribeAuth();
   }, []);
-
-  // Removed the initial loading check to handle the async nature of auth and firestore better.
-  // The loading state is now managed inside the onAuthStateChanged listener.
 
   return (
     <AuthContext.Provider value={{ user, customerData, loading }}>

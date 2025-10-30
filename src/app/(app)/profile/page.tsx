@@ -4,7 +4,9 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { LogOut, Save, KeyRound, AlertTriangle, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { es, enUS } from "date-fns/locale";
+import { LogOut, Save, KeyRound, AlertTriangle, Loader2, Copy, Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
@@ -30,12 +32,13 @@ function ProfileSubmitButton() {
 
 export default function ProfilePage() {
   const { user, customerData, loading: authLoading } = useAuth();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { toast } = useToast();
   const router = useRouter();
 
   const [isPasswordResetting, startPasswordReset] = useTransition();
   const [isDeleting, startDelete] = useTransition();
+  const [hasCopied, setHasCopied] = useState(false);
 
   const initialState: UpdateNameState = { message: "", success: false };
   const [state, formAction] = useActionState(updateProfileName, initialState);
@@ -83,6 +86,13 @@ export default function ProfilePage() {
     });
   };
 
+  const handleCopyApiKey = () => {
+    if (!customerData?.apiKey) return;
+    navigator.clipboard.writeText(customerData.apiKey);
+    setHasCopied(true);
+    setTimeout(() => setHasCopied(false), 2000);
+  };
+
    const getPlanText = (plan: string) => {
     switch (plan?.toLowerCase()) {
       case 'free': return t.customersPage.plan_free;
@@ -102,14 +112,11 @@ export default function ProfilePage() {
     }
   };
 
-
   if (authLoading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin"/></div>
   }
 
   if (!user || !customerData) {
-    // This could happen for an admin user or if the customer doc is missing.
-    // Admins are redirected from /customers, other users should have a doc.
      return (
       <Card>
         <CardHeader>
@@ -159,17 +166,41 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle>{t.profilePage.account_info_title}</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+        <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <Label>{t.profilePage.plan_label}</Label>
-            <Badge variant="secondary">{getPlanText(customerData.subscriptionPlan)}</Badge>
+            <div><Badge variant="secondary">{getPlanText(customerData.subscriptionPlan)}</Badge></div>
           </div>
           <div className="space-y-2">
             <Label>{t.profilePage.status_label}</Label>
-            <Badge variant={customerData.subscriptionStatus === 'active' ? 'secondary' : 'destructive'}>
-              {getStatusText(customerData.subscriptionStatus)}
-            </Badge>
+            <div>
+              <Badge variant={customerData.subscriptionStatus === 'active' ? 'secondary' : 'destructive'}>
+                {getStatusText(customerData.subscriptionStatus)}
+              </Badge>
+            </div>
           </div>
+           <div className="space-y-2">
+              <Label>{t.profilePage.created_at_label}</Label>
+              <p className="text-sm text-muted-foreground">
+                {customerData.createdAt ? format(customerData.createdAt.toDate(), 'PPP', { locale: locale === 'es' ? es : enUS }) : 'N/A'}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>{t.profilePage.renews_at_label}</Label>
+              <p className="text-sm text-muted-foreground">
+                {customerData.renewalDate ? format(customerData.renewalDate.toDate(), 'PPP', { locale: locale === 'es' ? es : enUS }) : 'N/A'}
+              </p>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="apiKey">{t.profilePage.api_key_label}</Label>
+              <div className="relative">
+                <Input id="apiKey" readOnly value={customerData.apiKey || "Not available"} className="pr-10 font-mono text-sm" />
+                 <Button variant="ghost" size="icon" className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2" onClick={handleCopyApiKey}>
+                    {hasCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    <span className="sr-only">Copy API Key</span>
+                  </Button>
+              </div>
+            </div>
         </CardContent>
       </Card>
 
