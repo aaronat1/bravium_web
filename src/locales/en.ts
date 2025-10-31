@@ -373,6 +373,13 @@ export const en = {
     share_button: "Share",
     share_title: "Verifiable Credential",
     share_text: "Here is my verifiable credential document.",
+    usage_title: "Current Cycle Usage",
+    usage_text: "You have used {count} of your {limit} issuances for this cycle.",
+    usage_unlimited: "unlimited",
+    limit_reached_title: "Issuance Limit Reached",
+    limit_reached_desc: "You have reached the issuance limit for your current plan.",
+    limit_reached_desc_issue_page: "You have reached your plan's issuance limit. Please upgrade your plan to continue issuing credentials.",
+    limit_reached_link: "Upgrade your plan",
   },
   issueCredentialPage: {
     title: "Issue New Credential",

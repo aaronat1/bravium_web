@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +12,8 @@ import QRCode from "qrcode.react";
 import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import jsPDF from "jspdf";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
+import Link from "next/link";
 
 
 import { useAuth } from "@/hooks/use-auth";
@@ -26,7 +27,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2, FileUp, FileDown, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, FileCheck, Copy, Check, AlertTriangle, Download, Share2, FileUp, FileDown, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
+
+const PLAN_LIMITS = {
+    free: 30,
+    starter: 60,
+    pro: 300,
+    enterprise: Infinity
+};
+
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     if (!fields) return z.object({});
@@ -103,11 +112,12 @@ function BatchResultDialog({ results, onOpenChange }: { results: { success: bool
 export default function IssueCredentialPage() {
     const { t } = useI18n();
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, customerData } = useAuth();
     const { toast } = useToast();
     const [templates, setTemplates] = useState<CredentialTemplate[]>([]);
+    const [credentials, setCredentials] = useState<any[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<CredentialTemplate | null>(null);
-    const [loadingTemplates, setLoadingTemplates] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [isIssuing, setIsIssuing] = useState(false);
     const [issuedCredential, setIssuedCredential] = useState<{jws: string, id: string} | null>(null);
     const [hasCopied, setHasCopied] = useState(false);
@@ -125,6 +135,29 @@ export default function IssueCredentialPage() {
 
     const isAdmin = user?.uid === ADMIN_UID;
 
+    const { isLimitReached } = useMemo(() => {
+        if (isAdmin || !customerData || !customerData.renewalDate) {
+            return { isLimitReached: false };
+        }
+        
+        const plan = customerData.subscriptionPlan;
+        const limit = PLAN_LIMITS[plan] || 0;
+
+        const renewalDate = customerData.renewalDate.toDate();
+        const cycleStartDate = subDays(renewalDate, 30);
+        
+        const count = credentials.filter(c => {
+            const issuedAtDate = c.issuedAt.toDate();
+            return issuedAtDate >= cycleStartDate && issuedAtDate <= renewalDate;
+        }).length;
+        
+        const reached = limit !== Infinity && count >= limit;
+
+        return { isLimitReached: reached };
+
+    }, [credentials, customerData, isAdmin]);
+
+
     const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
 
     type FormData = z.infer<typeof formSchema>;
@@ -137,21 +170,32 @@ export default function IssueCredentialPage() {
 
     useEffect(() => {
         if (!user) return;
-        setLoadingTemplates(true);
+        setLoading(true);
         const templatesCollectionRef = collection(db, "credentialSchemas");
         const q = isAdmin ? templatesCollectionRef : query(templatesCollectionRef, where("customerId", "==", user.uid));
         
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubTemplates = onSnapshot(q, (snapshot) => {
             const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
             setTemplates(fetchedTemplates);
-            setLoadingTemplates(false);
+            setLoading(false);
         }, (error) => {
             console.error("Error fetching templates:", error);
             toast({ variant: "destructive", title: t.toast_error_title, description: "Failed to load templates." });
-            setLoadingTemplates(false);
+            setLoading(false);
         });
         
-        return () => unsubscribe();
+        const credsCollection = collection(db, "issuedCredentials");
+        const credsQuery = isAdmin ? credsCollection : query(credsCollection, where("customerId", "==", user.uid));
+
+        const unsubCredentials = onSnapshot(credsQuery, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setCredentials(data);
+        });
+
+        return () => {
+            unsubTemplates();
+            unsubCredentials();
+        };
     }, [user, isAdmin, t, toast]);
 
     useEffect(() => {
@@ -419,6 +463,29 @@ export default function IssueCredentialPage() {
         reader.readAsText(csvFile);
     };
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    if (isLimitReached) {
+        return (
+            <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>{t.credentialsPage.limit_reached_title}</AlertTitle>
+                <AlertDescription>
+                    {t.credentialsPage.limit_reached_desc_issue_page}{' '}
+                    <Link href="/profile" className="font-semibold underline">
+                        {t.credentialsPage.limit_reached_link}
+                    </Link>.
+                </AlertDescription>
+            </Alert>
+        )
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -431,7 +498,7 @@ export default function IssueCredentialPage() {
                     <CardDescription>{t.issueCredentialPage.step1_desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loadingTemplates ? (
+                    {loading ? (
                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     ) : (
                         <Select onValueChange={handleTemplateChange} disabled={templates.length === 0}>
@@ -632,5 +699,3 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
-
-    

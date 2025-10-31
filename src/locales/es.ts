@@ -373,6 +373,13 @@ export const es = {
     share_button: "Compartir",
     share_title: "Credencial Verificable",
     share_text: "Aquí tienes mi documento de credencial verificable.",
+    usage_title: "Uso del Ciclo Actual",
+    usage_text: "Has utilizado {count} de tus {limit} emisiones para este ciclo.",
+    usage_unlimited: "ilimitadas",
+    limit_reached_title: "Límite de Emisiones Alcanzado",
+    limit_reached_desc: "Has alcanzado el límite de emisiones de tu plan actual.",
+    limit_reached_desc_issue_page: "Has alcanzado el límite de emisiones de tu plan. Por favor, actualiza tu plan para seguir emitiendo credenciales.",
+    limit_reached_link: "Actualiza tu plan",
   },
   issueCredentialPage: {
     title: "Emitir Nueva Credencial",

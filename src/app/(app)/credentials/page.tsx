@@ -4,9 +4,9 @@
 import { useEffect, useState, useMemo, useTransition, useRef } from "react";
 import Link from "next/link";
 import { collection, onSnapshot, query, where, type Timestamp } from "firebase/firestore";
-import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X, Share2, Download } from "lucide-react";
+import { PlusCircle, Loader2, Eye, Copy, Check, BadgeCheck, MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, FileDown, Calendar as CalendarIcon, X, Share2, Download, AlertCircle } from "lucide-react";
 import QRCode from "qrcode.react";
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, subDays } from 'date-fns';
 import { es, enUS } from "date-fns/locale";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -28,6 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ADMIN_UID = "PdaXG6zsMbaoQNRgUr136DvKWtM2";
 const ITEMS_PER_PAGE = 10;
@@ -45,6 +47,13 @@ type IssuedCredential = {
     issuedAt: Timestamp;
     jws: string;
     customerId: string;
+};
+
+const PLAN_LIMITS = {
+    free: 30,
+    starter: 60,
+    pro: 300,
+    enterprise: Infinity
 };
 
 function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential: IssuedCredential | null, isOpen: boolean, onOpenChange: (open: boolean) => void }) {
@@ -174,7 +183,7 @@ function ViewCredentialDialog({ credential, isOpen, onOpenChange }: { credential
 // MAIN PAGE COMPONENT
 export default function CredentialsPage() {
     const { t, locale } = useI18n();
-    const { user } = useAuth();
+    const { user, customerData } = useAuth();
     const [credentials, setCredentials] = useState<IssuedCredential[]>([]);
     const [loading, setLoading] = useState(true);
     const [viewingCredential, setViewingCredential] = useState<IssuedCredential | null>(null);
@@ -215,6 +224,29 @@ export default function CredentialsPage() {
             .join(', ');
     };
     
+    const { currentCycleCount, usagePercentage, planLimit, isLimitReached } = useMemo(() => {
+        if (!customerData || !customerData.renewalDate) {
+            return { currentCycleCount: 0, usagePercentage: 0, planLimit: 0, isLimitReached: false };
+        }
+        
+        const plan = customerData.subscriptionPlan;
+        const limit = PLAN_LIMITS[plan] || 0;
+
+        const renewalDate = customerData.renewalDate.toDate();
+        const cycleStartDate = subDays(renewalDate, 30);
+        
+        const count = credentials.filter(c => {
+            const issuedAtDate = c.issuedAt.toDate();
+            return issuedAtDate >= cycleStartDate && issuedAtDate <= renewalDate;
+        }).length;
+        
+        const percentage = limit > 0 && limit !== Infinity ? (count / limit) * 100 : 0;
+        const reached = limit !== Infinity && count >= limit;
+
+        return { currentCycleCount: count, usagePercentage: percentage, planLimit: limit, isLimitReached: reached };
+
+    }, [credentials, customerData]);
+
     const sortedAndFilteredCredentials = useMemo(() => {
         let filtered = credentials.filter(c => {
             const textMatch = c.templateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -325,13 +357,43 @@ export default function CredentialsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">{t.credentialsPage.title}</h1>
-                 <Button asChild>
+                <Button asChild disabled={isLimitReached && !isAdmin}>
                     <Link href="/credentials/issue">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         {t.credentialsPage.issue_new_button}
                     </Link>
                 </Button>
             </div>
+             {!isAdmin && customerData && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t.credentialsPage.usage_title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                             <p className="text-sm text-muted-foreground">
+                                {t.credentialsPage.usage_text
+                                    .replace('{count}', currentCycleCount.toString())
+                                    .replace('{limit}', planLimit === Infinity ? t.credentialsPage.usage_unlimited : planLimit.toString())
+                                }
+                            </p>
+                            {planLimit !== Infinity && <Progress value={usagePercentage} />}
+                            {isLimitReached && (
+                                <Alert variant="destructive" className="mt-4">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>{t.credentialsPage.limit_reached_title}</AlertTitle>
+                                    <AlertDescription>
+                                        {t.credentialsPage.limit_reached_desc}{' '}
+                                        <Link href="/profile" className="font-semibold underline">
+                                            {t.credentialsPage.limit_reached_link}
+                                        </Link>
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
             <Card>
                 <CardHeader>
                     <CardTitle>{t.credentialsPage.list_title}</CardTitle>
@@ -503,5 +565,3 @@ export default function CredentialsPage() {
         </div>
     );
 }
-
-    
