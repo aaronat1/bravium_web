@@ -26,6 +26,54 @@ export type AddCustomerState = {
   };
 };
 
+async function sendWelcomeEmail(email: string, password: string): Promise<void> {
+  const API_URL = 'https://smtp.maileroo.com/send';
+  const API_KEY = '02ad0072053fdc168e0ca174497ecada4e47d30ec898276357c067681b100f93';
+  const FROM_EMAIL = 'bravium@c819211b683530d3.maileroo.org';
+
+  const subject = "Welcome to Bravium! / ¡Bienvenido a Bravium!";
+  const htmlContent = `
+    <div style="font-family: sans-serif; line-height: 1.6;">
+        <h2>Welcome to Bravium!</h2>
+        <p>Your account has been created successfully.</p>
+        <p>Your password is: <strong>${password}</strong></p>
+        <p>We strongly recommend changing it from your user profile inside the Bravium application.</p>
+        <p>Sincerely,<br>The Bravium Team</p>
+        <hr>
+        <h2>¡Bienvenido a Bravium!</h2>
+        <p>Tu cuenta ha sido creada con éxito.</p>
+        <p>Tu contraseña es: <strong>${password}</strong></p>
+        <p>Te recomendamos encarecidamente cambiarla desde tu perfil de usuario dentro de la aplicación de Bravium.</p>
+        <p>Atentamente,<br>El equipo de Bravium</p>
+    </div>
+  `;
+
+  const form = new FormData();
+  form.append('from', FROM_EMAIL);
+  form.append('to', email);
+  form.append('subject', subject);
+  form.append('html', htmlContent);
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'X-API-Key': API_KEY },
+      body: form,
+    });
+
+    if (!response.ok) {
+        const result = await response.json();
+        throw new Error(`Failed to send email: ${JSON.stringify(result)}`);
+    }
+
+    console.log(`Welcome email sent to ${email}`);
+  } catch (error) {
+    console.error("Could not send welcome email:", error);
+    // We don't re-throw the error so that the customer creation process can complete even if the email fails.
+  }
+}
+
+
 export async function addCustomer(prevState: AddCustomerState, formData: FormData): Promise<AddCustomerState> {
   if (!adminAuth || !adminDb) {
     return {
@@ -56,7 +104,6 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
         return { message: "Ya existe un usuario con este correo electrónico.", success: false };
     }
 
-    // The password will be the UID. This is not secure for production.
     const userRecord = await adminAuth.createUser({
       email,
       emailVerified: false,
@@ -66,7 +113,6 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
     
     const { uid } = userRecord;
 
-    // Set the password to be the UID.
     await adminAuth.updateUser(uid, {
       password: uid,
     });
@@ -93,6 +139,9 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
     };
 
     await adminDb.collection('customers').doc(uid).set(customerData);
+
+    // Send welcome email after successful creation
+    await sendWelcomeEmail(email, uid);
 
     return { 
         message: `Cliente "${name}" añadido correctamente.`, 
