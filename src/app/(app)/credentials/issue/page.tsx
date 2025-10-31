@@ -528,7 +528,6 @@ export default function IssueCredentialPage() {
                         <TabsTrigger value="single">{t.issueCredentialPage.tab_single}</TabsTrigger>
                         <TabsTrigger value="batch">{t.issueCredentialPage.tab_batch}</TabsTrigger>
                     </TabsList>
-                    
                     <TabsContent value="single">
                         <Card>
                             <CardHeader>
@@ -607,7 +606,6 @@ export default function IssueCredentialPage() {
                             </CardContent>
                          </Card>
                     </TabsContent>
-
                     <TabsContent value="batch">
                         <Card>
                              <CardHeader>
@@ -717,5 +715,3 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
-
-    
