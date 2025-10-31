@@ -13,20 +13,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@/hooks/use-i18n';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useActionState } from 'react';
+import { useForm, useFormState } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { addContactMessage } from '@/lib/firebase/auth';
+import { sendContactMessage, type ContactFormState } from '@/actions/contactActions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+
+function ContactSubmitButton() {
+  const { pending } = useFormState();
+  const { t } = useI18n();
+  return (
+    <Button type="submit" size="lg" disabled={pending}>
+      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {t.landingPage.contact.form_cta}
+    </Button>
+  );
+}
 
 
 export default function LandingPage() {
   const { t, locale } = useI18n();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
 
   const formSchema = z.object({
     name: z.string().min(1, { message: t.landingPage.contact.form_validation_name }),
@@ -45,25 +56,26 @@ export default function LandingPage() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
-    const { success } = await addContactMessage(values);
-    setLoading(false);
-
-    if (success) {
-      toast({
-        title: t.landingPage.contact.toast_success_title,
-        description: t.landingPage.contact.toast_success_desc,
-      });
-      form.reset();
-    } else {
-      toast({
-        variant: "destructive",
-        title: t.landingPage.contact.toast_error_title,
-        description: t.landingPage.contact.toast_error_desc,
-      });
+  const initialState: ContactFormState = { message: '', success: false };
+  const [state, formAction] = useActionState(sendContactMessage, initialState);
+  
+  useEffect(() => {
+    if (state.message) {
+      if (state.success) {
+        toast({
+          title: t.landingPage.contact.toast_success_title,
+          description: t.landingPage.contact.toast_success_desc,
+        });
+        form.reset();
+      } else {
+        toast({
+          variant: "destructive",
+          title: t.landingPage.contact.toast_error_title,
+          description: state.message || t.landingPage.contact.toast_error_desc,
+        });
+      }
     }
-  }
+  }, [state, toast, form, t]);
 
 
   return (
@@ -435,7 +447,7 @@ export default function LandingPage() {
               <Card>
                 <CardContent className="pt-6">
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form action={formAction} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
@@ -491,10 +503,7 @@ export default function LandingPage() {
                           )}
                         />
                       <div className="flex justify-center">
-                        <Button type="submit" size="lg" disabled={loading}>
-                          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          {t.landingPage.contact.form_cta}
-                        </Button>
+                        <ContactSubmitButton />
                       </div>
                     </form>
                   </Form>
@@ -509,5 +518,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
