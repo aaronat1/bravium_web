@@ -130,14 +130,16 @@ export default function IssueCredentialPage() {
     const [isBatchIssuing, setIsBatchIssuing] = useState(false);
     const [batchProgress, setBatchProgress] = useState(0);
     const [batchResults, setBatchResults] = useState<{ success: boolean; data: any; error?: string }[]>([]);
+    const [batchError, setBatchError] = useState<string | null>(null);
+
 
     const hasFileField = selectedTemplate?.fields.some(f => f.type === 'file') ?? false;
 
     const isAdmin = user?.uid === ADMIN_UID;
 
-    const { isLimitReached } = useMemo(() => {
+    const { currentCycleCount, planLimit, remainingIssuances, isLimitReached } = useMemo(() => {
         if (isAdmin || !customerData || !customerData.renewalDate) {
-            return { isLimitReached: false };
+            return { currentCycleCount: 0, planLimit: Infinity, remainingIssuances: Infinity, isLimitReached: false };
         }
         
         const plan = customerData.subscriptionPlan;
@@ -152,8 +154,9 @@ export default function IssueCredentialPage() {
         }).length;
         
         const reached = limit !== Infinity && count >= limit;
+        const remaining = limit === Infinity ? Infinity : limit - count;
 
-        return { isLimitReached: reached };
+        return { currentCycleCount: count, planLimit: limit, remainingIssuances: remaining, isLimitReached: reached };
 
     }, [credentials, customerData, isAdmin]);
 
@@ -218,6 +221,7 @@ export default function IssueCredentialPage() {
         setCsvFile(null);
         setBatchResults([]);
         setBatchProgress(0);
+        setBatchError(null);
     };
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
@@ -248,11 +252,6 @@ export default function IssueCredentialPage() {
             }
             
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
-            // AQUÍ SE LLAMA A LA CLOUD FUNCTION `issueCredential`
-            // Se le pasa un objeto con la siguiente información:
-            // - credentialSubject: Un objeto con los datos del formulario (ej: { studentName: 'John Doe', course: 'Physics 101' })
-            // - credentialType: El nombre de la plantilla (ej: "Certificado de Asistencia")
-            // - customerId: El ID del cliente que está emitiendo la credencial.
             const result: any = await issueCredentialFunc({
                 credentialSubject,
                 credentialType: selectedTemplate.name,
@@ -406,6 +405,8 @@ export default function IssueCredentialPage() {
         setIsBatchIssuing(true);
         setBatchProgress(0);
         setBatchResults([]);
+        setBatchError(null);
+
 
         const reader = new FileReader();
         reader.onload = async (event) => {
@@ -419,8 +420,14 @@ export default function IssueCredentialPage() {
             
             const headers = lines[0].split(',').map(h => h.trim());
             const dataRows = lines.slice(1);
-
             const totalRows = dataRows.length;
+            
+            if (totalRows > remainingIssuances) {
+                setBatchError(`No tienes suficientes emisiones. Necesitas ${totalRows} pero solo te quedan ${remainingIssuances}.`);
+                setIsBatchIssuing(false);
+                return;
+            }
+
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
             const tempResults = [];
 
@@ -631,7 +638,10 @@ export default function IssueCredentialPage() {
                                             id="csv-upload"
                                             type="file" 
                                             accept=".csv"
-                                            onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)}
+                                            onChange={(e) => {
+                                                setCsvFile(e.target.files ? e.target.files[0] : null);
+                                                setBatchError(null);
+                                            }}
                                         />
                                     </div>
                                     <Button onClick={handleBatchIssue} disabled={!csvFile || isBatchIssuing}>
@@ -645,6 +655,14 @@ export default function IssueCredentialPage() {
                                             <Progress value={batchProgress} />
                                             <p className="text-sm text-muted-foreground text-center">{Math.round(batchProgress)}%</p>
                                         </div>
+                                    )}
+
+                                    {batchError && (
+                                        <Alert variant="destructive">
+                                            <AlertCircle className="h-4 w-4" />
+                                            <AlertTitle>{t.toast_error_title}</AlertTitle>
+                                            <AlertDescription>{batchError}</AlertDescription>
+                                        </Alert>
                                     )}
                                 </>
                                )}
