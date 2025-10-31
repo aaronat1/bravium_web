@@ -162,6 +162,19 @@ export const en = {
       toast_error_desc: "There was a problem sending your message. Please try again.",
     },
   },
+  registerPage: {
+    title: "Create Your Free Account",
+    subtitle: "Start issuing verifiable credentials in minutes.",
+    cta: "Create Account",
+    toast_success_title: "Account Created!",
+    newUserDialog: {
+        title: "Account Created Successfully!",
+        desc: "Your account is ready. Please save your temporary password securely before logging in.",
+        alert_title: "Important: Save Your Password",
+        alert_desc: "This is the only time your temporary password will be shown. Copy it and store it in a safe place. We recommend changing it from your profile after logging in.",
+        login_button: "Go to Login",
+    }
+  },
   verifyPage: {
     title: "Public Verification Page",
     subtitle: "Validate the authenticity of a credential by scanning a QR or pasting its JWS.",
@@ -493,5 +506,3 @@ export const en = {
     month: "month",
   },
 };
-
-    

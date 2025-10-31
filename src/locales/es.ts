@@ -162,6 +162,19 @@ export const es = {
       toast_error_desc: "Hubo un problema al enviar tu mensaje. Por favor, inténtalo de nuevo.",
     },
   },
+  registerPage: {
+    title: "Crea tu Cuenta Gratuita",
+    subtitle: "Empieza a emitir credenciales verificables en minutos.",
+    cta: "Crear Cuenta",
+    toast_success_title: "¡Cuenta Creada!",
+    newUserDialog: {
+        title: "¡Cuenta Creada con Éxito!",
+        desc: "Tu cuenta está lista. Por favor, guarda tu contraseña temporal de forma segura antes de iniciar sesión.",
+        alert_title: "Importante: Guarda tu Contraseña",
+        alert_desc: "Esta es la única vez que se mostrará tu contraseña temporal. Cópiala y guárdala en un lugar seguro. Te recomendamos cambiarla desde tu perfil una vez inicies sesión.",
+        login_button: "Ir a Iniciar Sesión",
+    }
+  },
   verifyPage: {
     title: "Página de Verificación Pública",
     subtitle: "Valide la autenticidad de una credencial escaneando un QR o pegando su JWS.",
@@ -493,5 +506,3 @@ export const es = {
     month: "mes",
   },
 };
-
-    

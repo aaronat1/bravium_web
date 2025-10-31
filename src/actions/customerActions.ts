@@ -9,7 +9,7 @@ import { createHmac } from 'crypto';
 const AddCustomerSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
   email: z.string().email({ message: "El correo electrónico no es válido." }),
-  subscriptionPlan: z.enum(['free', 'starter', 'pro', 'enterprise'], { errorMap: () => ({ message: 'Debe seleccionar un plan.'}) }),
+  subscriptionPlan: z.enum(['free', 'starter', 'pro', 'enterprise'], { errorMap: () => ({ message: 'Debe seleccionar un plan.'}) }).optional(),
 });
 
 export type AddCustomerState = {
@@ -96,7 +96,8 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
     };
   }
 
-  const { name, email, subscriptionPlan } = validatedFields.data;
+  const { name, email } = validatedFields.data;
+  const subscriptionPlan = validatedFields.data.subscriptionPlan || 'free';
 
   try {
     const existingUser = await adminAuth.getUserByEmail(email).catch(() => null);
