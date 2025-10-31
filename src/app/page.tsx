@@ -367,21 +367,6 @@ export default function LandingPage() {
                 </CardFooter>
               </Card>
             </div>
-            <div className="mt-16 text-center">
-              <h3 className="text-2xl font-bold text-foreground">{t.landingPage.pricing.add_ons_title}</h3>
-              <div className="mt-8 max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-left">
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-muted-foreground text-center">{t.landingPage.pricing.add_on_extra_emission}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-muted-foreground text-center">{t.landingPage.pricing.add_on_extra_storage}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -524,12 +509,5 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
-
-    
-
-
-
 
     

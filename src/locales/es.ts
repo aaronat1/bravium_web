@@ -119,9 +119,6 @@ export const es = {
       feature_advanced: "Funcionalidades Avanzadas",
       feature_storage_custom: "Almacenamiento Personalizado",
       cta_contact_sales: "Contactar",
-      add_ons_title: "Costes por Uso Adicional",
-      add_on_extra_emission: "Emisión Extra: 0.50 € por certificado",
-      add_on_extra_storage: "Almacenamiento Adicional: 10 € por cada 10 GB/mes",
     },
     faq: {
       title: "Preguntas Frecuentes (FAQ)",
@@ -377,7 +374,7 @@ export const es = {
     usage_text: "Has utilizado {count} de tus {limit} emisiones para este ciclo.",
     usage_unlimited: "ilimitadas",
     limit_reached_title: "Límite de Emisiones Alcanzado",
-    limit_reached_desc: "Has alcanzado el límite de emisiones de tu plan. Para seguir emitiendo, puedes ampliar tu plan o contactarnos para comprar emisiones extra.",
+    limit_reached_desc: "Has alcanzado el límite de emisiones de tu plan. Para seguir emitiendo, debes ampliar tu plan.",
     limit_reached_desc_issue_page: "Has alcanzado el límite de emisiones de tu plan. Por favor, actualiza tu plan para seguir emitiendo credenciales.",
     limit_reached_link: "Amplía tu plan aquí",
   },
@@ -496,3 +493,5 @@ export const es = {
     month: "mes",
   },
 };
+
+    
