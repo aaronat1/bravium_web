@@ -377,9 +377,9 @@ export const en = {
     usage_text: "You have used {count} of your {limit} issuances for this cycle.",
     usage_unlimited: "unlimited",
     limit_reached_title: "Issuance Limit Reached",
-    limit_reached_desc: "You have reached the issuance limit for your current plan.",
+    limit_reached_desc: "You have reached your plan's issuance limit. To continue issuing, you can upgrade your plan or contact us to purchase extra issuances.",
     limit_reached_desc_issue_page: "You have reached your plan's issuance limit. Please upgrade your plan to continue issuing credentials.",
-    limit_reached_link: "Upgrade your plan",
+    limit_reached_link: "Upgrade your plan here",
   },
   issueCredentialPage: {
     title: "Issue New Credential",
