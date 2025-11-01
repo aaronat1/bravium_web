@@ -137,6 +137,12 @@ export default function RegisterPage() {
                                 <Input id="email" name="email" type="email" placeholder={t.customersPage.form_email_placeholder} required />
                                 {state.errors?.email && <p className="text-sm font-medium text-destructive">{state.errors.email[0]}</p>}
                             </div>
+                            <div className="text-center text-sm">
+                                ¿Ya tienes cuenta?{' '}
+                                <Link href="/login" className="underline">
+                                    Acceder
+                                </Link>
+                            </div>
                             <RegisterSubmitButton />
                         </form>
                     </CardContent>
