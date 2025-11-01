@@ -97,7 +97,7 @@ export default function LandingPage() {
                     <Link href="/try">{t.landingPage.hero.cta_demo}</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                    <Link href="#pricing">{t.landingPage.hero.cta_prices}</Link>
+                    <Link href="/#pricing">{t.landingPage.hero.cta_prices}</Link>
                 </Button>
                 </div>
             </div>
@@ -191,18 +191,18 @@ export default function LandingPage() {
                     <h2 className="text-3xl md:text-4xl font-bold text-foreground">{t.landingPage.howItWorks.title}</h2>
                 </div>
                 <div className="grid md:grid-cols-3 gap-8">
-                    <div className="flex flex-col items-center text-center">
+                    <article className="flex flex-col items-center text-center">
                         <FilePlus2 className="h-12 w-12 text-primary mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step1_text}</p>
-                    </div>
-                     <div className="flex flex-col items-center text-center">
+                    </article>
+                     <article className="flex flex-col items-center text-center">
                         <Send className="h-12 w-12 text-primary mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step2_text}</p>
-                    </div>
-                     <div className="flex flex-col items-center text-center">
+                    </article>
+                     <article className="flex flex-col items-center text-center">
                         <Wallet className="h-12 w-12 text-primary mb-4"/>
                         <p className="mt-2 text-muted-foreground">{t.landingPage.howItWorks.step3_text}</p>
-                    </div>
+                    </article>
                 </div>
                  <div className="mt-12 text-center">
                     <Button asChild>
@@ -226,7 +226,7 @@ export default function LandingPage() {
               </TabsList>
               <TabsContent value="universities" className="mt-8">
                 <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div>
+                  <article>
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab1_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab1_content_text}</p>
                     <ul className="space-y-3">
@@ -235,7 +235,7 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit3}</span></li>
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab1_benefit4}</span></li>
                     </ul>
-                  </div>
+                  </article>
                   <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
                     <Image src="https://images.unsplash.com/photo-1653945475312-03bb03fd1303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxNnx8QSVDMyVCMWFkZSUyMGltYWdlbiUyMHJlbGFjaW9uYWRhJTIwY29uJTIwZXN0dWRpYW50ZXMlMkMlMjBleCVDMyVBMW1lbmVzJTIweSUyMHVuaXZlcnNpZGFkfGVufDB8fHx8MTc1MTMxNjE5Nnww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab1_alt} width={600} height={400} className="w-full h-full object-cover" data-ai-hint="university students" />
                   </div>
@@ -243,7 +243,7 @@ export default function LandingPage() {
               </TabsContent>
               <TabsContent value="ngos" className="mt-8">
                 <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div>
+                  <article>
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab2_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab2_content_text}</p>
                     <ul className="space-y-3">
@@ -252,7 +252,7 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit3}</span></li>
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab2_benefit4}</span></li>
                     </ul>
-                  </div>
+                  </article>
                    <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
                     <Image src="https://images.unsplash.com/photo-1589190887320-d1b6af2bdac3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxBeXVkYSUyMGh1bWFuaXRhcmlhfGVufDB8fHx8MTc1MTMxNjM0NXww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab2_alt} width={600} height={400} className="w-full h-full object-cover" data-ai-hint="community volunteers" />
                    </div>
@@ -260,7 +260,7 @@ export default function LandingPage() {
               </TabsContent>
               <TabsContent value="companies" className="mt-8">
                  <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div>
+                  <article>
                     <h3 className="text-2xl font-semibold mb-4">{t.landingPage.useCases.tab3_content_title}</h3>
                     <p className="text-muted-foreground mb-6">{t.landingPage.useCases.tab3_content_text}</p>
                     <ul className="space-y-3">
@@ -269,7 +269,7 @@ export default function LandingPage() {
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit3}</span></li>
                         <li className="flex items-start gap-3"><Check className="h-5 w-5 text-primary flex-shrink-0 mt-1" /><span>{t.landingPage.useCases.tab3_benefit4}</span></li>
                     </ul>
-                  </div>
+                  </article>
                    <div className="aspect-[3/2] overflow-hidden rounded-lg shadow-lg">
                     <Image src="https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxQeW1lfGVufDB8fHx8MTc1MTMxNjUwMHww&ixlib=rb-4.1.0&q=80&w=1080" alt={t.landingPage.useCases.tab3_alt} width={600} height={400} className="w-full h-full object-cover" data-ai-hint="corporate meeting" />
                    </div>
