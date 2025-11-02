@@ -255,7 +255,7 @@ export default function IssueCredentialPage() {
             const result: any = await issueCredentialFunc({
                 credentialSubject,
                 credentialType: selectedTemplate.name,
-                customerId: selectedTemplate.customerId,
+                customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
             });
             
             const jws = result.data.verifiableCredentialJws;
@@ -266,7 +266,7 @@ export default function IssueCredentialPage() {
             const savedCredential = await saveIssuedCredential({
                 templateId: selectedTemplate.id,
                 templateName: selectedTemplate.name,
-                customerId: selectedTemplate.customerId,
+                customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
                 recipientData: credentialSubject,
                 jws,
             });
@@ -443,7 +443,7 @@ export default function IssueCredentialPage() {
                     const result: any = await issueCredentialFunc({
                         credentialSubject,
                         credentialType: selectedTemplate.name,
-                        customerId: selectedTemplate.customerId,
+                        customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
                     });
                     
                     const jws = result.data.verifiableCredentialJws;
@@ -452,7 +452,7 @@ export default function IssueCredentialPage() {
                     await saveIssuedCredential({
                         templateId: selectedTemplate.id,
                         templateName: selectedTemplate.name,
-                        customerId: selectedTemplate.customerId,
+                        customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
                         recipientData: credentialSubject,
                         jws,
                     });
@@ -715,3 +715,5 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
+
+    
