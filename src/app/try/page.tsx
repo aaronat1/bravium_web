@@ -19,7 +19,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { db, functions, storage } from "@/lib/firebase/config";
-import { saveIssuedCredential } from "@/actions/issuanceActions";
+import { issueDemoCredential } from "@/actions/issuanceActions";
 import { verifyRecaptcha } from "@/actions/recaptchaActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
@@ -39,9 +39,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
 const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
-const DEMO_USER_EMAIL = process.env.NEXT_PUBLIC_DEMO_USER_EMAIL!;
-const DEMO_USER_PASSWORD = process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD!;
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+const DEMO_USER_EMAIL = "demo@bravium.es";
+const DEMO_USER_PASSWORD = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
+const RECAPTCHA_SITE_KEY = "6LdoyAAsAAAAAFBLWb98ZQj4t07Y8O3hKnggllA2";
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     let shape: Record<string, z.ZodType<any, any>> = {
@@ -111,7 +111,7 @@ export default function TryNowPage() {
     useEffect(() => {
         setLoadingTemplates(true);
         const templatesCollectionRef = collection(db, "credentialSchemas");
-        const q = query(templatesCollectionRef, where("public", "==", true));
+        const q = query(templatesCollectionRef, where("customerId", "==", DEMO_CUSTOMER_ID));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
@@ -154,7 +154,6 @@ export default function TryNowPage() {
 
         setIsIssuing(true);
         setSubmissionError(null);
-        let demoUserSignedIn = false;
         
         try {
             // First, verify reCAPTCHA token
@@ -162,14 +161,6 @@ export default function TryNowPage() {
             if (!recaptchaResult.success) {
                 throw new Error(recaptchaResult.message || "reCAPTCHA verification failed.");
             }
-
-            // Sign in demo user silently
-            const { error: signInError } = await signIn(DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
-            if (signInError) {
-                throw new Error(`Demo authentication failed: ${signInError.message}`);
-            }
-            demoUserSignedIn = true;
-
 
             const credentialSubject: Record<string, any> = {};
 
@@ -193,46 +184,26 @@ export default function TryNowPage() {
                 }
             }
             
-            const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
-            const result: any = await issueCredentialFunc({
+            const result = await issueDemoCredential(
                 credentialSubject,
-                credentialType: selectedTemplate.name,
-                customerId: DEMO_CUSTOMER_ID,
-                test: true, 
-                emailTester: data.email
-            });
-            
-            const jws = result.data.verifiableCredentialJws;
-            if (!jws) {
-                throw new Error("Cloud function did not return a verifiableCredentialJws.");
+                selectedTemplate.name,
+                selectedTemplate.id,
+                data.email
+            );
+
+            if (!result.success || !result.jws || !result.id) {
+                throw new Error(result.message || "Failed to issue demo credential.");
             }
             
-            const savedCredential = await saveIssuedCredential({
-                templateId: selectedTemplate.id,
-                templateName: selectedTemplate.name,
-                customerId: DEMO_CUSTOMER_ID,
-                recipientData: credentialSubject,
-                jws,
-                test: true,
-                emailTester: data.email,
-            });
-
-            if (!savedCredential.success || !savedCredential.id) {
-                throw new Error(savedCredential.message || "Failed to save demo credential record.");
-            }
-
-            setIssuedCredential({jws, id: savedCredential.id});
+            setIssuedCredential({jws: result.jws, id: result.id});
             toast({ title: t.issueCredentialPage.toast_success_title, description: t.issueCredentialPage.toast_success_desc });
 
         } catch (error: any) {
             console.error("Error issuing demo credential:", error);
-            const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
+            const detailedError = error.message || "An unexpected error occurred.";
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
         } finally {
-            if (demoUserSignedIn) {
-                await signOut();
-            }
             setIsIssuing(false);
         }
     };

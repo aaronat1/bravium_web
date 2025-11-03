@@ -117,3 +117,5 @@ export async function issueDemoCredential(
         return { success: false, message: functionErrorMessage || "An unexpected error occurred during demo issuance." };
     }
 }
+
+    
