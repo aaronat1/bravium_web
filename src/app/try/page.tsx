@@ -428,7 +428,13 @@ export default function TryNowPage() {
                                                 onExpired={() => setRecaptchaToken(null)}
                                             />
                                         ) : (
-                                            <p className="text-sm text-destructive">reCAPTCHA no está configurado. Contacta con el administrador.</p>
+                                             <Alert variant="destructive">
+                                                <AlertTriangle className="h-4 w-4" />
+                                                <AlertTitle>reCAPTCHA Error</AlertTitle>
+                                                <AlertDescription>
+                                                    The reCAPTCHA site key is not configured. Please contact the site administrator.
+                                                </AlertDescription>
+                                            </Alert>
                                         )}
 
                                         <Button type="submit" disabled={isIssuing || !selectedTemplate || !recaptchaToken || !RECAPTCHA_SITE_KEY} size="lg">
