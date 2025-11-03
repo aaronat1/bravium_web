@@ -13,12 +13,11 @@ import jsPDF from "jspdf";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ReCAPTCHA from "react-google-recaptcha";
-
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
-import { db, functions, storage } from "@/lib/firebase/config";
-import { issueDemoCredential } from "@/actions/issuanceActions";
+import { db, functions, storage, auth } from "@/lib/firebase/config";
 import { verifyRecaptcha } from "@/actions/recaptchaActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
@@ -37,6 +36,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+// Hardcoded demo user credentials as per the new requirement for authentication
+const DEMO_USER_EMAIL = "demo@bravium.es";
+const DEMO_USER_PASSWORD = "password-demo-2024";
+const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
@@ -58,7 +61,6 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
                     if (field.required) {
                         stringSchema = stringSchema.min(1, {message: "This field is required"});
                     } else {
-                        // For optional fields, we explicitly mark them as optional in Zod
                         stringSchema = stringSchema.optional();
                     }
                     fieldSchema = stringSchema;
@@ -157,6 +159,10 @@ export default function TryNowPage() {
             if (!recaptchaResult.success) {
                 throw new Error(recaptchaResult.message || "reCAPTCHA verification failed.");
             }
+            
+            // Authenticate with demo user credentials before calling the function
+            if (!auth || !functions) throw new Error("Firebase not initialized");
+            await signInWithEmailAndPassword(auth, DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
 
             const credentialSubject: Record<string, any> = {};
 
@@ -180,23 +186,28 @@ export default function TryNowPage() {
                 }
             }
             
-            const result = await issueDemoCredential(
+            const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
+            const result: any = await issueCredentialFunc({
                 credentialSubject,
-                selectedTemplate.name,
-                selectedTemplate.id,
-                data.email
-            );
+                credentialType: selectedTemplate.name,
+                customerId: DEMO_CUSTOMER_ID,
+                test: true,
+                emailTester: data.email,
+            });
 
-            if (!result.success || !result.jws || !result.id) {
-                throw new Error(result.message || "Failed to issue demo credential.");
+            const jws = result.data.verifiableCredentialJws;
+            const credentialId = result.data.credentialId;
+
+            if (!jws || !credentialId) {
+                throw new Error("Cloud function did not return a valid JWS or credential ID.");
             }
             
-            setIssuedCredential({jws: result.jws, id: result.id});
+            setIssuedCredential({ jws, id: credentialId });
             toast({ title: t.issueCredentialPage.toast_success_title, description: t.issueCredentialPage.toast_success_desc });
 
         } catch (error: any) {
             console.error("Error issuing demo credential:", error);
-            const detailedError = error.message || "An unexpected error occurred.";
+            const detailedError = (error as HttpsCallableError)?.details?.message || error.message || "An unexpected error occurred.";
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
         } finally {

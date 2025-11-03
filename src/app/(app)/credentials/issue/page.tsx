@@ -255,27 +255,18 @@ export default function IssueCredentialPage() {
             const result: any = await issueCredentialFunc({
                 credentialSubject,
                 credentialType: selectedTemplate.name,
-                customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
+                customerId: user.uid,
             });
             
             const jws = result.data.verifiableCredentialJws;
-            if (!jws) {
-                throw new Error("Cloud function did not return a verifiableCredentialJws.");
+            const credentialId = result.data.credentialId;
+            if (!jws || !credentialId) {
+                throw new Error("Cloud function did not return a verifiableCredentialJws or credentialId.");
             }
             
-            const savedCredential = await saveIssuedCredential({
-                templateId: selectedTemplate.id,
-                templateName: selectedTemplate.name,
-                customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
-                recipientData: credentialSubject,
-                jws,
-            });
-
-            if (!savedCredential.success || !savedCredential.id) {
-                throw new Error(savedCredential.message || "Failed to save credential record.");
-            }
-
-            setIssuedCredential({jws, id: savedCredential.id});
+            // The Cloud Function now handles saving the credential record.
+            // We just update the local state to show the result.
+            setIssuedCredential({jws, id: credentialId});
 
             toast({ title: t.issueCredentialPage.toast_success_title, description: t.issueCredentialPage.toast_success_desc });
 
@@ -443,20 +434,13 @@ export default function IssueCredentialPage() {
                     const result: any = await issueCredentialFunc({
                         credentialSubject,
                         credentialType: selectedTemplate.name,
-                        customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
+                        customerId: user.uid,
                     });
                     
                     const jws = result.data.verifiableCredentialJws;
                     if (!jws) throw new Error("Cloud function did not return JWS.");
                     
-                    await saveIssuedCredential({
-                        templateId: selectedTemplate.id,
-                        templateName: selectedTemplate.name,
-                        customerId: user.uid, // FIX: Ensure customerId is always the authenticated user's UID
-                        recipientData: credentialSubject,
-                        jws,
-                    });
-
+                    // The Cloud Function now handles saving the record
                     tempResults.push({ success: true, data: credentialSubject });
                 } catch (error: any) {
                     const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
