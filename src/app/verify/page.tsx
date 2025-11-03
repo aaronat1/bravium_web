@@ -3,6 +3,8 @@
 
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import jsQR from "jsqr";
+import { collection, query, where, getDocs } from "firebase/firestore";
+
 
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
@@ -17,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { db } from "@/lib/firebase/config";
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from "@/components/ui/table";
 
 
@@ -94,35 +97,27 @@ export default function VerifyPage() {
   }, []);
 
   const handleShowDetails = async () => {
-    if (!jwsInput) return;
+    if (!jwsInput || !db) return;
     startFetchingDetails(async () => {
         try {
             const cleanedJws = jwsInput.replace(/\s/g, '');
-            const response = await fetch(VERIFY_ENDPOINT, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ jws: cleanedJws })
-            });
+            
+            // Query Firestore for the document with the matching JWS
+            const q = query(collection(db, "issuedCredentials"), where("jws", "==", cleanedJws));
+            const querySnapshot = await getDocs(q);
 
-            const result = await response.json();
-             if (!response.ok) {
-              throw new Error(result.error || "Failed to fetch credential details.");
+            if (querySnapshot.empty) {
+                throw new Error("Could not find the credential details in the database.");
+            }
+            
+            const docData = querySnapshot.docs[0].data();
+            const recipientData = docData.recipientData;
+            
+            if (!recipientData) {
+                throw new Error("Recipient data not found in the credential record.");
             }
 
-            const claims = result.claims || {};
-            const details = claims.credentialSubject || claims;
-            
-            // Filter out technical fields before setting the state
-            const fieldsToExclude = ['iat', 'exp', 'iss', 'sub', 'aud', 'jti', 'nbf', '@context', 'id', 'type', 'issuer', 'issuanceDate'];
-            const filteredDetails = Object.keys(details)
-              .filter(key => !fieldsToExclude.includes(key))
-              .reduce((obj, key) => {
-                obj[key] = details[key];
-                return obj;
-              }, {} as Record<string, any>);
-
-
-            setCredentialDetails(filteredDetails);
+            setCredentialDetails(recipientData);
             setIsDetailsDialogOpen(true);
 
         } catch (error: any) {
