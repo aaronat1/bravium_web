@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -23,8 +22,8 @@ export type ContactFormState = {
   success: boolean;
 };
 
-// This function is intentionally not async to be fire-and-forget
-function sendContactEmail(data: z.infer<typeof ContactSchema>): void {
+// This function can remain async. It's a fire-and-forget call from the main server action.
+async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<void> {
   const API_URL = 'https://smtp.maileroo.com/send';
   const API_KEY = '02ad0072053fdc168e0ca174497ecada4e47d30ec898276357c067681b100f93';
   const FROM_EMAIL = 'bravium@c819211b683530d3.maileroo.org';
@@ -51,23 +50,21 @@ function sendContactEmail(data: z.infer<typeof ContactSchema>): void {
   form.append('subject', subject);
   form.append('html', htmlContent);
 
-  // Fire-and-forget fetch call
-  fetch(API_URL, {
-    method: 'POST',
-    headers: { 'X-API-Key': API_KEY },
-    body: form,
-  })
-  .then(async (response) => {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'X-API-Key': API_KEY },
+      body: form,
+    });
     if (!response.ok) {
         const result = await response.json();
         console.error(`Failed to send contact email: ${JSON.stringify(result)}`);
     } else {
         console.log(`Contact form email sent successfully to ${TO_EMAIL}`);
     }
-  })
-  .catch(error => {
+  } catch (error) {
     console.error("Could not send contact email:", error);
-  });
+  }
 }
 
 export async function sendContactMessage(prevState: ContactFormState, formData: FormData): Promise<ContactFormState> {
@@ -101,7 +98,7 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
     });
 
     // Then, send the email notification (fire-and-forget)
-    sendContactEmail(validatedFields.data);
+    await sendContactEmail(validatedFields.data);
 
     return { message: 'Mensaje enviado correctamente.', success: true };
   } catch (error: any) {
