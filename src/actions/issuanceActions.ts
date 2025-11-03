@@ -112,7 +112,8 @@ export async function issueDemoCredential(
     } catch (error: any) {
         console.error("Error in issueDemoCredential:", error);
         
-        const functionErrorMessage = error.details?.message || error.message;
+        // As HttpsCallableError has a 'details' property which can be more specific
+        const functionErrorMessage = (error as any).details?.message || error.message;
 
         return { success: false, message: functionErrorMessage || "An unexpected error occurred during demo issuance." };
     }

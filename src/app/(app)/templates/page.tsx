@@ -59,6 +59,7 @@ export type CredentialTemplate = {
   description?: string;
   fields: TemplateField[];
   customerId: string;
+  public?: boolean;
 };
 
 // ZOD SCHEMA
@@ -80,6 +81,7 @@ function useTemplateFormSchema() {
         description: z.string().optional(),
         fields: z.array(fieldSchema).min(1, t.templatesPage.form_validation_fields),
         customerId: z.string().min(1, t.templatesPage.form_validation_customer),
+        public: z.boolean().optional(),
     });
 }
 
@@ -104,11 +106,13 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
       description: template.description || "",
       fields: template.fields.map(f => ({ ...f, fieldName: f.fieldName.replace(/[^a-zA-Z0-9_]/g, ''), defaultValue: f.defaultValue || '' })),
       customerId: template.customerId,
+      public: template.public || false,
     } : {
       name: "",
       description: "",
       fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true, options: [], defaultValue: "" }],
       customerId: isAdmin ? "" : user?.uid || "",
+      public: false,
     }
   });
 
@@ -141,11 +145,13 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
           description: template.description || "",
           fields: template.fields.map(f => ({ ...f, defaultValue: f.defaultValue || '' })),
           customerId: template.customerId,
+          public: template.public || false,
         } : {
           name: "",
           description: "",
           fields: [{ fieldName: "recipientName", label: "Recipient Name", type: "text", required: true, defaultValue: "" }],
           customerId: defaultCustomerId,
+          public: false,
         });
         setActiveTab("designer");
         setAiPrompt("");
@@ -237,6 +243,19 @@ function TemplateFormDialog({ isOpen, onOpenChange, template, customers }: { isO
                   />
                 )}
 
+                <FormField
+                    control={control}
+                    name="public"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <div className="space-y-0.5">
+                                <FormLabel>{t.templatesPage.form_public_label}</FormLabel>
+                                <FormDescription>{t.templatesPage.form_public_desc}</FormDescription>
+                            </div>
+                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                        </FormItem>
+                    )}
+                />
 
                 <div className="space-y-4">
                     <Label>{t.templatesPage.fields_label}</Label>
@@ -698,5 +717,3 @@ export default function TemplatesPage() {
     </div>
   );
 }
-
-    

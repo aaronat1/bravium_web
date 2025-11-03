@@ -37,11 +37,8 @@ import LandingFooter from "@/components/landing-footer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
-// For the demo, we use a predefined customer (the admin/verifier) to issue the credential.
-const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
-const DEMO_USER_EMAIL = "demo@bravium.es";
-const DEMO_USER_PASSWORD = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
-const RECAPTCHA_SITE_KEY = "6LdoyAAsAAAAAFBLWb98ZQj4t07Y8O3hKnggllA2";
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     let shape: Record<string, z.ZodType<any, any>> = {
@@ -111,7 +108,7 @@ export default function TryNowPage() {
     useEffect(() => {
         setLoadingTemplates(true);
         const templatesCollectionRef = collection(db, "credentialSchemas");
-        const q = query(templatesCollectionRef, where("customerId", "==", DEMO_CUSTOMER_ID));
+        const q = query(templatesCollectionRef, where("public", "==", true));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTemplates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CredentialTemplate));
@@ -473,5 +470,3 @@ export default function TryNowPage() {
         </div>
     );
 }
-
-    

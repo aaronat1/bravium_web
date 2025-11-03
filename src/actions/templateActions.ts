@@ -25,6 +25,7 @@ const TemplateSchema = z.object({
   description: z.string().optional(),
   fields: z.array(FieldSchema).min(1, "At least one field is required."),
   customerId: z.string().min(1, "Debe seleccionar un cliente."),
+  public: z.boolean().optional(),
 });
 
 export type TemplateState = {
