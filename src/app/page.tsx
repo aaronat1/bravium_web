@@ -12,34 +12,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@/hooks/use-i18n';
-import { useEffect, useRef, useActionState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useFormStatus } from 'react-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { sendContactMessage, type ContactFormState } from '@/actions/contactActions';
+import { sendContactMessage } from '@/actions/contactActions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-
-function ContactSubmitButton() {
-  const { pending } = useFormStatus();
-  const { t } = useI18n();
-
-  return (
-    <Button type="submit" size="lg" disabled={pending}>
-        {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {t.landingPage.contact.form_cta}
-    </Button>
-  );
-}
 
 
 export default function LandingPage() {
   const { t, locale } = useI18n();
   const { toast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formSchema = z.object({
     name: z.string().min(1, { message: t.landingPage.contact.form_validation_name }),
@@ -48,7 +34,9 @@ export default function LandingPage() {
     message: z.string().min(10, { message: t.landingPage.contact.form_validation_message }),
   });
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  type ContactFormData = z.infer<typeof formSchema>;
+
+  const form = useForm<ContactFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -57,25 +45,40 @@ export default function LandingPage() {
       message: "",
     },
   });
-  
-  const initialState: ContactFormState = { success: false, message: "" };
-  const [state, formAction] = useActionState(sendContactMessage, initialState);
 
-  useEffect(() => {
-    if (state.success) {
-      toast({
-        title: t.landingPage.contact.toast_success_title,
-        description: t.landingPage.contact.toast_success_desc,
-      });
-      form.reset();
-    } else if (state.message && !state.errors) {
-       toast({
-        variant: "destructive",
-        title: t.landingPage.contact.toast_error_title,
-        description: state.message,
-      });
+  const { handleSubmit, control, reset } = form;
+
+  const processForm: SubmitHandler<ContactFormData> = async (data) => {
+    setIsSubmitting(true);
+
+    // 1. Mostrar el toast y limpiar el formulario inmediatamente.
+    toast({
+      title: t.landingPage.contact.toast_success_title,
+      description: t.landingPage.contact.toast_success_desc,
+    });
+    reset();
+
+    // 2. Crear un FormData y llamar a la Server Action en segundo plano.
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    try {
+      // Se ejecuta la acción del servidor "fire-and-forget".
+      // No esperamos (await) su resultado para no bloquear la UI.
+      const serverResult = await sendContactMessage({ success: false, message: "" }, formData);
+      if (!serverResult.success) {
+        // Si hay un error en el servidor, lo mostramos en la consola para depuración,
+        // pero la UI del usuario ya ha respondido positivamente.
+        console.error("Error en segundo plano al enviar contacto:", serverResult.message);
+      }
+    } catch (error) {
+      console.error("Error catastrófico en segundo plano:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [state, form, t, toast]);
+  };
 
 
   return (
@@ -447,10 +450,10 @@ export default function LandingPage() {
               <Card>
                 <CardContent className="pt-6">
                   <Form {...form}>
-                    <form action={formAction} ref={formRef} className="space-y-6">
+                    <form onSubmit={handleSubmit(processForm)} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
-                          control={form.control}
+                          control={control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
@@ -463,7 +466,7 @@ export default function LandingPage() {
                           )}
                         />
                          <FormField
-                          control={form.control}
+                          control={control}
                           name="email"
                           render={({ field }) => (
                             <FormItem>
@@ -477,7 +480,7 @@ export default function LandingPage() {
                         />
                       </div>
                       <FormField
-                          control={form.control}
+                          control={control}
                           name="subject"
                           render={({ field }) => (
                             <FormItem>
@@ -490,7 +493,7 @@ export default function LandingPage() {
                           )}
                         />
                       <FormField
-                          control={form.control}
+                          control={control}
                           name="message"
                           render={({ field }) => (
                             <FormItem>
@@ -503,7 +506,10 @@ export default function LandingPage() {
                           )}
                         />
                       <div className="flex justify-center">
-                         <ContactSubmitButton />
+                         <Button type="submit" size="lg" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {t.landingPage.contact.form_cta}
+                        </Button>
                       </div>
                     </form>
                   </Form>
