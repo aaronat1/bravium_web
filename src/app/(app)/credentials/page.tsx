@@ -236,6 +236,7 @@ export default function CredentialsPage() {
         const cycleStartDate = subDays(renewalDate, 30);
         
         const count = credentials.filter(c => {
+            if (!c.issuedAt) return false;
             const issuedAtDate = c.issuedAt.toDate();
             return issuedAtDate >= cycleStartDate && issuedAtDate <= renewalDate;
         }).length;
