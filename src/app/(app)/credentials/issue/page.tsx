@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from 'zod';
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where, addDoc, updateDoc, serverTimestamp, doc } from "firebase/firestore";
 import QRCode from "qrcode.react";
 import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -20,7 +20,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { db, functions, storage } from "@/lib/firebase/config";
-import { saveIssuedCredential } from "@/actions/issuanceActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -225,12 +224,17 @@ export default function IssueCredentialPage() {
     };
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
-        if (!selectedTemplate || !user || !functions) return;
+        if (!selectedTemplate || !user || !functions || !db) return;
+
         setIsIssuing(true);
         setSubmissionError(null);
+        
+        let preliminaryDocRef;
+
         try {
             const credentialSubject: Record<string, any> = {};
 
+            // Handle file uploads first
             for (const fieldInfo of selectedTemplate.fields) {
                 const fieldName = fieldInfo.fieldName;
                 const value = data[fieldName as keyof FormData];
@@ -250,7 +254,19 @@ export default function IssueCredentialPage() {
                     credentialSubject[fieldName] = value;
                 }
             }
+
+            // Create preliminary record in Firestore
+            const issuedCredentialsCollection = collection(db, 'issuedCredentials');
+            preliminaryDocRef = await addDoc(issuedCredentialsCollection, {
+                customerId: user.uid,
+                templateId: selectedTemplate.id,
+                templateName: selectedTemplate.name,
+                recipientData: credentialSubject,
+                issuedAt: serverTimestamp(),
+                jws: '', // Initially empty
+            });
             
+            // Call the Cloud Function
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
             const result: any = await issueCredentialFunc({
                 credentialSubject,
@@ -258,16 +274,18 @@ export default function IssueCredentialPage() {
                 customerId: user.uid,
             });
             
-            const jws = result.data.verifiableCredentialJws;
-            const credentialId = result.data.credentialId;
-            if (!jws || !credentialId) {
-                throw new Error("Cloud function did not return a verifiableCredentialJws or credentialId.");
+            const { verifiableCredentialJws, transactionHash } = result.data;
+            if (!verifiableCredentialJws) {
+                throw new Error("Cloud function did not return a verifiableCredentialJws.");
             }
             
-            // The Cloud Function now handles saving the credential record.
-            // We just update the local state to show the result.
-            setIssuedCredential({jws, id: credentialId});
+            // Update the preliminary record with the JWS and blockchain proof
+            await updateDoc(preliminaryDocRef, {
+                jws: verifiableCredentialJws,
+                blockchainProof: transactionHash ? { transactionHash } : null,
+            });
 
+            setIssuedCredential({jws: verifiableCredentialJws, id: preliminaryDocRef.id});
             toast({ title: t.issueCredentialPage.toast_success_title, description: t.issueCredentialPage.toast_success_desc });
 
         } catch (error: any) {
@@ -275,10 +293,15 @@ export default function IssueCredentialPage() {
             const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
             setSubmissionError(detailedError);
             toast({ variant: "destructive", title: t.toast_error_title, description: detailedError, duration: 10000 });
+            // Optionally, delete the preliminary document if the function call failed
+            if (preliminaryDocRef) {
+                // await deleteDoc(preliminaryDocRef);
+            }
         } finally {
             setIsIssuing(false);
         }
     };
+
 
     const handleCopy = () => {
         if (!issuedCredential) return;
@@ -391,7 +414,7 @@ export default function IssueCredentialPage() {
     };
 
     const handleBatchIssue = async () => {
-        if (!csvFile || !selectedTemplate || !user || !functions) return;
+        if (!csvFile || !selectedTemplate || !user || !functions || !db) return;
 
         setIsBatchIssuing(true);
         setBatchProgress(0);
@@ -421,6 +444,7 @@ export default function IssueCredentialPage() {
 
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
             const tempResults = [];
+            const issuedCredentialsCollection = collection(db, 'issuedCredentials');
 
             for (let i = 0; i < totalRows; i++) {
                 const row = dataRows[i];
@@ -430,18 +454,36 @@ export default function IssueCredentialPage() {
                     return acc;
                 }, {} as Record<string, any>);
 
+                let batchDocRef;
                 try {
+                    // Create preliminary record
+                    batchDocRef = await addDoc(issuedCredentialsCollection, {
+                        customerId: user.uid,
+                        templateId: selectedTemplate.id,
+                        templateName: selectedTemplate.name,
+                        recipientData: credentialSubject,
+                        issuedAt: serverTimestamp(),
+                        jws: '',
+                    });
+
+                    // Call cloud function
                     const result: any = await issueCredentialFunc({
                         credentialSubject,
                         credentialType: selectedTemplate.name,
                         customerId: user.uid,
                     });
                     
-                    const jws = result.data.verifiableCredentialJws;
-                    if (!jws) throw new Error("Cloud function did not return JWS.");
+                    const { verifiableCredentialJws, transactionHash } = result.data;
+                    if (!verifiableCredentialJws) throw new Error("Cloud function did not return JWS.");
                     
-                    // The Cloud Function now handles saving the record
+                    // Update record
+                    await updateDoc(batchDocRef, {
+                        jws: verifiableCredentialJws,
+                        blockchainProof: transactionHash ? { transactionHash } : null,
+                    });
+                    
                     tempResults.push({ success: true, data: credentialSubject });
+
                 } catch (error: any) {
                     const detailedError = (error as HttpsCallableError)?.details?.originalError || error.message || "An unexpected error occurred.";
                     tempResults.push({ success: false, data: credentialSubject, error: detailedError });
@@ -699,5 +741,3 @@ export default function IssueCredentialPage() {
         </div>
     );
 }
-
-    

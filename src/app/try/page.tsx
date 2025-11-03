@@ -10,7 +10,7 @@ import * as z from 'zod';
 import QRCode from "qrcode.react";
 import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import jsPDF from "jspdf";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where, addDoc, updateDoc, serverTimestamp, doc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ReCAPTCHA from "react-google-recaptcha";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -36,7 +36,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-// Use the UID of the demo customer as the password, following the app's logic
 const DEMO_USER_EMAIL = "verifier@bravium.org";
 const DEMO_USER_PASSWORD = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
@@ -151,8 +150,14 @@ export default function TryNowPage() {
             return;
         }
 
+        if (!auth || !functions || !db) {
+            setSubmissionError("Firebase is not initialized correctly.");
+            return;
+        }
+
         setIsIssuing(true);
         setSubmissionError(null);
+        let preliminaryDocRef;
         
         try {
             // First, verify reCAPTCHA token
@@ -162,7 +167,6 @@ export default function TryNowPage() {
             }
             
             // Authenticate with demo user credentials before calling the function
-            if (!auth || !functions) throw new Error("Firebase not initialized");
             try {
               await signInWithEmailAndPassword(auth, DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
             } catch (authError) {
@@ -192,6 +196,20 @@ export default function TryNowPage() {
                 }
             }
             
+            // Create preliminary record in Firestore
+            const issuedCredentialsCollection = collection(db, 'issuedCredentials');
+            preliminaryDocRef = await addDoc(issuedCredentialsCollection, {
+                customerId: DEMO_CUSTOMER_ID,
+                templateId: selectedTemplate.id,
+                templateName: selectedTemplate.name,
+                recipientData: credentialSubject,
+                issuedAt: serverTimestamp(),
+                jws: '', // Initially empty
+                test: true,
+                emailTester: data.email,
+            });
+
+            // Call the Cloud Function
             const issueCredentialFunc = httpsCallable(functions, 'issueCredential');
             const result: any = await issueCredentialFunc({
                 credentialSubject,
@@ -201,14 +219,18 @@ export default function TryNowPage() {
                 emailTester: data.email,
             });
 
-            const jws = result.data.verifiableCredentialJws;
-            const credentialId = result.data.credentialId;
-
-            if (!jws || !credentialId) {
-                throw new Error("Cloud function did not return a valid JWS or credential ID.");
+            const { verifiableCredentialJws, transactionHash } = result.data;
+            if (!verifiableCredentialJws) {
+                throw new Error("Cloud function did not return a valid JWS.");
             }
             
-            setIssuedCredential({ jws, id: credentialId });
+             // Update the preliminary record with the JWS and blockchain proof
+            await updateDoc(preliminaryDocRef, {
+                jws: verifiableCredentialJws,
+                blockchainProof: transactionHash ? { transactionHash } : null,
+            });
+            
+            setIssuedCredential({ jws: verifiableCredentialJws, id: preliminaryDocRef.id });
             toast({ title: t.issueCredentialPage.toast_success_title, description: t.issueCredentialPage.toast_success_desc });
 
         } catch (error: any) {
@@ -484,5 +506,3 @@ export default function TryNowPage() {
         </div>
     );
 }
-
-    
