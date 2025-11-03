@@ -109,7 +109,20 @@ export default function VerifyPage() {
               throw new Error(result.error || "Failed to fetch credential details.");
             }
 
-            setCredentialDetails(result.claims?.credentialSubject || {});
+            const claims = result.claims || {};
+            const details = claims.credentialSubject || claims;
+            
+            // Filter out technical fields before setting the state
+            const fieldsToExclude = ['iat', 'exp', 'iss', 'sub', 'aud', 'jti', 'nbf', '@context', 'id', 'type', 'issuer', 'issuanceDate'];
+            const filteredDetails = Object.keys(details)
+              .filter(key => !fieldsToExclude.includes(key))
+              .reduce((obj, key) => {
+                obj[key] = details[key];
+                return obj;
+              }, {} as Record<string, any>);
+
+
+            setCredentialDetails(filteredDetails);
             setIsDetailsDialogOpen(true);
 
         } catch (error: any) {
