@@ -1,6 +1,8 @@
 'use server';
 
 import { z } from 'zod';
+import { adminDb } from '@/lib/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const ContactSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -20,7 +22,6 @@ export type ContactFormState = {
   success: boolean;
 };
 
-// This function can remain async. It's a fire-and-forget call from the main server action.
 async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<void> {
   const API_URL = 'https://smtp.maileroo.com/send';
   const API_KEY = '02ad0072053fdc168e0ca174497ecada4e47d30ec898276357c067681b100f93';
@@ -56,7 +57,6 @@ async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<vo
     });
     if (!response.ok) {
         const result = await response.json();
-        // Log the error but don't throw, so the user doesn't see a server error.
         console.error(`Failed to send contact email: ${JSON.stringify(result)}`);
     } else {
         console.log(`Contact form email sent successfully to ${TO_EMAIL}`);
@@ -82,15 +82,24 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
     };
   }
 
+  if (!adminDb) {
+    console.error('ERROR: Firebase Admin DB is not initialized. Cannot save contact message.');
+    await sendContactEmail(validatedFields.data);
+    return { message: 'Mensaje enviado, pero no se pudo guardar en la base de datos.', success: true };
+  }
+
   try {
-    // The primary action is to send the email. Storing in Firestore is secondary
-    // and was causing crashes in production due to missing admin credentials.
+    await adminDb.collection('contacts').add({
+      ...validatedFields.data,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    
+    // The primary action is to send the email.
     await sendContactEmail(validatedFields.data);
 
     // Always return success to the user if validation passes.
     return { message: 'Mensaje enviado correctamente.', success: true };
   } catch (error: any) {
-    // This catch block will now only catch very rare, unexpected errors.
     console.error(`Error processing contact message: ${error.message}`);
     return { message: `Error al procesar el mensaje: ${error.message}`, success: false };
   }

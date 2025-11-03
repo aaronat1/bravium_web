@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@/hooks/use-i18n';
 import { useEffect, useActionState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFormState } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
@@ -24,9 +24,23 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
+function ContactSubmitButton() {
+  const { isSubmitting } = useFormState();
+  const { t } = useI18n();
+
+  return (
+    <Button type="submit" size="lg" disabled={isSubmitting}>
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {t.landingPage.contact.form_cta}
+    </Button>
+  );
+}
+
+
 export default function LandingPage() {
   const { t, locale } = useI18n();
   const { toast } = useToast();
+  const router = useRouter();
 
   const formSchema = z.object({
     name: z.string().min(1, { message: t.landingPage.contact.form_validation_name }),
@@ -55,15 +69,14 @@ export default function LandingPage() {
         description: t.landingPage.contact.toast_success_desc,
       });
       form.reset();
-    } else if (state.message && !state.success) {
-      toast({
+    } else if (state.message && form.formState.isSubmitSuccessful) {
+       toast({
         variant: "destructive",
         title: t.landingPage.contact.toast_error_title,
         description: state.message,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [state, form, t, toast]);
 
 
   return (
@@ -491,10 +504,7 @@ export default function LandingPage() {
                           )}
                         />
                       <div className="flex justify-center">
-                         <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-                            {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {t.landingPage.contact.form_cta}
-                        </Button>
+                         <ContactSubmitButton />
                       </div>
                     </form>
                   </Form>
