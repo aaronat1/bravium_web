@@ -41,7 +41,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 const DEMO_USER_EMAIL = process.env.NEXT_PUBLIC_DEMO_USER_EMAIL!;
 const DEMO_USER_PASSWORD = process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD!;
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
     let shape: Record<string, z.ZodType<any, any>> = {
@@ -421,13 +421,17 @@ export default function TryNowPage() {
                                     </Alert>
 
                                     <div className="flex flex-col items-center gap-4">
-                                        <ReCAPTCHA
-                                            sitekey={RECAPTCHA_SITE_KEY}
-                                            onChange={(token) => setRecaptchaToken(token)}
-                                            onExpired={() => setRecaptchaToken(null)}
-                                        />
+                                        {RECAPTCHA_SITE_KEY ? (
+                                            <ReCAPTCHA
+                                                sitekey={RECAPTCHA_SITE_KEY}
+                                                onChange={(token) => setRecaptchaToken(token)}
+                                                onExpired={() => setRecaptchaToken(null)}
+                                            />
+                                        ) : (
+                                            <p className="text-sm text-destructive">reCAPTCHA no está configurado. Contacta con el administrador.</p>
+                                        )}
 
-                                        <Button type="submit" disabled={isIssuing || !selectedTemplate || !recaptchaToken} size="lg">
+                                        <Button type="submit" disabled={isIssuing || !selectedTemplate || !recaptchaToken || !RECAPTCHA_SITE_KEY} size="lg">
                                             {isIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
                                             {t.issueCredentialPage.issue_button}
                                         </Button>
