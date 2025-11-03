@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -102,7 +103,7 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
     // Then, send the email notification
     await sendContactEmail(validatedFields.data);
 
-    revalidatePath('/');
+    // revalidatePath('/'); // This causes a client-side exception in production on a static page.
     return { message: 'Mensaje enviado correctamente.', success: true };
   } catch (error: any) {
     return { message: `Error al procesar el mensaje: ${error.message}`, success: false };
