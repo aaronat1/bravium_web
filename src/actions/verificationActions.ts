@@ -4,10 +4,6 @@
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase/admin';
 
-// This file is currently not used, but is kept for future server-side verification logic.
-// The client-side verification flow calls the Cloud Function endpoint directly.
-// We can implement a server action wrapper here if needed.
-
 export type CredentialDetails = {
     id: string;
     templateName: string;
@@ -40,8 +36,6 @@ export async function getCredentialDetailsByJws(jws: string): Promise<{ success:
         const doc = snapshot.docs[0];
         const data = doc.data();
         
-        // This is the fix: convert the Firestore Timestamp to a plain object
-        // before sending it to the client component.
         const issuedAtObject = {
             _seconds: data.issuedAt._seconds,
             _nanoseconds: data.issuedAt._nanoseconds,

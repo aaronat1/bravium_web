@@ -77,13 +77,6 @@ export async function issueDemoCredential(
             }
         }
         
-        // AQUÍ SE LLAMA A LA CLOUD FUNCTION `issueCredential` DESDE EL SERVIDOR DE NEXT.JS
-        // Se le pasa un objeto con la siguiente información:
-        // - credentialSubject: Un objeto con los datos del formulario (ej: { studentName: 'Jane Doe', ... })
-        // - credentialType: El nombre de la plantilla (ej: "Certificado de Participación")
-        // - customerId: El ID del cliente de demostración.
-        // - test: true, para marcar que es una prueba.
-        // - emailTester: el email del usuario de la demo.
         const issueCredentialFunc = getFunctions().httpsCallable('issueCredential');
         const result = await issueCredentialFunc({
             credentialSubject: credentialSubject,
@@ -98,7 +91,6 @@ export async function issueDemoCredential(
             throw new Error("Cloud function did not return a verifiableCredentialJws.");
         }
         
-        // 3. Guardar el registro de la credencial emitida (incluyendo la actualización del timestamp del rate limit)
         await rateLimitRef.set({ timestamp: FieldValue.serverTimestamp() });
 
         const savedCredential = await saveIssuedCredential({
@@ -120,7 +112,6 @@ export async function issueDemoCredential(
     } catch (error: any) {
         console.error("Error in issueDemoCredential:", error);
         
-        // Extraer el mensaje de error de la Cloud Function si está disponible
         const functionErrorMessage = error.details?.message || error.message;
 
         return { success: false, message: functionErrorMessage || "An unexpected error occurred during demo issuance." };

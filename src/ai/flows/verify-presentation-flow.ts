@@ -5,25 +5,21 @@
  * This file is now deprecated in favor of a direct verification flow.
  */
 
-// This entire flow is deprecated and will be removed in a future update.
-// The new verification logic is handled client-side by calling the `verifyCredential`
-// cloud function directly.
-
 import { adminDb } from '@/lib/firebase/admin';
 
-if (!adminDb) {
-  throw new Error("Firebase Admin DB is not initialized. Verification flow will fail.");
-}
-
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-if (!PROJECT_ID) {
-    throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set.");
-}
 
 // Function is now a simple server action, no Genkit needed.
 export async function generateRequest(
   { baseUrl }: { baseUrl: string }
 ): Promise<{ requestUrl: string; state: string }> {
+
+  if (!adminDb) {
+    throw new Error("Firebase Admin DB is not initialized. Verification flow will fail.");
+  }
+  if (!PROJECT_ID) {
+    throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set.");
+  }
 
   const state = Math.random().toString(36).substring(2);
   const functionUrl = `https://us-central1-${PROJECT_ID}.cloudfunctions.net/openid4vp`;

@@ -7,12 +7,8 @@ import { generateTemplate } from '@/ai/flows/generate-template-flow';
 import type { GenerateTemplateOutput } from '@/ai/flows/generate-template-flow';
 import { revalidatePath } from 'next/cache';
 
-const templatesCollection = adminDb?.collection('credentialSchemas');
-const credentialsCollection = adminDb?.collection('issuedCredentials');
-
-if (!adminDb) {
-  console.warn("Firebase Admin DB is not initialized. Template actions will fail.");
-}
+const getTemplatesCollection = () => adminDb?.collection('credentialSchemas');
+const getCredentialsCollection = () => adminDb?.collection('issuedCredentials');
 
 // Zod Schema for validation from the client
 const FieldSchema = z.object({
@@ -39,6 +35,7 @@ export type TemplateState = {
 
 // --- CREATE TEMPLATE ---
 export async function createTemplate(prevState: TemplateState, formData: FormData): Promise<TemplateState> {
+  const templatesCollection = getTemplatesCollection();
   if (!templatesCollection) {
     return {
       message: 'Error de configuración del servidor: la base de datos no está disponible.',
@@ -73,6 +70,7 @@ export async function createTemplate(prevState: TemplateState, formData: FormDat
 
 // --- UPDATE TEMPLATE ---
 export async function updateTemplate(prevState: TemplateState, formData: FormData): Promise<TemplateState> {
+    const templatesCollection = getTemplatesCollection();
     if (!templatesCollection) {
         return { message: 'Error de configuración del servidor.', success: false };
     }
@@ -109,6 +107,9 @@ export async function updateTemplate(prevState: TemplateState, formData: FormDat
 
 // --- DELETE TEMPLATE ---
 export async function deleteTemplate(templateId: string): Promise<{ success: boolean; message: string }> {
+  const templatesCollection = getTemplatesCollection();
+  const credentialsCollection = getCredentialsCollection();
+  
   if (!templatesCollection || !credentialsCollection || !adminDb) {
     return { message: 'Error de configuración del servidor.', success: false };
   }

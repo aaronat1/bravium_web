@@ -59,13 +59,11 @@ async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<vo
     if (!response.ok) {
         const result = await response.json();
         console.error(`Failed to send contact email: ${JSON.stringify(result)}`);
-        // No lanzamos error aquí para que el guardado en DB pueda continuar si es posible
     } else {
         console.log(`Contact form email sent successfully to ${TO_EMAIL}`);
     }
   } catch (error) {
     console.error("Could not send contact email:", error);
-    // No relanzamos el error para no interrumpir el flujo principal
   }
 }
 
@@ -85,7 +83,7 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
     };
   }
 
-  // Comprobar si la base de datos está disponible ANTES de usarla
+  // Check if adminDb is initialized before using it
   if (adminDb) {
     try {
       await adminDb.collection('contacts').add({
@@ -94,16 +92,13 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
       });
     } catch (dbError: any) {
        console.error(`Error saving contact message to Firestore: ${dbError.message}`);
-       // Opcional: podrías devolver un error aquí si el guardado en DB es crítico
-       // return { message: `Error al guardar en la base de datos: ${dbError.message}`, success: false };
+       // We can decide to return an error if DB save is critical, but for now, we let the email send.
     }
   } else {
-    console.warn('ADVERTENCIA: Firebase Admin DB no está inicializado. El mensaje de contacto no se guardará en la base de datos.');
+    console.warn('WARNING: Firebase Admin DB is not initialized. Contact message will not be saved to the database.');
   }
   
-  // Enviar el email independientemente del resultado de la base de datos
   await sendContactEmail(validatedFields.data);
 
-  // Devolver siempre éxito al cliente si la validación pasa para evitar el crash del lado del cliente
   return { message: 'Mensaje enviado correctamente.', success: true };
 }

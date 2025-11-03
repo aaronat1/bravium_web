@@ -173,7 +173,7 @@ export type UpdateCustomerState = {
 };
 
 export async function updateCustomer(prevState: UpdateCustomerState, formData: FormData): Promise<UpdateCustomerState> {
-  if (!adminDb) {
+  if (!adminDb || !adminAuth) {
     return {
       message: 'Error de configuración: Las funcionalidades de administrador no están disponibles.',
       success: false,
@@ -204,9 +204,7 @@ export async function updateCustomer(prevState: UpdateCustomerState, formData: F
       subscriptionStatus,
     });
     // Also update the display name in Firebase Auth
-    if (adminAuth) {
-        await adminAuth.updateUser(id, { displayName: name });
-    }
+    await adminAuth.updateUser(id, { displayName: name });
     return { message: 'Cliente actualizado correctamente.', success: true };
   } catch (error: any) {
     return { message: `Error al actualizar el cliente: ${error.message}`, success: false };

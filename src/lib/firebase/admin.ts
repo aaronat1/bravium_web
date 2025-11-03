@@ -6,15 +6,12 @@ import type { Firestore } from 'firebase-admin/firestore';
 let adminAuth: Auth | undefined;
 let adminDb: Firestore | undefined;
 
-// Lee las credenciales de las variables de entorno
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-// El private key necesita un reemplazo por los saltos de línea
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-// Inicializa Firebase Admin SÓLO si no está ya inicializado
+// This check prevents Next.js from trying to re-initialize the app on every hot-reload
 if (!admin.apps.length) {
-  // Asegúrate de que todas las variables de entorno necesarias existan
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
   if (projectId && clientEmail && privateKey) {
     try {
       admin.initializeApp({
@@ -24,20 +21,21 @@ if (!admin.apps.length) {
           privateKey,
         }),
       });
-      console.log('Firebase Admin SDK inicializado correctamente.');
+      console.log('Firebase Admin SDK initialized successfully.');
       adminAuth = admin.auth();
       adminDb = admin.firestore();
     } catch (error: any) {
-      console.error('ERROR AL INICIALIZAR FIREBASE ADMIN:', error.message);
-      // adminDb y adminAuth se quedarán como `undefined` si falla la inicialización
+      console.error('ERROR INITIALIZING FIREBASE ADMIN:', error.message);
     }
   } else {
-    console.warn('ADVERTENCIA: Las credenciales del SDK de Admin no están configuradas completamente en las variables de entorno. Las funciones de administrador podrían no estar disponibles.');
+    console.warn('WARNING: Firebase Admin credentials are not fully set in environment variables. Admin features might be unavailable.');
   }
 } else {
-  // Si la app ya está inicializada, simplemente obtenemos las instancias
-  adminAuth = admin.app().auth();
-  adminDb = admin.app().firestore();
+  // If the app is already initialized, get the instances. This is common in development with hot-reloading.
+  if (admin.apps[0]) {
+    adminAuth = admin.apps[0].auth();
+    adminDb = admin.apps[0].firestore();
+  }
 }
 
 export { adminAuth, adminDb };
