@@ -297,7 +297,6 @@ export default function TryNowPage() {
         }
     };
 
-
     return (
         <div className="flex flex-col min-h-screen bg-background">
             <LandingHeader />
@@ -417,4 +416,73 @@ export default function TryNowPage() {
                                                 <AlertTitle>reCAPTCHA Error</AlertTitle>
                                                 <AlertDescription>
                                                     The reCAPTCHA site key is not configured. Please contact the site administrator.
-                                                </Aler
+                                                </AlertDescription>
+                                             </Alert>
+                                        )}
+                                        <Button type="submit" disabled={isIssuing || !recaptchaToken || !selectedTemplate}>
+                                            {isIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
+                                            {t.issueCredentialPage.issue_button}
+                                        </Button>
+                                    </div>
+                                </form>
+                            </Form>
+    
+                            {submissionError && (
+                                <Alert variant="destructive" className="mt-6">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertTitle>Error Detallado</AlertTitle>
+                                    <AlertDescription>
+                                        <pre className="mt-2 text-xs whitespace-pre-wrap font-mono bg-transparent">
+                                            {submissionError}
+                                        </pre>
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
+            <LandingFooter />
+
+            <Dialog open={!!issuedCredential} onOpenChange={(open) => !open && setIssuedCredential(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{t.tryNowPage.result_dialog_title}</DialogTitle>
+                         <DialogDescription>{t.tryNowPage.result_dialog_desc}</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center gap-6 py-4">
+                        <div ref={qrCodeRef} className="p-4 bg-white rounded-lg border">
+                            <QRCode value={issuedCredential?.jws || ''} size={256} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <Button variant="outline" onClick={handleDownloadPdf}>
+                                <Download className="mr-2 h-4 w-4" /> {t.credentialsPage.download_pdf_button}
+                            </Button>
+                             {isShareSupported && (
+                                <Button variant="outline" onClick={handleShare}>
+                                    <Share2 className="mr-2 h-4 w-4" /> {t.credentialsPage.share_button}
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="w-full space-y-2">
+                             <Label htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</Label>
+                            <div className="relative">
+                                <Textarea id="jws-output" readOnly value={issuedCredential?.jws || ""} rows={6} className="font-mono text-xs pr-10"/>
+                                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={handleCopy}>
+                                    {hasCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={() => router.push('/verify')}>{t.issueCredentialPage.back_to_list_button}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+        </div>
+    );
+}
+
+    
