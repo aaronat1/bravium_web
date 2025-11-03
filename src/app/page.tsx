@@ -15,25 +15,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@/hooks/use-i18n';
 import { useEffect } from 'react';
-import { useForm, useFormState } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { sendContactMessage, type ContactFormState } from '@/actions/contactActions';
+import { sendContactMessage } from '@/actions/contactActions';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-
-function ContactSubmitButton() {
-  const { pending } = useFormState();
-  const { t } = useI18n();
-  return (
-    <Button type="submit" size="lg" disabled={pending}>
-      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {t.landingPage.contact.form_cta}
-    </Button>
-  );
-}
 
 
 export default function LandingPage() {
@@ -69,7 +57,6 @@ export default function LandingPage() {
         form.reset();
         router.refresh();
     }
-    // We only want this effect to run on successful submission
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formState.isSubmitSuccessful]);
 
@@ -89,7 +76,6 @@ export default function LandingPage() {
         description: result.message || t.landingPage.contact.toast_error_desc,
       });
     }
-    // Success case is handled by the useEffect above
   };
 
 
@@ -536,3 +522,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
