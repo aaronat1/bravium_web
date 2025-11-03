@@ -36,9 +36,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-// Hardcoded demo user credentials as per the new requirement for authentication
+// Use the UID of the demo customer as the password, following the app's logic
 const DEMO_USER_EMAIL = "demo@bravium.es";
-const DEMO_USER_PASSWORD = "password-demo-2024";
+const DEMO_USER_PASSWORD = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 
 
@@ -162,7 +162,12 @@ export default function TryNowPage() {
             
             // Authenticate with demo user credentials before calling the function
             if (!auth || !functions) throw new Error("Firebase not initialized");
-            await signInWithEmailAndPassword(auth, DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
+            try {
+              await signInWithEmailAndPassword(auth, DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
+            } catch (authError) {
+              console.error("Demo authentication failed:", authError);
+              throw new Error(`Demo authentication failed: ${(authError as Error).message}`);
+            }
 
             const credentialSubject: Record<string, any> = {};
 
