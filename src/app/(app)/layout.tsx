@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -14,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -40,6 +42,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 md:ml-64">
         <header className="flex h-20 items-center justify-end px-6 border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
             <div className="flex items-center gap-4">
+              <ModeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">

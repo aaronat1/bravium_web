@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useI18n } from "@/hooks/use-i18n";
+import { ModeToggle } from "./mode-toggle";
 
 export default function LandingHeader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +53,7 @@ export default function LandingHeader() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+           <ModeToggle />
            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -72,7 +75,8 @@ export default function LandingHeader() {
           </Button>
         </div>
 
-        <div className="md:hidden">
+        <div className="md:hidden flex items-center gap-2">
+          <ModeToggle />
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
