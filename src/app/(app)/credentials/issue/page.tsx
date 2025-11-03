@@ -225,7 +225,7 @@ export default function IssueCredentialPage() {
     };
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
-        if (!selectedTemplate || !user) return;
+        if (!selectedTemplate || !user || !functions) return;
         setIsIssuing(true);
         setSubmissionError(null);
         try {
@@ -400,7 +400,7 @@ export default function IssueCredentialPage() {
     };
 
     const handleBatchIssue = async () => {
-        if (!csvFile || !selectedTemplate || !user) return;
+        if (!csvFile || !selectedTemplate || !user || !functions) return;
 
         setIsBatchIssuing(true);
         setBatchProgress(0);
@@ -716,4 +716,5 @@ export default function IssueCredentialPage() {
     );
 }
 
+    
     

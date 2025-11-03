@@ -12,7 +12,6 @@ import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import jsPDF from "jspdf";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { signIn, signOut } from "@/lib/firebase/auth";
 import ReCAPTCHA from "react-google-recaptcha";
 
 
@@ -470,3 +469,5 @@ export default function TryNowPage() {
         </div>
     );
 }
+
+    
