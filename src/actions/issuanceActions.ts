@@ -93,6 +93,9 @@ export async function issueDemoCredential(
         
         await rateLimitRef.set({ timestamp: FieldValue.serverTimestamp() });
 
+        // NOTE: The Cloud Function itself now saves the credential record.
+        // We might want to remove this redundant save operation in the future.
+        // For now, we keep it to ensure the 'id' is returned to the client for the PDF generation.
         const savedCredential = await saveIssuedCredential({
             templateId: templateId,
             templateName: templateName,
