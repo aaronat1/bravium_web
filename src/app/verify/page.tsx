@@ -17,7 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getCredentialDetailsByJws, type CredentialDetails } from "@/actions/verificationActions";
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from "@/components/ui/table";
 
 
@@ -48,7 +47,7 @@ export default function VerifyPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [activeTab, setActiveTab] = useState("jws");
 
-  const [credentialDetails, setCredentialDetails] = useState<CredentialDetails | null>(null);
+  const [credentialDetails, setCredentialDetails] = useState<Record<string, any> | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isFetchingDetails, startFetchingDetails] = useTransition();
 
@@ -58,6 +57,7 @@ export default function VerifyPage() {
     
     // Clean the JWS string by removing all whitespace, including newlines
     const cleanedJws = jws.replace(/\s/g, '');
+    setJwsInput(cleanedJws);
     
     setIsCameraOn(false); // Turn off camera on verification
     setPageState('verifying');
@@ -96,18 +96,29 @@ export default function VerifyPage() {
   const handleShowDetails = async () => {
     if (!jwsInput) return;
     startFetchingDetails(async () => {
-      const cleanedJws = jwsInput.replace(/\s/g, '');
-      const result = await getCredentialDetailsByJws(cleanedJws);
-      if (result.success && result.data) {
-        setCredentialDetails(result.data);
-        setIsDetailsDialogOpen(true);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.message || "Could not fetch credential details.",
-        });
-      }
+        try {
+            const cleanedJws = jwsInput.replace(/\s/g, '');
+            const response = await fetch(VERIFY_ENDPOINT, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ jws: cleanedJws })
+            });
+
+            const result = await response.json();
+             if (!response.ok) {
+              throw new Error(result.error || "Failed to fetch credential details.");
+            }
+
+            setCredentialDetails(result.claims?.credentialSubject || {});
+            setIsDetailsDialogOpen(true);
+
+        } catch (error: any) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: error.message || "Could not fetch credential details.",
+            });
+        }
     });
   };
 
@@ -365,7 +376,7 @@ export default function VerifyPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Object.entries(credentialDetails.recipientData).map(([key, value]) => (
+                  {Object.entries(credentialDetails).map(([key, value]) => (
                     <TableRow key={key}>
                       <TableCell className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</TableCell>
                       <TableCell>
@@ -396,7 +407,3 @@ export default function VerifyPage() {
     </div>
   );
 }
-
-    
-
-    
