@@ -1,40 +1,43 @@
-import admin from 'firebase-admin';
-import { getApps } from 'firebase-admin/app';
+
+import * as admin from 'firebase-admin';
 import type { Auth } from 'firebase-admin/auth';
 import type { Firestore } from 'firebase-admin/firestore';
-
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-// The private key must be wrapped in quotes in the .env file to handle newlines correctly.
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
 let adminAuth: Auth | undefined;
 let adminDb: Firestore | undefined;
 
+// Lee las credenciales de las variables de entorno
+const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+// El private key necesita un reemplazo por los saltos de línea
+const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-if (!getApps().length) {
-    if (projectId && clientEmail && privateKey) {
-        try {
-            admin.initializeApp({
-              credential: admin.credential.cert({
-                projectId,
-                clientEmail,
-                privateKey,
-              }),
-            });
-            adminAuth = admin.auth();
-            adminDb = admin.firestore();
-        } catch (error) {
-            console.error("Error initializing Firebase Admin SDK in main app:", error);
-        }
-    } else {
-        console.warn('WARNING: Admin SDK credentials not set in the root .env file. Admin features may not be available in Server Actions.');
+// Inicializa Firebase Admin SÓLO si no está ya inicializado
+if (!admin.apps.length) {
+  // Asegúrate de que todas las variables de entorno necesarias existan
+  if (projectId && clientEmail && privateKey) {
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+      console.log('Firebase Admin SDK inicializado correctamente.');
+      adminAuth = admin.auth();
+      adminDb = admin.firestore();
+    } catch (error: any) {
+      console.error('ERROR AL INICIALIZAR FIREBASE ADMIN:', error.message);
+      // adminDb y adminAuth se quedarán como `undefined` si falla la inicialización
     }
+  } else {
+    console.warn('ADVERTENCIA: Las credenciales del SDK de Admin no están configuradas completamente en las variables de entorno. Las funciones de administrador podrían no estar disponibles.');
+  }
 } else {
-    // If the app is already initialized, get the existing instances.
-    const app = admin.app();
-    adminAuth = admin.auth(app);
-    adminDb = admin.firestore(app);
+  // Si la app ya está inicializada, simplemente obtenemos las instancias
+  adminAuth = admin.app().auth();
+  adminDb = admin.app().firestore();
 }
 
 export { adminAuth, adminDb };
