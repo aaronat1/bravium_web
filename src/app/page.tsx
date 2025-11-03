@@ -3,7 +3,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Check, Loader2, Rocket, ShieldCheck, Wallet, FilePlus2, Send, Globe, Layers, X, FileSignature } from 'lucide-react';
@@ -11,10 +10,9 @@ import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@/hooks/use-i18n';
-import { useEffect, useActionState, useRef } from 'react';
+import { useEffect, useRef, useActionState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useFormStatus } from 'react-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -70,7 +68,7 @@ export default function LandingPage() {
         description: t.landingPage.contact.toast_success_desc,
       });
       form.reset();
-    } else if (state.message && state.errors === undefined) { // Show error toast only if it's not a validation error
+    } else if (state.message && !state.errors) {
        toast({
         variant: "destructive",
         title: t.landingPage.contact.toast_error_title,

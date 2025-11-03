@@ -91,7 +91,6 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
     };
   }
 
-  // Check if adminDb is initialized before using it
   if (adminDb) {
     try {
       await adminDb.collection('contacts').add({
@@ -100,7 +99,6 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
       });
     } catch (dbError: any) {
        console.error(`Error saving contact message to Firestore: ${dbError.message}`);
-       // Don't block email sending if DB fails, but return an error to the user
        return {
            message: `No se pudo guardar el mensaje en la base de datos: ${dbError.message}`,
            success: false,
@@ -108,10 +106,6 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
     }
   } else {
     console.warn('WARNING: Firebase Admin DB is not initialized. Contact message will not be saved to the database.');
-     return {
-        message: 'La configuración del servidor no permite guardar el mensaje. Por favor, inténtelo más tarde.',
-        success: false,
-     }
   }
   
   const emailResult = await sendContactEmail(validatedFields.data);
