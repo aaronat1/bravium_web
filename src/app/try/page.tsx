@@ -37,7 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 // Use the UID of the demo customer as the password, following the app's logic
-const DEMO_USER_EMAIL = "demo@bravium.es";
+const DEMO_USER_EMAIL = "verifier@bravium.org";
 const DEMO_USER_PASSWORD = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 
@@ -61,6 +61,7 @@ const getBaseSchema = (fields: CredentialTemplate['fields'] | undefined) => {
                     if (field.required) {
                         stringSchema = stringSchema.min(1, {message: "This field is required"});
                     } else {
+                        // For optional fields, we explicitly mark them as optional in Zod
                         stringSchema = stringSchema.optional();
                     }
                     fieldSchema = stringSchema;
@@ -416,74 +417,4 @@ export default function TryNowPage() {
                                                 <AlertTitle>reCAPTCHA Error</AlertTitle>
                                                 <AlertDescription>
                                                     The reCAPTCHA site key is not configured. Please contact the site administrator.
-                                                </AlertDescription>
-                                            </Alert>
-                                        )}
-
-                                        <Button type="submit" disabled={isIssuing || !selectedTemplate || !recaptchaToken || !RECAPTCHA_SITE_KEY} size="lg">
-                                            {isIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
-                                            {t.issueCredentialPage.issue_button}
-                                        </Button>
-                                    </div>
-                                </form>
-                            </Form>
-    
-                            {submissionError && (
-                                <Alert variant="destructive" className="mt-6">
-                                    <AlertTriangle className="h-4 w-4" />
-                                    <AlertTitle>Error Detallado</AlertTitle>
-                                    <AlertDescription>
-                                        <pre className="mt-2 text-xs whitespace-pre-wrap font-mono bg-transparent">
-                                            {submissionError}
-                                        </pre>
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                        </CardContent>
-                    </Card>
-                 </div>
-            </main>
-            <LandingFooter />
-
-            <Dialog open={!!issuedCredential} onOpenChange={(open) => !open && setIssuedCredential(null)}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{t.issueCredentialPage.result_dialog_title}</DialogTitle>
-                         <DialogDescription>{t.tryNowPage.result_dialog_desc}</DialogDescription>
-                    </DialogHeader>
-                    <div className="flex flex-col items-center gap-6 py-4">
-                        <div ref={qrCodeRef} className="p-4 bg-white rounded-lg border">
-                            <QRCode value={issuedCredential?.jws || ''} size={256} />
-                        </div>
-                        <div className="flex items-center gap-2">
-                             <Button variant="outline" onClick={handleDownloadPdf}>
-                                <Download className="mr-2 h-4 w-4" /> {t.credentialsPage.download_pdf_button}
-                            </Button>
-                             {isShareSupported && (
-                                <Button variant="outline" onClick={handleShare}>
-                                    <Share2 className="mr-2 h-4 w-4" /> {t.credentialsPage.share_button}
-                                </Button>
-                            )}
-                        </div>
-
-                        <div className="w-full space-y-2">
-                             <Label htmlFor="jws-output">{t.issueCredentialPage.result_jws_label}</Label>
-                            <div className="relative">
-                                <Textarea id="jws-output" readOnly value={issuedCredential?.jws || ""} rows={6} className="font-mono text-xs pr-10"/>
-                                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={handleCopy}>
-                                    {hasCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                         <Button onClick={() => setIssuedCredential(null)}>{t.issueCredentialPage.close_button}</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-        </div>
-    );
-}
-
-    
+                                                </Aler
