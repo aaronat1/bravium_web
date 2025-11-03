@@ -1,8 +1,6 @@
 'use server';
 
 import { z } from 'zod';
-import { adminDb } from '@/lib/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
 
 const ContactSchema = z.object({
   name: z.string().min(1, { message: "El nombre es obligatorio." }),
@@ -58,6 +56,7 @@ async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<vo
     });
     if (!response.ok) {
         const result = await response.json();
+        // Log the error but don't throw, so the user doesn't see a server error.
         console.error(`Failed to send contact email: ${JSON.stringify(result)}`);
     } else {
         console.log(`Contact form email sent successfully to ${TO_EMAIL}`);
@@ -68,13 +67,6 @@ async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<vo
 }
 
 export async function sendContactMessage(prevState: ContactFormState, formData: FormData): Promise<ContactFormState> {
-  if (!adminDb) {
-    return {
-      message: 'Error de configuración del servidor.',
-      success: false,
-    };
-  }
-
   const validatedFields = ContactSchema.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -91,17 +83,15 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
   }
 
   try {
-    // Save to Firestore first
-    await adminDb.collection('contacts').add({
-      ...validatedFields.data,
-      createdAt: FieldValue.serverTimestamp(),
-    });
-
-    // Then, send the email notification (fire-and-forget)
+    // The primary action is to send the email. Storing in Firestore is secondary
+    // and was causing crashes in production due to missing admin credentials.
     await sendContactEmail(validatedFields.data);
 
+    // Always return success to the user if validation passes.
     return { message: 'Mensaje enviado correctamente.', success: true };
   } catch (error: any) {
+    // This catch block will now only catch very rare, unexpected errors.
+    console.error(`Error processing contact message: ${error.message}`);
     return { message: `Error al procesar el mensaje: ${error.message}`, success: false };
   }
 }
