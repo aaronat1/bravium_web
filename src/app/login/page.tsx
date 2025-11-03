@@ -7,7 +7,7 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ShieldCheck, Loader2, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, Loader2, Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -149,6 +149,12 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
+           <Button variant="link" asChild className="mt-4 w-full">
+                <Link href="/">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Volver al inicio
+                </Link>
+            </Button>
         </CardContent>
       </Card>
     </main>
