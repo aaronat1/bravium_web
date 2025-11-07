@@ -1,6 +1,5 @@
 
 'use server';
-export const runtime = 'nodejs'; // ¡No Edge!
 
 import { z } from 'zod';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
