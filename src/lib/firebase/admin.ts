@@ -1,41 +1,51 @@
 
-import * as admin from 'firebase-admin';
-import type { Auth } from 'firebase-admin/auth';
-import type { Firestore } from 'firebase-admin/firestore';
+// lib/firebase/admin.ts
+// Archivo **sólo** de servidor
+import 'server-only';
+import { getApps, initializeApp, cert, AppOptions } from 'firebase-admin/app';
+import { getAuth, Auth } from 'firebase-admin/auth';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-let adminAuth: Auth | undefined;
-let adminDb: Firestore | undefined;
-
-// This check prevents Next.js from trying to re-initialize the app on every hot-reload
-if (!admin.apps.length) {
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  if (projectId && clientEmail && privateKey) {
-    try {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId,
-          clientEmail,
-          privateKey,
-        }),
-      });
-      console.log('Firebase Admin SDK initialized successfully.');
-      adminAuth = admin.auth();
-      adminDb = admin.firestore();
-    } catch (error: any) {
-      console.error('ERROR INITIALIZING FIREBASE ADMIN:', error.message);
-    }
-  } else {
-    console.warn('WARNING: Firebase Admin credentials are not fully set in environment variables. Admin features might be unavailable.');
-  }
-} else {
-  // If the app is already initialized, get the instances. This is common in development with hot-reloading.
-  if (admin.apps[0]) {
-    adminAuth = admin.apps[0].auth();
-    adminDb = admin.apps[0].firestore();
-  }
+function readEnv(name: string) {
+  const v = process.env[name];
+  if (!v) console.error(`[firebase/admin] Falta la env ${name}`);
+  return v;
 }
 
-export { adminAuth, adminDb };
+// ❌ NO uses NEXT_PUBLIC_ aquí
+const projectId   = readEnv('FIREBASE_PROJECT_ID');
+const clientEmail = readEnv('FIREBASE_CLIENT_EMAIL');
+
+let privateKey = readEnv('FIREBASE_PRIVATE_KEY');
+// Vercel/otros guardan saltos como "\n"
+if (privateKey) {
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.slice(1, -1);
+  }
+  privateKey = privateKey.replace(/\\n/g, '\n');
+}
+
+const options: AppOptions =
+  projectId && clientEmail && privateKey
+    ? { credential: cert({ projectId, clientEmail, privateKey }) }
+    : {};
+
+const app = getApps().length ? getApps()[0] : initializeApp(options);
+
+export const adminAuth: Auth | undefined = (() => {
+  try {
+    return getAuth(app);
+  } catch (e) {
+    console.error('[firebase/admin] Error obteniendo Auth:', e);
+    return undefined;
+  }
+})();
+
+export const adminDb: Firestore | undefined = (() => {
+  try {
+    return getFirestore(app);
+  } catch (e) {
+    console.error('[firebase/admin] Error obteniendo Firestore:', e);
+    return undefined;
+  }
+})();
