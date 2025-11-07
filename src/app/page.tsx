@@ -71,10 +71,10 @@ export default function LandingPage() {
       if (!serverResult.success) {
         // Si hay un error en el servidor, lo mostramos en la consola para depuración,
         // pero la UI del usuario ya ha respondido positivamente.
-        console.error("Error en segundo plano al enviar contacto:", serverResult.message);
+        console.error("Error sending contact form in background:", serverResult.message);
       }
     } catch (error) {
-      console.error("Error catastrófico en segundo plano:", error);
+      console.error("Catastrophic background error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -330,7 +330,7 @@ export default function LandingPage() {
                 </CardContent>
                 <CardFooter>
                     <Button asChild variant="outline" className="w-full">
-                        <Link href="#contact">{t.landingPage.pricing.cta_choose_plan}</Link>
+                        <Link href="https://buy.stripe.com/test_28E28qgAceWJgMNb0t1wY00">{t.landingPage.pricing.cta_choose_plan}</Link>
                     </Button>
                 </CardFooter>
               </Card>
@@ -354,7 +354,7 @@ export default function LandingPage() {
                 </CardContent>
                  <CardFooter>
                     <Button asChild className="w-full">
-                       <Link href="#contact">{t.landingPage.pricing.cta_choose_plan}</Link>
+                       <Link href="https://buy.stripe.com/test_8x27sK2JmcOBeEF1pT1wY01">{t.landingPage.pricing.cta_choose_plan}</Link>
                     </Button>
                 </CardFooter>
               </Card>
