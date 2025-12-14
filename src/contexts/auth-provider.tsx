@@ -66,6 +66,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setCustomerData(null);
         setLoading(false);
       }
+    }, (error) => {
+        // This error handler for onAuthStateChanged itself catches initialization errors
+        console.error("Error in onAuthStateChanged:", error);
+        setUser(null);
+        setCustomerData(null);
+        setLoading(false);
     });
 
     // Clean up auth subscription
