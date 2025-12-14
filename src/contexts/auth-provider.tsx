@@ -32,6 +32,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Si Firebase no está inicializado (faltan envs), no bloquees la UI
+    if (!auth || !db) {
+      console.error("Firebase auth/db not initialized. Check NEXT_PUBLIC_FIREBASE_* env vars.");
+      setLoading(false);
+      setUser(null);
+      setCustomerData(null);
+      return;
+    }
+
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
