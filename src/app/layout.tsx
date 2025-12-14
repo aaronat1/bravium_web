@@ -1,11 +1,8 @@
 
 import type {Metadata} from 'next';
 import './globals.css';
-import { AuthProvider } from '@/contexts/auth-provider';
-import { Toaster } from "@/components/ui/toaster"
-import { I18nProvider } from '@/contexts/i18n-provider';
-import CookieConsent from '@/components/cookie-consent';
-import { ThemeProvider } from '@/components/theme-provider';
+import Providers from './providers';
+
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bravium.es';
 
@@ -76,21 +73,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <I18nProvider>
-              {children}
-              <CookieConsent />
-            </I18nProvider>
-          </AuthProvider>
-          <Toaster />
-        </ThemeProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
+
