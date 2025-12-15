@@ -1,11 +1,12 @@
+# Settings to manage and configure a Firebase App Hosting backend.
+# https://firebase.google.com/docs/app-hosting/configure
 specVersion: v1alpha1
-sourceDir: app
 runConfig:
   cpu: 1
   memoryMiB: 1024
   maxInstances: 2
 build:
+  # Do not change this value
   builder: "us-central1-docker.pkg.dev/firestack-build/buildpacks/builder"
 iam:
   invoker: ["public"]
-

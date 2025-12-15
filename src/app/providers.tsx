@@ -14,13 +14,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       enableSystem={false}
       disableTransitionOnChange
     >
-      <AuthProvider>
-        <I18nProvider>
+      <I18nProvider>
+        <AuthProvider>
           {children}
+          <Toaster />
           <CookieConsent />
-        </I18nProvider>
-      </AuthProvider>
-      <Toaster />
+        </AuthProvider>
+      </I18nProvider>
     </ThemeProvider>
   );
 }
