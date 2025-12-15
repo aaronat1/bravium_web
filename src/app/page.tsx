@@ -184,7 +184,7 @@ export default function LandingPage() {
                                             <div className="bg-muted aspect-[4/3] md:aspect-auto">
                                                 <Image
                                                     src={uc.image.src}
-                                                    alt={t.landingPage.useCases[uc.id as keyof typeof t.landingPage.useCases].alt}
+                                                    alt={t[uc.image.alt as keyof typeof t]}
                                                     width={600}
                                                     height={450}
                                                     className="w-full h-full object-cover"
@@ -328,5 +328,7 @@ export default function LandingPage() {
         </div>
     );
 }
+
+    
 
     
