@@ -8,5 +8,6 @@ runConfig:
 build:
   # Do not change this value
   builder: "us-central1-docker.pkg.dev/firestack-build/buildpacks/builder"
+  sourceDir: .
 iam:
   invoker: ["public"]
