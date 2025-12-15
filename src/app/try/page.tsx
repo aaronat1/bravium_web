@@ -12,13 +12,11 @@ import { httpsCallable, type HttpsCallableError } from 'firebase/functions';
 import jsPDF from "jspdf";
 import { collection, onSnapshot, query, where, addDoc, updateDoc, serverTimestamp, doc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import ReCAPTCHA from "react-google-recaptcha";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
 import { useI18n } from "@/hooks/use-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { db, functions, storage, auth } from "@/lib/firebase/config";
-import { verifyRecaptcha } from "@/actions/recaptchaActions";
 import type { CredentialTemplate } from "@/app/(app)/templates/page";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +33,6 @@ import LandingFooter from "@/components/landing-footer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 const DEMO_USER_EMAIL = "verifier@bravium.org";
 const DEMO_USER_PASSWORD = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
 const DEMO_CUSTOMER_ID = "d31KJFgu5KR6jOXYQ0h5h8VXyuW2";
@@ -87,8 +84,6 @@ export default function TryNowPage() {
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const qrCodeRef = useRef<HTMLDivElement>(null);
     const isShareSupported = typeof navigator !== 'undefined' && !!navigator.share;
-    
-    const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
     
 
     const formSchema = React.useMemo(() => getBaseSchema(selectedTemplate?.fields), [selectedTemplate]);
@@ -145,11 +140,6 @@ export default function TryNowPage() {
             return;
         }
 
-        if (!recaptchaToken) {
-            toast({ variant: "destructive", title: "Error", description: "Please complete the reCAPTCHA." });
-            return;
-        }
-
         if (!auth || !functions || !db) {
             setSubmissionError("Firebase is not initialized correctly.");
             return;
@@ -160,12 +150,6 @@ export default function TryNowPage() {
         let preliminaryDocRef;
         
         try {
-            // First, verify reCAPTCHA token
-            const recaptchaResult = await verifyRecaptcha(recaptchaToken);
-            if (!recaptchaResult.success) {
-                throw new Error(recaptchaResult.message || "reCAPTCHA verification failed.");
-            }
-            
             // Authenticate with demo user credentials before calling the function
             try {
               await signInWithEmailAndPassword(auth, DEMO_USER_EMAIL, DEMO_USER_PASSWORD);
@@ -426,22 +410,7 @@ export default function TryNowPage() {
                                     </Alert>
 
                                     <div className="flex flex-col items-center gap-4">
-                                        {RECAPTCHA_SITE_KEY ? (
-                                            <ReCAPTCHA
-                                                sitekey={RECAPTCHA_SITE_KEY}
-                                                onChange={(token) => setRecaptchaToken(token)}
-                                                onExpired={() => setRecaptchaToken(null)}
-                                            />
-                                        ) : (
-                                             <Alert variant="destructive">
-                                                <AlertTriangle className="h-4 w-4" />
-                                                <AlertTitle>reCAPTCHA Error</AlertTitle>
-                                                <AlertDescription>
-                                                    The reCAPTCHA site key is not configured. Please contact the site administrator.
-                                                </AlertDescription>
-                                             </Alert>
-                                        )}
-                                        <Button type="submit" disabled={isIssuing || !recaptchaToken || !selectedTemplate}>
+                                        <Button type="submit" disabled={isIssuing || !selectedTemplate}>
                                             {isIssuing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCheck className="mr-2 h-4 w-4" />}
                                             {t.issueCredentialPage.issue_button}
                                         </Button>
