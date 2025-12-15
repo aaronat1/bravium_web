@@ -2,17 +2,17 @@
   "useCases": {
     "universities": {
       "src": "https://images.unsplash.com/photo-1523050854058-8DF90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwZ3JhZHVhdGlvbnxlbnwwfHx8fDE3NTEyNTc3NjB8MA&ixlib=rb-4.0.3&q=80&w=1080",
-      "alt": "t.landingPage.useCases.tab1_alt",
+      "alt": "landingPage.useCases.tab1_alt",
       "hint": "student graduation"
     },
     "ngos": {
       "src": "https://images.unsplash.com/photo-1593113598332-cd288d649433?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxuZ28lMjB2b2x1bnRlZXJzfGVufDB8fHx8MTc1MTI1Nzg0N3ww&ixlib=rb-4.0.3&q=80&w=1080",
-      "alt": "t.landingPage.useCases.tab2_alt",
+      "alt": "landingPage.useCases.tab2_alt",
       "hint": "ngo volunteers"
     },
     "companies": {
       "src": "https://images.unsplash.com/photo-1552664730-d307ca884978?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHRlYW18ZW58MHx8fHwxNzUxMjU3OTM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
-      "alt": "t.landingPage.useCases.tab3_alt",
+      "alt": "landingPage.useCases.tab3_alt",
       "hint": "business team"
     }
   },

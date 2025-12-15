@@ -88,18 +88,11 @@ export default function LandingPage() {
       { id: "faq-6", q: t.landingPage.faq.q6_title, a: t.landingPage.faq.q6_text },
     ];
 
-    const resolveTranslation = (key: string) => {
-        const keys = key.split('.');
-        let result: any = t;
-        for (const k of keys) {
-            if (result && typeof result === 'object' && k in result) {
-                result = result[k];
-            } else {
-                return key; 
-            }
-        }
-        return result;
+    const resolveTranslation = (obj: any, path: string): string => {
+        const value = path.split('.').reduce((o, k) => (o && o[k]) ? o[k] : null, obj);
+        return typeof value === 'string' ? value : path;
     };
+
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
@@ -197,7 +190,7 @@ export default function LandingPage() {
                                             <div className="bg-muted aspect-[4/3] md:aspect-auto">
                                                 <Image
                                                     src={uc.image.src}
-                                                    alt={resolveTranslation(uc.image.alt)}
+                                                    alt={resolveTranslation(t, uc.image.alt)}
                                                     width={600}
                                                     height={450}
                                                     className="w-full h-full object-cover"
@@ -345,3 +338,4 @@ export default function LandingPage() {
     
 
     
+
