@@ -1,9 +1,0 @@
-specVersion: v1alpha1
-runConfig:
-  cpu: 1
-  memoryMiB: 1024
-  maxInstances: 2
-build:
-  builder: "us-central1-docker.pkg.dev/firestack-build/buildpacks/builder"
-iam:
-  invoker: ["public"]
