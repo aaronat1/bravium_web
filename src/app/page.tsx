@@ -88,6 +88,19 @@ export default function LandingPage() {
       { id: "faq-6", q: t.landingPage.faq.q6_title, a: t.landingPage.faq.q6_text },
     ];
 
+    const resolveTranslation = (key: string) => {
+        const keys = key.split('.');
+        let result: any = t;
+        for (const k of keys) {
+            if (result && typeof result === 'object' && k in result) {
+                result = result[k];
+            } else {
+                return key; 
+            }
+        }
+        return result;
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-background">
             <LandingHeader />
@@ -184,7 +197,7 @@ export default function LandingPage() {
                                             <div className="bg-muted aspect-[4/3] md:aspect-auto">
                                                 <Image
                                                     src={uc.image.src}
-                                                    alt={t[uc.image.alt as keyof typeof t]}
+                                                    alt={resolveTranslation(uc.image.alt)}
                                                     width={600}
                                                     height={450}
                                                     className="w-full h-full object-cover"
