@@ -25,10 +25,10 @@ export type AddCustomerState = {
     email: string;
   };
 };
-
+/*
 async function sendWelcomeEmail(email: string, password: string): Promise<void> {
   const API_URL = 'https://smtp.maileroo.com/send';
-  const API_KEY = '02ad0072053fdc168e0ca174497ecada4e47d30ec898276357c067681b100f93';
+  const API_KEY = process.env.MAILEROO_API_KEY;
   const FROM_EMAIL = 'bravium@c819211b683530d3.maileroo.org';
 
   const subject = "Welcome to Bravium! / ¡Bienvenido a Bravium!";
@@ -72,7 +72,7 @@ async function sendWelcomeEmail(email: string, password: string): Promise<void> 
     // We don't re-throw the error so that the customer creation process can complete even if the email fails.
   }
 }
-
+*/
 
 export async function addCustomer(prevState: AddCustomerState, formData: FormData): Promise<AddCustomerState> {
   if (!adminAuth || !adminDb) {
@@ -142,7 +142,7 @@ export async function addCustomer(prevState: AddCustomerState, formData: FormDat
     await adminDb.collection('customers').doc(uid).set(customerData);
 
     // Send welcome email after successful creation
-    await sendWelcomeEmail(email, uid);
+    // await sendWelcomeEmail(email, uid);
 
     return { 
         message: `Cliente "${name}" añadido correctamente.`, 

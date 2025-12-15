@@ -1,23 +1,17 @@
 
 "use client";
 
-import { useId, useRef, useActionState, useEffect } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 
 import { useI18n } from '@/hooks/use-i18n';
-import { useToast } from "@/hooks/use-toast";
-import { sendContactMessage } from "@/actions/contactActions";
-
 import LandingHeader from '@/components/landing-header';
 import LandingFooter from '@/components/landing-footer';
+import ContactForm from '@/components/contact-form'; // Importar el nuevo componente
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 import { CheckCircle, ShieldCheck, FileWarning, Eye, GitBranchPlus } from 'lucide-react';
 
@@ -39,42 +33,6 @@ export default function LandingPage() {
             title: t.landingPage.standards.item3_title,
             text: t.landingPage.standards.item3_text,
             icon: <ShieldCheck className="h-8 w-8" />,
-        },
-    ];
-
-    const problems = [
-        {
-            title: t.landingPage.problem.item1_title,
-            text: t.landingPage.problem.item1_text,
-            icon: <FileWarning className="w-10 h-10 text-destructive" />
-        },
-        {
-            title: t.landingPage.problem.item2_title,
-            text: t.landingPage.problem.item2_text,
-            icon: <FileWarning className="w-10 h-10 text-destructive" />
-        },
-        {
-            title: t.landingPage.problem.item3_title,
-            text: t.landingPage.problem.item3_text,
-            icon: <FileWarning className="w-10 h-10 text-destructive" />
-        },
-    ];
-
-    const solutions = [
-        {
-            title: t.landingPage.solution.item1_title,
-            text: t.landingPage.solution.item1_text,
-            icon: <ShieldCheck className="w-10 h-10 text-primary" />
-        },
-        {
-            title: t.landingPage.solution.item2_title,
-            text: t.landingPage.solution.item2_text,
-            icon: <ShieldCheck className="w-10 h-10 text-primary" />
-        },
-        {
-            title: t.landingPage.solution.item3_title,
-            text: t.landingPage.solution.item3_text,
-            icon: <ShieldCheck className="w-10 h-10 text-primary" />
         },
     ];
 
@@ -134,25 +92,6 @@ export default function LandingPage() {
       { id: "faq-5", q: t.landingPage.faq.q5_title, a: t.landingPage.faq.q5_text },
       { id: "faq-6", q: t.landingPage.faq.q6_title, a: t.landingPage.faq.q6_text },
     ];
-    
-    // --- Contact Form Logic ---
-    const formRef = useRef<HTMLFormElement>(null);
-    const { toast } = useToast();
-    const [state, formAction] = useActionState(sendContactMessage, { message: "", success: false, errors: {} });
-
-    useEffect(() => {
-        if (state.message) {
-            toast({
-                title: state.success ? t.landingPage.contact.toast_success_title : t.landingPage.contact.toast_error_title,
-                description: state.success ? t.landingPage.contact.toast_success_desc : state.message,
-                variant: state.success ? "default" : "destructive",
-            });
-            if (state.success) {
-                formRef.current?.reset();
-            }
-        }
-    }, [state, t, toast]);
-
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
@@ -386,33 +325,7 @@ export default function LandingPage() {
                             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{t.landingPage.contact.title}</h2>
                             <p className="mt-4 text-lg text-muted-foreground">{t.landingPage.contact.subtitle}</p>
                         </div>
-                        <Card className="mt-12">
-                            <CardContent className="pt-6">
-                                <form ref={formRef} action={formAction} className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="name">{t.landingPage.contact.form_name}</Label>
-                                        <Input id="name" name="name" placeholder={t.landingPage.contact.form_name_placeholder} required />
-                                        {state.errors?.name && <p className="text-sm font-medium text-destructive">{state.errors.name[0]}</p>}
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="email">{t.landingPage.contact.form_email}</Label>
-                                        <Input id="email" name="email" type="email" placeholder={t.landingPage.contact.form_email_placeholder} required />
-                                        {state.errors?.email && <p className="text-sm font-medium text-destructive">{state.errors.email[0]}</p>}
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="subject">{t.landingPage.contact.form_subject}</Label>
-                                        <Input id="subject" name="subject" placeholder={t.landingPage.contact.form_subject_placeholder} required />
-                                        {state.errors?.subject && <p className="text-sm font-medium text-destructive">{state.errors.subject[0]}</p>}
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="message">{t.landingPage.contact.form_message}</Label>
-                                        <Textarea id="message" name="message" placeholder={t.landingPage.contact.form_message_placeholder} required rows={5}/>
-                                        {state.errors?.message && <p className="text-sm font-medium text-destructive">{state.errors.message[0]}</p>}
-                                    </div>
-                                    <Button type="submit" disabled={state.success}>{t.landingPage.contact.form_cta}</Button>
-                                </form>
-                            </CardContent>
-                        </Card>
+                        <ContactForm />
                     </div>
                 </section>
             </main>
@@ -420,3 +333,5 @@ export default function LandingPage() {
         </div>
     );
 }
+
+    

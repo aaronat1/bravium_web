@@ -22,7 +22,7 @@ export type ContactFormState = {
   };
   success: boolean;
 };
-
+/*
 async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<{success: boolean}> {
   const API_URL = 'https://smtp.maileroo.com/send';
   const API_KEY = process.env.MAILEROO_API_KEY;
@@ -74,7 +74,7 @@ async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<{s
     return { success: false };
   }
 }
-
+*/
 export async function sendContactMessage(prevState: ContactFormState, formData: FormData): Promise<ContactFormState> {
   const validatedFields = ContactSchema.safeParse({
     name: formData.get('name'),
@@ -108,14 +108,14 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
     console.warn('WARNING: Firebase Admin DB is not initialized. Contact message will not be saved to the database.');
   }
   
-  const emailResult = await sendContactEmail(validatedFields.data);
+  // const emailResult = await sendContactEmail(validatedFields.data);
 
-  if (!emailResult.success) {
-      return {
-          message: 'El mensaje se guardó, pero no se pudo enviar el correo de notificación.',
-          success: false,
-      }
-  }
+  // if (!emailResult.success) {
+  //     return {
+  //         message: 'El mensaje se guardó, pero no se pudo enviar el correo de notificación.',
+  //         success: false,
+  //     }
+  // }
 
   return { message: 'Mensaje enviado correctamente.', success: true };
 }
