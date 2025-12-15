@@ -48,7 +48,7 @@ export default function LandingPage() {
                 t.landingPage.useCases.tab1_benefit3,
                 t.landingPage.useCases.tab1_benefit4,
             ],
-            imageSrc: "https://picsum.photos/seed/grad/600/450",
+            imageSrc: "https://images.unsplash.com/photo-1653945475312-03bb03fd1303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxNnx8QSVDMyVCMWFkZSUyMGltYWdlbiUyMHJlbGFjaW9uYWRhJTIwY29uJTIwZXN0dWRpYW50ZXMlMkMlMjBleCVDMyVBMW1lbmVzJTIweSUyMHVuaXZlcnNpZGFkfGVufDB8fHx8MTc1MTMxNjE5Nnww&ixlib=rb-4.1.0&q=80&w=1080",
             alt: t.landingPage.useCases.tab1_alt,
             aiHint: "student graduation"
         },
@@ -98,7 +98,7 @@ export default function LandingPage() {
             <LandingHeader />
             <main className="flex-grow">
                 {/* Hero Section */}
-                <section className="relative py-20 md:py-32 bg-card">
+                <section className="relative py-20 md:py-32">
                     <div className="container text-center">
                         <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-6xl whitespace-pre-line">{t.landingPage.hero.title}</h1>
                         <p className="mt-6 text-lg leading-8 text-muted-foreground max-w-3xl mx-auto">{t.landingPage.hero.subtitle}</p>
@@ -114,7 +114,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* Standards Section */}
-                <section id="vision" className="py-24 sm:py-32">
+                <section id="vision" className="py-24 sm:py-32 bg-muted/50">
                     <div className="container">
                         <div className="text-center">
                             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{t.landingPage.standards.title}</h2>
@@ -135,7 +135,7 @@ export default function LandingPage() {
                 </section>
                 
                 {/* How It Works Section */}
-                <section id="how-it-works" className="py-24 sm:py-32 bg-card">
+                <section id="how-it-works" className="py-24 sm:py-32">
                     <div className="container text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{t.landingPage.howItWorks.title}</h2>
                         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
@@ -161,7 +161,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* Use Cases Section */}
-                <section id="use-cases" className="py-24 sm:py-32">
+                <section id="use-cases" className="py-24 sm:py-32 bg-muted/50">
                     <div className="container">
                         <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl text-center mb-16">{t.landingPage.useCases.title}</h2>
                         <Tabs defaultValue={useCases[0].id} className="w-full">
@@ -205,7 +205,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* Pricing Section */}
-                <section id="pricing" className="py-24 sm:py-32 bg-card">
+                <section id="pricing" className="py-24 sm:py-32">
                     <div className="container">
                         <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl text-center">{t.landingPage.pricing.title}</h2>
                         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -289,7 +289,7 @@ export default function LandingPage() {
                 </section>
                 
                 {/* FAQ Section */}
-                <section id="faq" className="py-24 sm:py-32">
+                <section id="faq" className="py-24 sm:py-32 bg-muted/50">
                     <div className="container max-w-4xl">
                         <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl text-center mb-12">{t.landingPage.faq.title}</h2>
                         <Accordion type="single" collapsible className="w-full">
@@ -306,7 +306,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* Final CTA Section */}
-                <section className="py-24 bg-card">
+                <section className="py-24">
                     <div className="container text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{t.landingPage.finalCta.title}</h2>
                         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">{t.landingPage.finalCta.subtitle}</p>
@@ -319,7 +319,7 @@ export default function LandingPage() {
                 </section>
                 
                 {/* Contact Section */}
-                <section id="contact" className="py-24 sm:py-32">
+                <section id="contact" className="py-24 sm:py-32 bg-muted/50">
                     <div className="container max-w-3xl">
                         <div className="text-center">
                             <h2 className="text-3xl font-bold tracking-tight text-primary sm:text-4xl">{t.landingPage.contact.title}</h2>
