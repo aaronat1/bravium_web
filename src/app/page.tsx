@@ -48,7 +48,7 @@ export default function LandingPage() {
                 t.landingPage.useCases.tab1_benefit3,
                 t.landingPage.useCases.tab1_benefit4,
             ],
-            imageSrc: "https://images.unsplash.com/photo-1523050854058-8DF90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwZ3JhZHVhdGlvbnxlbnwwfHx8fDE3NTEyNTc3NjB8MA&ixlib=rb-4.0.3&q=80&w=1080",
+            imageSrc: "https://picsum.photos/seed/grad/600/450",
             alt: t.landingPage.useCases.tab1_alt,
             aiHint: "student graduation"
         },
