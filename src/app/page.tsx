@@ -48,7 +48,7 @@ export default function LandingPage() {
                 t.landingPage.useCases.tab1_benefit3,
                 t.landingPage.useCases.tab1_benefit4,
             ],
-            imageSrc: "https://images.unsplash.com/photo-1653945475312-03bb03fd1303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxNnx8QSVDMyVCMWFkZSUyMGltYWdlbiUyMHJlbGFjaW9uYWRhJTIwY29uJTIwZXN0dWRpYW50ZXMlMkMlMjBleCVDMyVBMW1lbmVzJTIweSUyMHVuaXZlcnNpZGFkfGVufDB8fHx8MTc1MTMxNjE5Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+            imageSrc: "https://images.unsplash.com/photo-1523050854058-8DF90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwZ3JhZHVhdGlvbnxlbnwwfHx8fDE3NTEyNTc3NjB8MA&ixlib=rb-4.0.3&q=80&w=1080",
             alt: t.landingPage.useCases.tab1_alt,
             aiHint: "student graduation"
         },
