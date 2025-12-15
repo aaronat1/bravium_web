@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Users, Send, ShieldCheck, FileUp, FileDown, CheckCircle } from "lucide-react";
 import { useI18n } from "@/hooks/use-i18n";
 import Image from "next/image";
+import imageData from '@/lib/placeholder-images.json';
 
 export default function HelpPage() {
   const { t } = useI18n();
@@ -39,9 +40,7 @@ export default function HelpPage() {
             t.helpPage.step1_point2,
             t.helpPage.step1_point3,
         ],
-        image: "https://images.unsplash.com/photo-1556740758-90de374c12ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxkYXNoYm9hcmQlMjB1aXxlbnwwfHx8fDE3NTEzMjc4Njh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-        alt: "Dashboard de Bravium",
-        aiHint: "ui dashboard"
+        image: imageData.helpPage.step1,
     },
     {
         step: t.helpPage.step2_title,
@@ -51,9 +50,7 @@ export default function HelpPage() {
             t.helpPage.step2_point1,
             t.helpPage.step2_point2,
         ],
-        image: "https://images.unsplash.com/photo-1573164713988-8665fc963095?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMGxhcHRvcCUyMGVtYWlsfGVufDB8fHx8MTc1NTI2NzU0OHww&ixlib=rb-4.1.0&q=80&w=1080",
-        alt: "Chica revisando su correo electrónico en un portátil",
-        aiHint: "woman laptop email"
+        image: imageData.helpPage.step2,
     },
     {
         step: t.helpPage.step3_title,
@@ -64,9 +61,7 @@ export default function HelpPage() {
             t.helpPage.step3_point2,
             t.helpPage.step3_point3,
         ],
-        image: "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYW4lMjBsYXB0b3AlMjBlbWFpbHxlbnwwfHx8fDE3NTE5NzU0NTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-        alt: "Chico mirando la pantalla de su ordenador con la típica vista de un webmail",
-        aiHint: "man webmail"
+        image: imageData.helpPage.step3,
     }
   ]
 
@@ -115,12 +110,12 @@ export default function HelpPage() {
                         </div>
                          <div className="bg-muted aspect-video md:aspect-auto md:h-full">
                             <Image 
-                                src={item.image} 
-                                alt={item.alt}
+                                src={item.image.src} 
+                                alt={item.image.alt}
                                 width={800}
                                 height={600}
                                 className="w-full h-full object-cover"
-                                data-ai-hint={item.aiHint}
+                                data-ai-hint={item.image.hint}
                             />
                         </div>
                     </div>

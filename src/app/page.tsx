@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import imageData from '@/lib/placeholder-images.json';
 
 import { CheckCircle, ShieldCheck, FileWarning, Eye, GitBranchPlus } from 'lucide-react';
 
@@ -48,9 +49,7 @@ export default function LandingPage() {
                 t.landingPage.useCases.tab1_benefit3,
                 t.landingPage.useCases.tab1_benefit4,
             ],
-            imageSrc: "https://images.unsplash.com/photo-1523050854058-8DF90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwZ3JhZHVhdGlvbnxlbnwwfHx8fDE3NTEyNTc3NjB8MA&ixlib=rb-4.0.3&q=80&w=1080",
-            alt: t.landingPage.useCases.tab1_alt,
-            aiHint: "student graduation"
+            image: imageData.useCases.universities,
         },
         {
             id: "ngos",
@@ -63,9 +62,7 @@ export default function LandingPage() {
                 t.landingPage.useCases.tab2_benefit3,
                 t.landingPage.useCases.tab2_benefit4,
             ],
-            imageSrc: "https://images.unsplash.com/photo-1593113598332-cd288d649433?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxuZ28lMjB2b2x1bnRlZXJzfGVufDB8fHx8MTc1MTI1Nzg0N3ww&ixlib=rb-4.0.3&q=80&w=1080",
-            alt: t.landingPage.useCases.tab2_alt,
-            aiHint: "ngo volunteers"
+            image: imageData.useCases.ngos,
         },
         {
             id: "companies",
@@ -78,9 +75,7 @@ export default function LandingPage() {
                 t.landingPage.useCases.tab3_benefit3,
                 t.landingPage.useCases.tab3_benefit4,
             ],
-            imageSrc: "https://images.unsplash.com/photo-1552664730-d307ca884978?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHRlYW18ZW58MHx8fHwxNzUxMjU3OTM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
-            alt: t.landingPage.useCases.tab3_alt,
-            aiHint: "business team"
+            image: imageData.useCases.companies,
         },
     ];
 
@@ -188,12 +183,12 @@ export default function LandingPage() {
                                             </div>
                                             <div className="bg-muted aspect-[4/3] md:aspect-auto">
                                                 <Image
-                                                    src={uc.imageSrc}
-                                                    alt={uc.alt}
+                                                    src={uc.image.src}
+                                                    alt={t.landingPage.useCases[uc.id as keyof typeof t.landingPage.useCases].alt}
                                                     width={600}
                                                     height={450}
                                                     className="w-full h-full object-cover"
-                                                    data-ai-hint={uc.aiHint}
+                                                    data-ai-hint={uc.image.hint}
                                                 />
                                             </div>
                                         </div>

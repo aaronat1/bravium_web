@@ -1,0 +1,36 @@
+{
+  "useCases": {
+    "universities": {
+      "src": "https://images.unsplash.com/photo-1523050854058-8DF90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwZ3JhZHVhdGlvbnxlbnwwfHx8fDE3NTEyNTc3NjB8MA&ixlib=rb-4.0.3&q=80&w=1080",
+      "alt": "t.landingPage.useCases.tab1_alt",
+      "hint": "student graduation"
+    },
+    "ngos": {
+      "src": "https://images.unsplash.com/photo-1593113598332-cd288d649433?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxuZ28lMjB2b2x1bnRlZXJzfGVufDB8fHx8MTc1MTI1Nzg0N3ww&ixlib=rb-4.0.3&q=80&w=1080",
+      "alt": "t.landingPage.useCases.tab2_alt",
+      "hint": "ngo volunteers"
+    },
+    "companies": {
+      "src": "https://images.unsplash.com/photo-1552664730-d307ca884978?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHRlYW18ZW58MHx8fHwxNzUxMjU3OTM4fDA&ixlib=rb-4.0.3&q=80&w=1080",
+      "alt": "t.landingPage.useCases.tab3_alt",
+      "hint": "business team"
+    }
+  },
+  "helpPage": {
+    "step1": {
+      "src": "https://images.unsplash.com/photo-1556740758-90de374c12ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxkYXNoYm9hcmQlMjB1aXxlbnwwfHx8fDE3NTEzMjc4Njh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "alt": "Dashboard de Bravium",
+      "hint": "ui dashboard"
+    },
+    "step2": {
+      "src": "https://images.unsplash.com/photo-1573164713988-8665fc963095?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMGxhcHRvcCUyMGVtYWlsfGVufDB8fHx8MTc1NTI2NzU0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "alt": "Chica revisando su correo electrónico en un portátil",
+      "hint": "woman laptop email"
+    },
+    "step3": {
+      "src": "https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYW4lMjBsYXB0b3AlMjBlbWFpbHxlbnwwfHx8fDE3NTE5NzU0NTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "alt": "Chico mirando la pantalla de su ordenador con la típica vista de un webmail",
+      "hint": "man webmail"
+    }
+  }
+}
