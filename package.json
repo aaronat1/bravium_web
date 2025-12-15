@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node ./scripts/dev.mjs",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
+    "dev": "sh -c 'next dev --hostname 0.0.0.0 --port ${PORT:-9002}'",
+    "start": "sh -c 'next start --hostname 0.0.0.0 --port ${PORT:-9002}'",
     "build": "next build",
-    "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
