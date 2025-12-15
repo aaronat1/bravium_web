@@ -87,11 +87,19 @@ export default function LandingPage() {
       { id: "faq-5", q: t.landingPage.faq.q5_title, a: t.landingPage.faq.q5_text },
       { id: "faq-6", q: t.landingPage.faq.q6_title, a: t.landingPage.faq.q6_text },
     ];
-
-    const resolveTranslation = (obj: any, path: string): string => {
-        const value = path.split('.').reduce((o, k) => (o && o[k]) ? o[k] : null, obj);
-        return typeof value === 'string' ? value : path;
-    };
+    
+    const getAltText = (altKey: string) => {
+      const keys = altKey.split('.');
+      let current: any = t;
+      for (const key of keys) {
+        if (current[key]) {
+          current = current[key];
+        } else {
+          return altKey; // fallback
+        }
+      }
+      return current;
+    }
 
 
     return (
@@ -190,7 +198,7 @@ export default function LandingPage() {
                                             <div className="bg-muted aspect-[4/3] md:aspect-auto">
                                                 <Image
                                                     src={uc.image.src}
-                                                    alt={resolveTranslation(t, uc.image.alt)}
+                                                    alt={getAltText(uc.image.alt)}
                                                     width={600}
                                                     height={450}
                                                     className="w-full h-full object-cover"
@@ -338,4 +346,5 @@ export default function LandingPage() {
     
 
     
+
 
