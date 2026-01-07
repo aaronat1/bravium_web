@@ -12,6 +12,39 @@ build:
 iam:
   invoker: ["public"]
 
+
 env:
   - variable: MAILEROO_API_KEY
     value: 02ad0072053fdc168e0ca174497ecada4e47d30ec898276357c067681b100f93
+  - variable: GEMINI_API_KEY
+    value: AIzaSyCGfgMmq_ehmkd6k3UboMF5OuOsSz7jqok
+  - variable: NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+    value: 6LeIxAcqAAAAAOPu-M-N_y-z_x_w_v_u_t_s_r_q
+  - variable: RECAPTCHA_SECRET_KEY
+    value: 6LeIxAcqAAAAAH_o1j5x_8u_9n_y_7x_6z_5w_4
+  - variable: API_KEY_SECRET
+    value: clave-secreta-para-generar-api-keys
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyC-GejjoGX20dguwux27APYwWmkQQW8PXA
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: bravium-d1e08.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: bravium-d1e08
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: bravium-d1e08.appspot.com
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: 176405635410
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:176405635410:web:d791f87c5e8f73602a1a8b
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-3KLQ9S0ZPC
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: firebase-adminsdk-fbsvc@bravium-d1e08.iam.gserviceaccount.com
+  - variable: FIREBASE_PROJECT_ID
+    value: bravium-d1e08
+  - variable: NEXT_PUBLIC_DEMO_USER_EMAIL
+    value: demo@bravium.es
+  - variable: NEXT_PUBLIC_DEMO_USER_PASSWORD
+    value: password-demo
+  - variable: FIREBASE_PRIVATE_KEY
+    value: "-----BEGIN PRIVATE KEY-----\\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC7pAD2HJSBXKAy\\n382Lf/1HtrboCeXAsGjbeLgrbetOMde7/KWz6StCwD1kZriq9wVjXuy3JhoKkXMR\\nEujtOdemm2Kyrb9Y/gRS+JTonaWaWahtLEq1vGWV+tv5UKRPEFRCEFBTHS+eaiq6\\n5Ve7KsXuy4VD4qip/QJ9RL8w1oZi8Ra47ZfueH/7xtaPTcA1j2pWRoj4YhuROaQ+\\nT9KhCX7KTLVBBhqNvNEcRPjdvuGOJz8VmHYgdycFUpQCvdW0fcnGrJ0GD3EWzecX\\nyHasMguq8yTRdcAthLYRhPU40auvyVfnqCv1bveFTf3AV07G7a6IDwHNCNCyYCEj\\n3CMduOezAgMBAAECggEAAfT6a5att9Gq/AzYfHF3x0UxECd2RXWxikRui0losFaV\\nvOisI721TUtq+H6Xw3SzEi+9wUU89UpCDHYJhtvZE2xAccOdIMT5b5IXH3vxa7Qu\\nrQDOwKl318IXhDiilg6CCnRYGh3OTtUln/BfY1zVVqG5wJT/FFLGsV7DrbM3EJYV\\nhlM/yOCSg59IsF/H81xNNBfTjEy3tiGtnQWL4QbsvYMQAwXwVZ5J1CzTBZpvr+B6\\njTwMSYo3RI9gkD8XdyQd9zcsmeW9hQ9sZh7UH/7FQIe0h5pX1XnfosRXeX+milxy\\niQcGuoJ3DtpfwEKxHDW2EUobHNNFKPAFmcYQfCKPxQKBgQDmOnuRcY4PL3USMeYG\\nwcTnA5d6YaJH/cer3YvzWTDdUFiw3RE0kNjBApB1IdNtFFty3PYFVq0WBH0c7gfz\\ntDDt+7Yg8kuKLQJk/0X+Q89gye2cGTSKN8WBF8gfqRGeCiqpJYBrMhIK299C4PcW\\nh9mbSz7xH9+2gMlragGyv0AoBwKBgQDQpRum7qShCpGyg86aH/x9jpl3ycZgdeXM\\nqz1C4atl8qE7+lqj3BKGqClMVC/jOSAYvD+9iV3lRAKNIfLanEQ0P2SrPiXgPwZT\\notFoLl7UVzS0PRPqLsl3B5qpDPzm4J1pGlZJpSPIBlg362H0Hc+eAWH8ehRSHCvz\\najN7t8hf9QKBgQCQNdPO/90nH+fqFL1sQBWxSquoqd130LwwqF6QeK7GAhz79A1h\\n6tUK2StZY23G5rh9k3C7WVaj8v3XkDYE7jqz5zZnHr44eAcG8muKYDlW/EVMwPEL\\nHvIk8ZuWUVXKs72TI/1zp/JrQNxxTO8Y+tFQl+p+KSP9cmA4WzdjGq76IwKBgQCM\\ng/XIigXzszOGf0BgClS4lpYC17AzfJNEMLs0VNli8nHl++iZXHhZmd0eW8BYjjtw\\njS98TYwgAJqbRBbTZdSFP4Bj15oYmTmAkDHpsPkKlqSXEl9cIyBpeoSNf4K/VtyM\\nUUF1nbMoXiWBm5O/nWga6KF+MRWIaxKqf4amtpJLFQKBgFuRFOo0BnTLV6vzmSGR\\nYr5FvUvwZcHlykaaK6VhITHORwPFjxhMaqjXDvRcj4f+ai0U1Pcvezj8linrfklV\\nbKQoDmma7Rda9EXx8kCfU2zbm/48mdN42eqVKrTKc1HNk0ni3Yk7xHdzV26InK1r\\n1jOQibw8UMDCT2nA7n6tTAS3\\n-----END PRIVATE KEY-----"
