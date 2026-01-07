@@ -11,3 +11,7 @@ build:
   sourceDir: .
 iam:
   invoker: ["public"]
+
+env:
+  - variable: MAILEROO_API_KEY
+    value: 02ad0072053fdc168e0ca174497ecada4e47d30ec898276357c067681b100f93
