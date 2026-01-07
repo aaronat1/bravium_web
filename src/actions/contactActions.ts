@@ -22,16 +22,15 @@ export type ContactFormState = {
   };
   success: boolean;
 };
-/*
-async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<{success: boolean}> {
+async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<{ success: boolean }> {
   const API_URL = 'https://smtp.maileroo.com/send';
   const API_KEY = process.env.MAILEROO_API_KEY;
   const FROM_EMAIL = 'bravium@c819211b683530d3.maileroo.org';
   const TO_EMAIL = 'aaron.asencio.tavio@gmail.com';
 
   if (!API_KEY) {
-      console.error("Maileroo API Key is not configured.");
-      return { success: false };
+    console.error("Maileroo API Key is not configured.");
+    return { success: false };
   }
 
   const subject = `Nuevo Mensaje de Contacto: ${data.subject}`;
@@ -62,19 +61,18 @@ async function sendContactEmail(data: z.infer<typeof ContactSchema>): Promise<{s
       body: form,
     });
     if (!response.ok) {
-        const result = await response.json();
-        console.error(`Failed to send contact email: ${JSON.stringify(result)}`);
-        return { success: false };
+      const result = await response.json();
+      console.error(`Failed to send contact email: ${JSON.stringify(result)}`);
+      return { success: false };
     } else {
-        console.log(`Contact form email sent successfully to ${TO_EMAIL}`);
-        return { success: true };
+      console.log(`Contact form email sent successfully to ${TO_EMAIL}`);
+      return { success: true };
     }
   } catch (error) {
     console.error("Could not send contact email:", error);
     return { success: false };
   }
 }
-*/
 export async function sendContactMessage(prevState: ContactFormState, formData: FormData): Promise<ContactFormState> {
   const validatedFields = ContactSchema.safeParse({
     name: formData.get('name'),
@@ -98,24 +96,24 @@ export async function sendContactMessage(prevState: ContactFormState, formData: 
         createdAt: FieldValue.serverTimestamp(),
       });
     } catch (dbError: any) {
-       console.error(`Error saving contact message to Firestore: ${dbError.message}`);
-       return {
-           message: `No se pudo guardar el mensaje en la base de datos: ${dbError.message}`,
-           success: false,
-       }
+      console.error(`Error saving contact message to Firestore: ${dbError.message}`);
+      return {
+        message: `No se pudo guardar el mensaje en la base de datos: ${dbError.message}`,
+        success: false,
+      }
     }
   } else {
     console.warn('WARNING: Firebase Admin DB is not initialized. Contact message will not be saved to the database.');
   }
-  
-  // const emailResult = await sendContactEmail(validatedFields.data);
 
-  // if (!emailResult.success) {
-  //     return {
-  //         message: 'El mensaje se guardó, pero no se pudo enviar el correo de notificación.',
-  //         success: false,
-  //     }
-  // }
+  const emailResult = await sendContactEmail(validatedFields.data);
+
+  if (!emailResult.success) {
+    return {
+      message: 'El mensaje se guardó, pero no se pudo enviar el correo de notificación.',
+      success: false,
+    }
+  }
 
   return { message: 'Mensaje enviado correctamente.', success: true };
 }
