@@ -80,25 +80,25 @@ export default function LandingPage() {
     ];
 
     const faqs = [
-      { id: "faq-1", q: t.landingPage.faq.q1_title, a: t.landingPage.faq.q1_text },
-      { id: "faq-2", q: t.landingPage.faq.q2_title, a: t.landingPage.faq.q2_text },
-      { id: "faq-3", q: t.landingPage.faq.q3_title, a: t.landingPage.faq.q3_text },
-      { id: "faq-4", q: t.landingPage.faq.q4_title, a: t.landingPage.faq.q4_text },
-      { id: "faq-5", q: t.landingPage.faq.q5_title, a: t.landingPage.faq.q5_text },
-      { id: "faq-6", q: t.landingPage.faq.q6_title, a: t.landingPage.faq.q6_text },
+        { id: "faq-1", q: t.landingPage.faq.q1_title, a: t.landingPage.faq.q1_text },
+        { id: "faq-2", q: t.landingPage.faq.q2_title, a: t.landingPage.faq.q2_text },
+        { id: "faq-3", q: t.landingPage.faq.q3_title, a: t.landingPage.faq.q3_text },
+        { id: "faq-4", q: t.landingPage.faq.q4_title, a: t.landingPage.faq.q4_text },
+        { id: "faq-5", q: t.landingPage.faq.q5_title, a: t.landingPage.faq.q5_text },
+        { id: "faq-6", q: t.landingPage.faq.q6_title, a: t.landingPage.faq.q6_text },
     ];
-    
+
     const getAltText = (altKey: string) => {
-      const keys = altKey.split('.');
-      let current: any = t;
-      for (const key of keys) {
-        if (current[key]) {
-          current = current[key];
-        } else {
-          return altKey; // fallback
+        const keys = altKey.split('.');
+        let current: any = t;
+        for (const key of keys) {
+            if (current[key]) {
+                current = current[key];
+            } else {
+                return altKey; // fallback
+            }
         }
-      }
-      return current;
+        return current;
     }
 
 
@@ -142,7 +142,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                 </section>
-                
+
                 {/* How It Works Section */}
                 <section id="how-it-works" className="py-24 sm:py-32">
                     <div className="container text-center">
@@ -152,16 +152,16 @@ export default function LandingPage() {
                                 <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground text-2xl font-bold">1</div>
                                 <p className="text-muted-foreground">{t.landingPage.howItWorks.step1_text}</p>
                             </div>
-                             <div className="flex flex-col items-center gap-4">
+                            <div className="flex flex-col items-center gap-4">
                                 <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground text-2xl font-bold">2</div>
                                 <p className="text-muted-foreground">{t.landingPage.howItWorks.step2_text}</p>
                             </div>
-                             <div className="flex flex-col items-center gap-4">
+                            <div className="flex flex-col items-center gap-4">
                                 <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground text-2xl font-bold">3</div>
                                 <p className="text-muted-foreground">{t.landingPage.howItWorks.step3_text}</p>
                             </div>
                         </div>
-                         <div className="mt-12">
+                        <div className="mt-12">
                             <Button asChild size="lg">
                                 <Link href="/help">{t.landingPage.howItWorks.cta}</Link>
                             </Button>
@@ -232,10 +232,10 @@ export default function LandingPage() {
                                     </ul>
                                 </CardContent>
                                 <CardContent>
-                                     <Button asChild className="w-full"><Link href="/register">{t.landingPage.pricing.cta_choose_plan}</Link></Button>
+                                    <Button asChild className="w-full"><Link href="/register">{t.landingPage.pricing.cta_choose_plan}</Link></Button>
                                 </CardContent>
                             </Card>
-                             {/* Starter Plan */}
+                            {/* Starter Plan */}
                             <Card className="flex flex-col">
                                 <CardHeader>
                                     <CardTitle>{t.landingPage.pricing.plan_starter_title}</CardTitle>
@@ -251,12 +251,12 @@ export default function LandingPage() {
                                     </ul>
                                 </CardContent>
                                 <CardContent>
-                                     <Button asChild className="w-full"><Link href="/register">{t.landingPage.pricing.cta_choose_plan}</Link></Button>
+                                    <Button asChild className="w-full" variant="outline"><Link href="#contact">{t.landingPage.pricing.cta_contact_sales}</Link></Button>
                                 </CardContent>
                             </Card>
                             {/* Pro Plan */}
                             <Card className="flex flex-col border-primary border-2 relative">
-                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">{t.landingPage.pricing.popular}</div>
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">{t.landingPage.pricing.popular}</div>
                                 <CardHeader>
                                     <CardTitle>{t.landingPage.pricing.plan_pro_title}</CardTitle>
                                     <CardDescription>{t.landingPage.pricing.plan_pro_target}</CardDescription>
@@ -271,7 +271,7 @@ export default function LandingPage() {
                                     </ul>
                                 </CardContent>
                                 <CardContent>
-                                    <Button asChild className="w-full"><Link href="/register">{t.landingPage.pricing.cta_choose_plan}</Link></Button>
+                                    <Button asChild className="w-full" variant="outline"><Link href="#contact">{t.landingPage.pricing.cta_contact_sales}</Link></Button>
                                 </CardContent>
                             </Card>
                             {/* Enterprise Plan */}
@@ -290,13 +290,13 @@ export default function LandingPage() {
                                     </ul>
                                 </CardContent>
                                 <CardContent>
-                                     <Button asChild className="w-full" variant="outline"><Link href="#contact">{t.landingPage.pricing.cta_contact_sales}</Link></Button>
+                                    <Button asChild className="w-full" variant="outline"><Link href="#contact">{t.landingPage.pricing.cta_contact_sales}</Link></Button>
                                 </CardContent>
                             </Card>
                         </div>
                     </div>
                 </section>
-                
+
                 {/* FAQ Section */}
                 <section id="faq" className="py-24 sm:py-32 bg-muted/50">
                     <div className="container max-w-4xl">
@@ -326,7 +326,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                 </section>
-                
+
                 {/* Contact Section */}
                 <section id="contact" className="py-24 sm:py-32 bg-muted/50">
                     <div className="container max-w-3xl">
@@ -343,8 +343,8 @@ export default function LandingPage() {
     );
 }
 
-    
 
-    
+
+
 
 
