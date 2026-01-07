@@ -136,9 +136,9 @@ export const en = {
       q6_text: "Security is divided into two layers:\n\nThe Platform: Bravium is built on the secure and scalable infrastructure of Google Cloud, ensuring the protection of your data and that of your users.\n\nThe Proof: The security of the certificate itself does not depend on us, but on the global blockchain network. The cryptographic proof is, by design, tamper-proof and is secured by a massive decentralized network, offering the highest possible level of trust.",
     },
     finalCta: {
-        title: "Ready to Lead the Digital Trust Revolution?",
-        subtitle: "Join the institutions that are no longer just issuing documents, but delivering verifiable trust.",
-        cta: "Try Now!",
+      title: "Ready to Lead the Digital Trust Revolution?",
+      subtitle: "Join the institutions that are no longer just issuing documents, but delivering verifiable trust.",
+      cta: "Try Now!",
     },
     contact: {
       title: "Contact",
@@ -196,11 +196,11 @@ export const en = {
     cta: "Create Account",
     toast_success_title: "Account Created!",
     newUserDialog: {
-        title: "Account Created Successfully!",
-        desc: "Your account is ready. Please save your temporary password securely before logging in.",
-        alert_title: "Important: Save Your Password",
-        alert_desc: "This is the only time your temporary password will be shown. Copy it and store it in a safe place. We recommend changing it from your profile after logging in.",
-        login_button: "Go to Login",
+      title: "Account Created Successfully!",
+      desc: "Your account is ready. Please save your temporary password securely before logging in.",
+      alert_title: "Important: Save Your Password",
+      alert_desc: "This is the only time your temporary password will be shown. Copy it and store it in a safe place. We recommend changing it from your profile after logging in.",
+      login_button: "Go to Login",
     }
   },
   verifyPage: {
@@ -393,7 +393,7 @@ export const en = {
     list_title: "Issued Credentials",
     list_desc: "History of all issued credentials.",
     col_template: "Template",
-col_recipient: "Recipient",
+    col_recipient: "Recipient",
     col_issued_at: "Issued At",
     view_button: "View",
     view_dialog_title: "View Credential",
@@ -498,7 +498,7 @@ col_recipient: "Recipient",
     p4_pre_link: "If you have any questions about this Cookies Policy, please",
     p4_link_text: "contact us",
   },
-   profilePage: {
+  profilePage: {
     title: "My Profile",
     subtitle: "View and manage your account details.",
     profile_details_title: "Profile Details",
@@ -535,6 +535,19 @@ col_recipient: "Recipient",
     current_plan_button: "Current Plan",
     month: "month",
   },
+  forgotPasswordPage: {
+    title: "Recover Password",
+    subtitle: "Enter your email to receive a recovery link.",
+    email_label: "Email",
+    email_placeholder: "name@example.com",
+    submit_button: "Send Recovery Link",
+    back_to_login: "Back to Login",
+    back_to_home: "Back to Home",
+    email_error: "Invalid email address.",
+    toast_success_title: "Email Sent",
+    toast_success_desc: "If the email exists, you will receive a link to reset your password.",
+    toast_fail_title: "Error",
+    toast_fail_desc: "There was a problem sending the email. Please try again.",
+  },
 };
 
-    

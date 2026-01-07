@@ -136,9 +136,9 @@ export const es = {
       q6_text: "La seguridad se divide en dos capas:\n\nLa Plataforma: Bravium está construido sobre la infraestructura segura y escalable de Google Cloud, garantizando la protección de tus datos y los de tus usuarios.\n\nLa Prueba: La seguridad del certificado en sí no depende de nosotros, sino de la red blockchain global. La prueba criptográfica es, por diseño, a prueba de manipulaciones y está asegurada por una red descentralizada masiva, ofreciendo el más alto nivel de confianza posible.",
     },
     finalCta: {
-        title: "¿Listo para Liderar la Revolución de la Confianza Digital?",
-        subtitle: "Únete a las instituciones que ya no solo emiten documentos, sino que entregan confianza verificable.",
-        cta: "¡Prueba Ahora!",
+      title: "¿Listo para Liderar la Revolución de la Confianza Digital?",
+      subtitle: "Únete a las instituciones que ya no solo emiten documentos, sino que entregan confianza verificable.",
+      cta: "¡Prueba Ahora!",
     },
     contact: {
       title: "Contacto",
@@ -196,11 +196,11 @@ export const es = {
     cta: "Crear Cuenta",
     toast_success_title: "¡Cuenta Creada!",
     newUserDialog: {
-        title: "¡Cuenta Creada con Éxito!",
-        desc: "Tu cuenta está lista. Por favor, guarda tu contraseña temporal de forma segura antes de iniciar sesión.",
-        alert_title: "Importante: Guarda tu Contraseña",
-        alert_desc: "Esta es la única vez que se mostrará tu contraseña temporal. Cópiala y guárdala en un lugar seguro. Te recomendamos cambiarla desde tu perfil una vez inicies sesión.",
-        login_button: "Ir a Iniciar Sesión",
+      title: "¡Cuenta Creada con Éxito!",
+      desc: "Tu cuenta está lista. Por favor, guarda tu contraseña temporal de forma segura antes de iniciar sesión.",
+      alert_title: "Importante: Guarda tu Contraseña",
+      alert_desc: "Esta es la única vez que se mostrará tu contraseña temporal. Cópiala y guárdala en un lugar seguro. Te recomendamos cambiarla desde tu perfil una vez inicies sesión.",
+      login_button: "Ir a Iniciar Sesión",
     }
   },
   verifyPage: {
@@ -535,6 +535,19 @@ export const es = {
     current_plan_button: "Plan Actual",
     month: "mes",
   },
+  forgotPasswordPage: {
+    title: "Recuperar Contraseña",
+    subtitle: "Introduce tu correo electrónico para recibir un enlace de recuperación.",
+    email_label: "Correo Electrónico",
+    email_placeholder: "nombre@ejemplo.com",
+    submit_button: "Enviar Enlace de Recuperación",
+    back_to_login: "Volver a Iniciar Sesión",
+    back_to_home: "Volver al inicio",
+    email_error: "Dirección de correo electrónico inválida.",
+    toast_success_title: "Correo Enviado",
+    toast_success_desc: "Si el correo existe, recibirás un enlace para restablecer tu contraseña.",
+    toast_fail_title: "Error",
+    toast_fail_desc: "Hubo un problema al enviar el correo. Por favor, inténtalo de nuevo.",
+  },
 };
 
-    

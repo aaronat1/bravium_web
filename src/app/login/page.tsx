@@ -113,7 +113,7 @@ export default function LoginPage() {
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>{t.loginPage.password_label}</FormLabel>
-                      <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                      <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
                         {t.loginPage.forgot_password}
                       </Link>
                     </div>
@@ -149,12 +149,12 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-           <Button variant="link" asChild className="mt-4 w-full">
-                <Link href="/">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Volver al inicio
-                </Link>
-            </Button>
+          <Button variant="link" asChild className="mt-4 w-full">
+            <Link href="/">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al inicio
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </main>
